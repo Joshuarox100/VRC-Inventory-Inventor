@@ -1,10 +1,8 @@
 ﻿using Boo.Lang;
-using NUnit.Framework.Internal.Execution;
 using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -12,11 +10,11 @@ public class AV3InventoriesWindow : EditorWindow
 {
     private readonly AV3InventoriesManager manager = new AV3InventoriesManager();
 
-    int windowTab;
-    bool focused;
-    List<bool> pages = new List<bool>();
+    private int windowTab;
+    private bool focused;
+    private readonly List<bool> pages = new List<bool>();
 
-    Vector2 scroll;
+    private Vector2 scroll;
 
     [MenuItem("Window/AV3 Tools/Inventory Inventor/Manage Inventory")]
     public static void ManageInventory()
@@ -25,6 +23,11 @@ public class AV3InventoriesWindow : EditorWindow
         //window.minSize = new Vector2(375f, 294f);
         window.wantsMouseMove = true;
         window.Show();
+    }
+    [MenuItem("Window/AV3 Tools/Inventory Inventor/Test")]
+    public static void Test()
+    {
+        Debug.Log(sizeof(ulong));
     }
 
     private void OnFocus()
