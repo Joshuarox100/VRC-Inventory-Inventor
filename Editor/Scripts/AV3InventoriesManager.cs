@@ -162,13 +162,13 @@ public class AV3InventoriesManager : UnityEngine.Object
                 bool invLayer = false;
                 for (int j = 0; j < 12; j++)
                 {
-                    if (animator.layers[i].name == "Inventory " + (j + 1))
+                    if (animator.layers[i].stateMachine.name == "Inventory " + (j + 1))
                     {
                         invLayer = true;
                         break;
                     }
                 }
-                if (!invLayer && animator.layers[i].name != "Inventory Master" && animator.layers[i].name != "Inventory Remote")
+                if (!invLayer && animator.layers[i].stateMachine.name != "Inventory Master")
                 {
                     EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Cloning Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse(i.ToString()) / animator.layers.Length));
                     newAnimator.AddLayer(animator.layers[i].name);
@@ -198,7 +198,7 @@ public class AV3InventoriesManager : UnityEngine.Object
 
             //toggle, state, and one bool for each anim.
             AnimatorControllerParameter[] srcParam = newAnimator.parameters;
-            bool[] existing = new bool[toggleables.ToArray().Length + 3];
+            bool[] existing = new bool[toggleables.ToArray().Length + 2];
             for (int i = 0; i < srcParam.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f + (0.025f * (float.Parse(i.ToString()) / srcParam.Length)));
@@ -244,26 +244,11 @@ public class AV3InventoriesManager : UnityEngine.Object
                             return;
                         }
                     }
-                    else if (srcParam[i].name == "True")
-                    {
-                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
-                        {
-                            existing[existing.Length - 1] = true;
-                            srcParam[i].defaultBool = true;
-                            break;
-                        }
-                        else
-                        {
-                            Debug.LogError("parameter exists with wrong type");
-                            RevertChanges();
-                            return;
-                        }
-                    }
                     else if (srcParam[i].name == "IsLocal")
                     {
                         if (srcParam[i].type == AnimatorControllerParameterType.Bool)
                         {
-                            existing[existing.Length - 3] = true;
+                            existing[existing.Length - 1] = true;
                             break;
                         }
                         else
@@ -297,14 +282,6 @@ public class AV3InventoriesManager : UnityEngine.Object
                 {
                     if (!existing[i])
                     {
-                        newAnimator.AddParameter("True", AnimatorControllerParameterType.Bool);
-                        newAnimator.parameters[newAnimator.parameters.Length - 1].defaultBool = true;
-                    }
-                }
-                else if (i == existing.Length - 3)
-                {
-                    if (!existing[i])
-                    {
                         newAnimator.AddParameter("IsLocal", AnimatorControllerParameterType.Bool);
                     }
                 }
@@ -317,7 +294,6 @@ public class AV3InventoriesManager : UnityEngine.Object
                 3. Create layers
             */
 
-            CreateRemoteLayer(newAnimator, toggleables.ToArray().Length);
             if (!CreateMasterLayer(newAnimator, toggleables.ToArray().Length, out List<int[]> activeStates))
             {
                 Debug.LogError("Failed to locate data files.");
@@ -353,7 +329,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 5. Create Expressions menu for toggles.
             */
 
-            /*
+            
             switch (CreateMenus(out VRCExpressionsMenu inventory))
             {
                 case 1:
@@ -383,7 +359,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                     menu.controls.Add(new VRCExpressionsMenu.Control() { name = "Inventory", type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
                 }
             }
-            */
+            
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 1f);
 
             /*
@@ -477,14 +453,14 @@ public class AV3InventoriesManager : UnityEngine.Object
     private int CreateMenus(out VRCExpressionsMenu mainMenu)
     {
         mainMenu = null;
-        int totalMenus = (toggleables.ToArray().Length / 8) + 1;
+        int totalMenus = (toggleables.ToArray().Length % 8 == 0) ? toggleables.ToArray().Length / 8 : (toggleables.ToArray().Length / 8) + 1;
         VRCExpressionsMenu inventory = ScriptableObject.CreateInstance<VRCExpressionsMenu>();
         inventory.name = avatar.name + "_Inventory";
         if (totalMenus == 1)
         {
             for (int i = 0; i < toggleables.ToArray().Length; i++)
             {
-                inventory.controls.Add(new VRCExpressionsMenu.Control() { name = (aliases[i] != "") ? aliases[i] : "Slot " + (i + 1), type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory Toggle" }, value = i + 1 });
+                inventory.controls.Add(new VRCExpressionsMenu.Control() { name = aliases[i], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = i + 1 });
             }
             if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus"))
                 AssetDatabase.CreateFolder(outputPath, "Menus");
@@ -502,6 +478,9 @@ public class AV3InventoriesManager : UnityEngine.Object
                     }
                 }
                 backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
+                AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
             else
             {
@@ -510,7 +489,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             AssetDatabase.CreateAsset(inventory, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            if (AssetDatabase.FindAssets(avatar.name + "_Inventory", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
+            if (AssetDatabase.FindAssets(inventory.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
             {
                 return 3;
             }
@@ -526,7 +505,7 @@ public class AV3InventoriesManager : UnityEngine.Object
         else
         {
             List<VRCExpressionsMenu> pages = new List<VRCExpressionsMenu>();
-            for(int i = 0; i < totalMenus && i < 3; i++)
+            for(int i = 0; i < totalMenus; i++)
             {
                 pages.Add(ScriptableObject.CreateInstance<VRCExpressionsMenu>());
                 pages[pages.ToArray().Length - 1].name = "Page " + (i + 1);
@@ -534,7 +513,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             }
             for (int i = 0; i < toggleables.ToArray().Length; i++)
             {
-                pages[i / 8].controls.Add(new VRCExpressionsMenu.Control() { name = (aliases[i] != "") ? aliases[i] : "Slot " + (i + 1), type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory Toggle" }, value = i + 1 });
+                pages[i / 8].controls.Add(new VRCExpressionsMenu.Control() { name = aliases[i], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = i + 1 });
             }
             if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus"))
                 AssetDatabase.CreateFolder(outputPath, "Menus");
@@ -554,17 +533,18 @@ public class AV3InventoriesManager : UnityEngine.Object
                         }
                     }
                     backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset"));
+                    AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
                 }
                 else
                 {
                     exists = false;
-                }
-                AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
-                AssetDatabase.Refresh();
-                AssetDatabase.CreateAsset(inventory, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
+                }                
+                AssetDatabase.CreateAsset(page, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                if (AssetDatabase.FindAssets(avatar.name + "_" + page.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
+                if (AssetDatabase.FindAssets(page.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
                 {
                     return 3;
                 }
@@ -572,7 +552,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 {
                     AssetDatabase.Refresh();
                     if (!exists)
-                        generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset"));
+                        generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"));
                 }
             }
             bool existed = true;
@@ -589,6 +569,9 @@ public class AV3InventoriesManager : UnityEngine.Object
                     }
                 }
                 backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
+                AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
             else
             {
@@ -597,7 +580,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             AssetDatabase.CreateAsset(inventory, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            if (AssetDatabase.FindAssets(avatar.name + "_Inventory", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
+            if (AssetDatabase.FindAssets(inventory.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
             {
                 return 3;
             }
@@ -626,8 +609,11 @@ public class AV3InventoriesManager : UnityEngine.Object
                 motion = null,
             }
         };
+        Vector3 pos = templateMachine.anyStatePosition;
         ChangeState(templateState, "Off");
+        templateState.position = pos - new Vector3(150, -45);
         states[0] = templateState.DeepClone();
+        templateState.position = pos + new Vector3(100, 45);
         ChangeState(templateState, "On");
         states[1] = templateState.DeepClone();
         templateMachine.states = states;
@@ -646,7 +632,7 @@ public class AV3InventoriesManager : UnityEngine.Object
         {
             EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Item Layers: {0} ({1:#0.##%})", aliases[i], (i + 1f) / toggleables.ToArray().Length), 0.55f + (0.35f * (float.Parse(i.ToString()) / toggleables.ToArray().Length)));
             int[] active = activeStates[i];
-            source.AddLayer("Inventory " + (i + 1));
+            source.AddLayer(aliases[i]);
             AnimatorControllerLayer[] layers = source.layers;
             AnimatorControllerLayer currentLayer = layers[layers.Length - 1];
             currentLayer.defaultWeight = 1;
@@ -659,7 +645,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             transitions[1] = (AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]);
             templateMachine.anyStateTransitions = transitions;
 
-            templateMachine.name = currentLayer.stateMachine.name;
+            templateMachine.name = "Inventory " + (i + 1);
             currentLayer.stateMachine = templateMachine.DeepClone();
             layers[layers.Length - 1] = currentLayer;
             source.layers = layers;
@@ -667,67 +653,9 @@ public class AV3InventoriesManager : UnityEngine.Object
         return;
     }
 
-    //Do object cache
-    private void CreateRemoteLayer(AnimatorController source, int itemTotal)
-    {
-        EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Remote Layer", 0.1f);
-        for (int i = 0; i < source.layers.Length; i++)
-        {
-            if (source.layers[i].name == "Inventory Remote")
-            {
-                source.RemoveLayer(i);
-                break;
-            }
-        }
-        source.AddLayer("Inventory Remote");
-        AnimatorControllerLayer masterLayer = source.layers[source.layers.Length - 1];
-        AnimatorState waitState = masterLayer.stateMachine.AddState("Ready");
-        masterLayer.stateMachine.defaultState = waitState;
-        AnimatorState resetState = masterLayer.stateMachine.AddState("Reset");
-        AnimatorStateTransition exitTransition = resetState.AddExitTransition();
-        exitTransition.duration = 0;
-        exitTransition.hasExitTime = false;
-        exitTransition.AddCondition(AnimatorConditionMode.If, 0, "True");
-
-        for (int i = 0; i < itemTotal; i++)
-        {
-            EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Remote Layer", 0.1f + (0.1f * (float.Parse(i.ToString()) / itemTotal)));
-            AnimatorState stateOn = masterLayer.stateMachine.AddState((i + 1) + " On");
-            AnimatorStateTransition transitionOnIn= waitState.AddTransition(stateOn);
-            transitionOnIn.hasExitTime = false;
-            transitionOnIn.duration = 0;
-            transitionOnIn.AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory " + (i + 1));
-            transitionOnIn.AddCondition(AnimatorConditionMode.Equals, (i + 1), "Inventory");
-            AnimatorStateTransition transitionOnOut = stateOn.AddTransition(resetState);
-            transitionOnOut.hasExitTime = false;
-            transitionOnOut.duration = 0;
-            transitionOnOut.AddCondition(AnimatorConditionMode.If, 0, "Inventory " + (i + 1));          
-            VRCAvatarParameterDriver driverOn = stateOn.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-            driverOn.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter() { name = "Inventory " + (i + 1), value = 1 });
-
-            AnimatorState stateOff = masterLayer.stateMachine.AddState((i + 1) + " Off");
-            AnimatorStateTransition transitionOffIn = waitState.AddTransition(stateOff);
-            transitionOffIn.hasExitTime = false;
-            transitionOffIn.duration = 0;
-            transitionOffIn.AddCondition(AnimatorConditionMode.If, 0, "Inventory " + (i + 1));
-            transitionOffIn.AddCondition(AnimatorConditionMode.Equals, (i + 1), "Inventory");
-            AnimatorStateTransition transitionOffOut = stateOff.AddTransition(resetState);
-            transitionOffOut.hasExitTime = false;
-            transitionOffOut.duration = 0;
-            transitionOffOut.AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory " + (i + 1));
-            VRCAvatarParameterDriver driverOff = stateOff.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-            driverOff.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter() { name = "Inventory " + (i + 1), value = 0 });
-        }
-
-        AnimatorControllerLayer[] layers = source.layers;
-        layers[layers.Length - 1] = masterLayer;
-        source.layers = layers;
-        return;
-    }
-
     private bool CreateMasterLayer(AnimatorController source, int itemTotal, out List<int[]> activeStates)
     {
-        EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Master Layer: Preparing", 0.2f);
+        EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Master Layer: Preparing", 0.1f);
         for (int i = 0; i < source.layers.Length; i++)
         {
             //Remove layer if already present
@@ -750,10 +678,10 @@ public class AV3InventoriesManager : UnityEngine.Object
             value += 2;
         } 
 
-        ChildAnimatorState[] states = new ChildAnimatorState[masterLayer.stateMachine.states.Length + (itemTotal * 2) + 1];
-        masterLayer.stateMachine.states.CopyTo(states, itemTotal * 2 + 1);
+        ChildAnimatorState[] states = new ChildAnimatorState[masterLayer.stateMachine.states.Length + (itemTotal * 4) + 1];
+        masterLayer.stateMachine.states.CopyTo(states, itemTotal * 4 + 1);
         Vector3 pos = masterLayer.stateMachine.entryPosition;
-        states[itemTotal * 2] = new ChildAnimatorState
+        states[itemTotal * 4] = new ChildAnimatorState
         {
             position = pos + new Vector3(-25, 50),
             state = new AnimatorState
@@ -784,21 +712,21 @@ public class AV3InventoriesManager : UnityEngine.Object
             conditions = null
         };
 
-        ChangeState(templateState, "Syncing " + 1 + ": On", activeStates[0], true);
+        ChangeState(templateState, "Syncing " + 1, activeStates[0], true);
         templateState.position = pos - new Vector3(150, 0);
         states[0] = templateState.DeepClone();
-        ChangeState(templateState, "Syncing " + 1 + ": Off", activeStates[0], false);
+        ChangeState(templateState, "Syncing " + 1 + " ", activeStates[0], false);
         templateState.position = pos + new Vector3(100, 0);
         states[1] = templateState.DeepClone();
         pos += new Vector3(0, 75);
         int index = 2;
         for (int i = 2; i < itemTotal * 2; i++)
         {
-            EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Master Layer: Creating States ({0:#0.##%})", (i + 1f) / (itemTotal * 2)), 0.2f + (0.35f * ((i + 1f) / (itemTotal * 2))));
+            EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Master Layer: Creating States ({0:#0.##%})", (i + 1f) / (itemTotal * 4)), 0.1f + (0.225f * ((i + 1f) / (itemTotal * 4))));
             switch (i % 2 == 0)
             {
                 case true:
-                    ChangeState(templateState, "Syncing " + index + ": On", activeStates[index - 1], true);
+                    ChangeState(templateState, "Syncing " + index, activeStates[index - 1], true);
                     templateState.position = pos - new Vector3(150, 0);
                     states[i] = templateState.DeepClone();
                     ChangeTransition(templateTransition, states[i], index, true);
@@ -807,7 +735,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                     states[i - 1].state.AddTransition((AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[i]));
                     break;
                 case false:
-                    ChangeState(templateState, "Syncing " + index + ": Off", activeStates[index - 1], false);
+                    ChangeState(templateState, "Syncing " + index + " ", activeStates[index - 1], false);
                     templateState.position = pos + new Vector3(100, 0);
                     states[i] = templateState.DeepClone();
                     ChangeTransition(templateTransition, states[i], index, false);
@@ -821,22 +749,80 @@ public class AV3InventoriesManager : UnityEngine.Object
         }
         //Final Transitions
         states[(itemTotal * 2) - 1].state.AddExitTransition();
-        states[(itemTotal * 2) - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "True");
+        states[(itemTotal * 2) - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
         states[(itemTotal * 2) - 1].state.transitions[0].hasExitTime = true;
         states[(itemTotal * 2) - 1].state.transitions[0].exitTime = 0.05f;
         states[(itemTotal * 2) - 1].state.transitions[0].duration = 0;
         states[(itemTotal * 2) - 2].state.AddExitTransition();
-        states[(itemTotal * 2) - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "True");
+        states[(itemTotal * 2) - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
         states[(itemTotal * 2) - 2].state.transitions[0].hasExitTime = true;
         states[(itemTotal * 2) - 2].state.transitions[0].exitTime = 0.05f;
         states[(itemTotal * 2) - 2].state.transitions[0].duration = 0;
-        states[itemTotal * 2].state.AddExitTransition();
-        states[itemTotal * 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-        states[itemTotal * 2].state.transitions[0].hasExitTime = false;
-        states[itemTotal * 2].state.transitions[0].duration = 0;
+        states[itemTotal * 4].state.AddExitTransition();
+        states[itemTotal * 4].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+        states[itemTotal * 4].state.transitions[0].hasExitTime = false;
+        states[itemTotal * 4].state.transitions[0].duration = 0;
         masterLayer.stateMachine.exitPosition = pos;
+
+        ChildAnimatorState templateToggle = new ChildAnimatorState
+        {
+            state = new AnimatorState { behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<VRCAvatarParameterDriver>() } }
+        };
+        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+        AnimatorStateTransition toggleTransition = new AnimatorStateTransition
+        {
+            isExit = true,
+            exitTime = 1f,
+            hasExitTime = true,
+            duration = 0f,
+            canTransitionToSelf = false
+        };
+
+        templateTransition.hasExitTime = false;
+        index = itemTotal * 2;
+        pos += new Vector3(0, 60);
+
+        AnimatorStateTransition[] anyTransitions = new AnimatorStateTransition[itemTotal * 2];
+
+        for (int i = itemTotal - 1; i >= 0; i--)
+        {
+            EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Master Layer: Creating States ({0:#0.##%})", index / (itemTotal * 4)), 0.1f + (0.225f * (index / (itemTotal * 4f))));
+            templateToggle.state.name = ("Toggling " + (i + 1) + ": On");
+            templateToggle.position = pos - new Vector3(150, 0);
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i][1];
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 1 });
+            states[index] = templateToggle.DeepClone();
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(1);
+            states[index].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
+            templateTransition.destinationState = states[index].state;
+            templateTransition.conditions = new AnimatorCondition[0];
+            templateTransition.AddCondition(AnimatorConditionMode.Equals, i + 1, "Inventory");
+            templateTransition.AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory " + (i + 1));
+            templateTransition.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+            anyTransitions[index - (itemTotal * 2)] = (AnimatorStateTransition)templateTransition.DeepClone(states[index]);
+            index++;
+
+            templateToggle.state.name = ("Toggling " + (i + 1) + ": Off");
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i][0];
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 0 });
+            templateToggle.position = pos + new Vector3(100, 0);
+            states[index] = templateToggle.DeepClone();
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(1);
+            states[index].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
+            templateTransition.destinationState = states[index].state;
+            templateTransition.conditions = new AnimatorCondition[0];
+            templateTransition.AddCondition(AnimatorConditionMode.Equals, i + 1, "Inventory");
+            templateTransition.AddCondition(AnimatorConditionMode.If, 0, "Inventory " + (i + 1));
+            templateTransition.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+            anyTransitions[index - (itemTotal * 2)] = (AnimatorStateTransition)templateTransition.DeepClone(states[index]);
+            index++;
+
+            pos += new Vector3(0, 75);
+        }
+        masterLayer.stateMachine.anyStatePosition = pos;
         masterLayer.stateMachine.states = states;
-        masterLayer.stateMachine.defaultState = states[itemTotal * 2].state;
+        masterLayer.stateMachine.anyStateTransitions = anyTransitions;
+        masterLayer.stateMachine.defaultState = states[itemTotal * 4].state;
         //Start Transitions
         masterLayer.stateMachine.AddEntryTransition(states[0].state);
         masterLayer.stateMachine.AddEntryTransition(states[1].state);
@@ -934,7 +920,7 @@ public class AV3InventoriesManager : UnityEngine.Object
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         for (int i = 0; generated != null && i < generated.ToArray().Length; i++)
-            if (!AssetDatabase.DeleteAsset(generated[i].path))
+            if (File.Exists(generated[i].path) && !AssetDatabase.DeleteAsset(generated[i].path))
                 Debug.LogError("[Inventory Inventor] Failed to revert all changes.");
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();

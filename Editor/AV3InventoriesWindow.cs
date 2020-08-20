@@ -24,10 +24,10 @@ public class AV3InventoriesWindow : EditorWindow
         window.wantsMouseMove = true;
         window.Show();
     }
-    [MenuItem("Window/AV3 Tools/Inventory Inventor/Test")]
-    public static void Test()
+    [MenuItem("Window/AV3 Tools/Inventory Inventor/Check For Updates")]
+    public static void CheckForUpdates()
     {
-        Debug.Log(sizeof(ulong));
+        AV3InventoriesManager.CheckForUpdates();
     }
 
     private void OnFocus()
@@ -100,7 +100,7 @@ public class AV3InventoriesWindow : EditorWindow
         EditorGUILayout.LabelField(new GUIContent("<b>Animation</b>", "Animation to be toggled by the menu."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { background = null }, richText = true }, GUILayout.Width(355f / 2));
         EditorGUILayout.EndHorizontal();
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        int pageTotal = (manager.toggleables.ToArray().Length / 6) + 1;
+        int pageTotal = (manager.toggleables.ToArray().Length / 8) + 1;
         while (pages.ToArray().Length > pageTotal)
         {
             pages.RemoveAt(pages.ToArray().Length - 1);
@@ -112,7 +112,7 @@ public class AV3InventoriesWindow : EditorWindow
         int count = 0;
         for (int i = 0; i < manager.toggleables.ToArray().Length; i++)
         {
-            if (i % 6 == 0 && manager.toggleables.ToArray().Length > 6)
+            if (i % 8 == 0 && manager.toggleables.ToArray().Length > 8)
             {
                 count++;
                 EditorGUILayout.BeginHorizontal();
@@ -130,7 +130,7 @@ public class AV3InventoriesWindow : EditorWindow
         EditorGUILayout.EndScrollView();
         GUILayout.FlexibleSpace();
         EditorGUILayout.BeginHorizontal();
-        if (manager.toggleables.ToArray().Length < 12)
+        if (manager.toggleables.ToArray().Length < 24)
         {
             if (manager.toggleables.ToArray().Length == 1)
             {
@@ -152,7 +152,7 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.FlexibleSpace();
         if (manager.toggleables.ToArray().Length > 1)
         {
-            if (manager.toggleables.ToArray().Length == 12)
+            if (manager.toggleables.ToArray().Length == 24)
             {
                 if (GUILayout.Button("Remove", GUILayout.Width(355f)))
                 {
