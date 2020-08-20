@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.VersionControl;
@@ -28,8 +27,6 @@ public class AV3InventoriesManager : UnityEngine.Object
 
     private Backup backupManager;
     private AssetList generated;
-
-    public object transitions { get; private set; }
 
     public AV3InventoriesManager() { }
 
@@ -201,7 +198,7 @@ public class AV3InventoriesManager : UnityEngine.Object
 
             //toggle, state, and one bool for each anim.
             AnimatorControllerParameter[] srcParam = newAnimator.parameters;
-            bool[] existing = new bool[toggleables.ToArray().Length + 2];
+            bool[] existing = new bool[toggleables.ToArray().Length + 3];
             for (int i = 0; i < srcParam.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f + (0.025f * (float.Parse(i.ToString()) / srcParam.Length)));
@@ -262,6 +259,20 @@ public class AV3InventoriesManager : UnityEngine.Object
                             return;
                         }
                     }
+                    else if (srcParam[i].name == "IsLocal")
+                    {
+                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
+                        {
+                            existing[existing.Length - 3] = true;
+                            break;
+                        }
+                        else
+                        {
+                            Debug.LogError("parameter exists with wrong type");
+                            RevertChanges();
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -288,6 +299,13 @@ public class AV3InventoriesManager : UnityEngine.Object
                     {
                         newAnimator.AddParameter("True", AnimatorControllerParameterType.Bool);
                         newAnimator.parameters[newAnimator.parameters.Length - 1].defaultBool = true;
+                    }
+                }
+                else if (i == existing.Length - 3)
+                {
+                    if (!existing[i])
+                    {
+                        newAnimator.AddParameter("IsLocal", AnimatorControllerParameterType.Bool);
                     }
                 }
             }
@@ -666,8 +684,6 @@ public class AV3InventoriesManager : UnityEngine.Object
         AnimatorState waitState = masterLayer.stateMachine.AddState("Ready");
         masterLayer.stateMachine.defaultState = waitState;
         AnimatorState resetState = masterLayer.stateMachine.AddState("Reset");
-        VRCAvatarParameterDriver resetDriver = resetState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-        resetDriver.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter() { name = "Inventory", value = 0 });
         AnimatorStateTransition exitTransition = resetState.AddExitTransition();
         exitTransition.duration = 0;
         exitTransition.hasExitTime = false;
@@ -742,7 +758,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             position = pos + new Vector3(-25, 50),
             state = new AnimatorState
             {
-                name = "Start",
+                name = "Remote Clients",
             }
         };
 
@@ -761,7 +777,8 @@ public class AV3InventoriesManager : UnityEngine.Object
         {
             destinationState = null,
             isExit = false,
-            hasExitTime = false,
+            hasExitTime = true,
+            exitTime = 0.05f,
             duration = 0,
             canTransitionToSelf = false,
             conditions = null
@@ -802,23 +819,31 @@ public class AV3InventoriesManager : UnityEngine.Object
                     break;
             }
         }
-        //Start Transitions
-        AnimatorStateTransition[] firstTransitions = new AnimatorStateTransition[2];
-        ChangeTransition(templateTransition, states[0], 1, true);
-        firstTransitions[0] = (AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[0]);
-        ChangeTransition(templateTransition, states[1], 1, false);
-        firstTransitions[1] = (AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[1]);
-        states[itemTotal * 2].state.transitions = firstTransitions;
         //Final Transitions
         states[(itemTotal * 2) - 1].state.AddExitTransition();
         states[(itemTotal * 2) - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "True");
+        states[(itemTotal * 2) - 1].state.transitions[0].hasExitTime = true;
+        states[(itemTotal * 2) - 1].state.transitions[0].exitTime = 0.05f;
         states[(itemTotal * 2) - 1].state.transitions[0].duration = 0;
         states[(itemTotal * 2) - 2].state.AddExitTransition();
         states[(itemTotal * 2) - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "True");
+        states[(itemTotal * 2) - 2].state.transitions[0].hasExitTime = true;
+        states[(itemTotal * 2) - 2].state.transitions[0].exitTime = 0.05f;
         states[(itemTotal * 2) - 2].state.transitions[0].duration = 0;
+        states[itemTotal * 2].state.AddExitTransition();
+        states[itemTotal * 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+        states[itemTotal * 2].state.transitions[0].hasExitTime = false;
+        states[itemTotal * 2].state.transitions[0].duration = 0;
         masterLayer.stateMachine.exitPosition = pos;
         masterLayer.stateMachine.states = states;
         masterLayer.stateMachine.defaultState = states[itemTotal * 2].state;
+        //Start Transitions
+        masterLayer.stateMachine.AddEntryTransition(states[0].state);
+        masterLayer.stateMachine.AddEntryTransition(states[1].state);
+        AnimatorTransition[] entryTransitions = masterLayer.stateMachine.entryTransitions;
+        entryTransitions[0].AddCondition(AnimatorConditionMode.If, 0, "Inventory 1");
+        entryTransitions[1].AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory 1");
+        masterLayer.stateMachine.entryTransitions = entryTransitions;
         AnimatorControllerLayer[] layers = source.layers;
         layers[layers.Length - 1] = masterLayer;
         source.layers = layers;
