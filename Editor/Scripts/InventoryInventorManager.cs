@@ -13,23 +13,29 @@ using UnityEngine.Networking;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
-public class AV3InventoriesManager : UnityEngine.Object
+public class InventoryInventorManager : UnityEngine.Object
 {
+    //Objects to modify
     public VRCAvatarDescriptor avatar;
     public VRCExpressionsMenu menu;
 
-    public List<AnimationClip> toggleables = new List<AnimationClip>() { null };
-    public List<string> aliases = new List<string>() { "Slot 1" };
-
-    public string relativePath;
-    public string outputPath;
-    public bool autoOverwrite = false;
+    //Input objects
+    public AnimationClip[] toggleables = new AnimationClip[0];
+    public string[] aliases = new string[0];
+    public int[] pageLength = new int[0];
+    public string[] pageNames = new string[0];
     public float refreshRate = 0.05f;
 
+    //Path related
+    public string relativePath;
+    public string outputPath;
+    public bool autoOverwrite = false;    
+
+    //File backup
     private Backup backupManager;
     private AssetList generated;
 
-    public AV3InventoriesManager() { }
+    public InventoryInventorManager() { }
 
     public void CreateInventory()
     {
@@ -45,22 +51,17 @@ public class AV3InventoriesManager : UnityEngine.Object
 
             if (avatar == null)
             {
-                Debug.LogError("no avatar");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No Avatar selected.", "Close");
                 return;
             }
             else if (avatar.baseAnimationLayers.Length != 5)
             {
-                Debug.LogError("avatar is not humanoid");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar is not humanoid.\n(Non-Humanoid avatars are not supported yet)", "Close");
                 return;
             }
             else if (avatar.expressionParameters == null)
             {
-                Debug.LogError("no parameters");
-                return;
-            }
-            else if (menu == null && avatar.expressionsMenu == null)
-            {
-                Debug.LogError("no menu");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar does not have an Expression Parameters object assigned in the descriptor.", "Close");
                 return;
             }
   
@@ -81,7 +82,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                         }
                         else
                         {
-                            Debug.LogError("expression parameter exists with wrong type");
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Expression Parameter \"" + param.name + "\" is present with the wrong type.", "Close");
                             return;
                         }
                         break;
@@ -94,7 +95,7 @@ public class AV3InventoriesManager : UnityEngine.Object
 
             if (16 - paramCount < 1 - present)
             {
-                Debug.LogError("too many parameters");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No unused Expression Parameters found.", "Close");
                 return;
             }
 
@@ -138,7 +139,7 @@ public class AV3InventoriesManager : UnityEngine.Object
 
                 if (animator == null)
                 {
-                    Debug.LogError("failed to find template");
+                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to copy template Animator from VRCSDK.", "Close");
                     RevertChanges();
                     return;
                 }
@@ -199,7 +200,7 @@ public class AV3InventoriesManager : UnityEngine.Object
 
             //toggle, state, and one bool for each anim.
             AnimatorControllerParameter[] srcParam = newAnimator.parameters;
-            bool[] existing = new bool[toggleables.ToArray().Length + 2];
+            bool[] existing = new bool[toggleables.Length + 2];
             for (int i = 0; i < srcParam.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f + (0.025f * (float.Parse(i.ToString()) / srcParam.Length)));
@@ -215,7 +216,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 {
                     break;
                 }
-                for (int j = 0; j < toggleables.ToArray().Length; j++)
+                for (int j = 0; j < toggleables.Length; j++)
                 {
                     if (srcParam[i].name == "Inventory " + (j + 1))
                     {
@@ -226,7 +227,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                         }
                         else
                         {
-                            Debug.LogError("parameter exists with wrong type");
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
                             RevertChanges();
                             return;
                         }
@@ -240,8 +241,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                         }
                         else
                         {
-                            Debug.LogError("parameter exists with wrong type");
-                            RevertChanges();
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
                             return;
                         }
                     }
@@ -254,7 +254,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                         }
                         else
                         {
-                            Debug.LogError("parameter exists with wrong type");
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
                             RevertChanges();
                             return;
                         }
@@ -295,12 +295,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 3. Create layers
             */
 
-            if (!CreateMasterLayer(newAnimator, toggleables.ToArray().Length, out List<int[]> activeStates))
-            {
-                Debug.LogError("Failed to locate data files.");
-                RevertChanges();
-                return;
-            }
+            CreateMasterLayer(newAnimator, toggleables.Length, out List<int[]> activeStates);
             CreateItemLayers(newAnimator, ref activeStates);
 
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Saving Controller", 0.9f);
@@ -455,12 +450,11 @@ public class AV3InventoriesManager : UnityEngine.Object
     private int CreateMenus(out VRCExpressionsMenu mainMenu)
     {
         mainMenu = null;
-        int totalMenus = (toggleables.ToArray().Length % 8 == 0) ? toggleables.ToArray().Length / 8 : (toggleables.ToArray().Length / 8) + 1;
         VRCExpressionsMenu inventory = ScriptableObject.CreateInstance<VRCExpressionsMenu>();
         inventory.name = avatar.name + "_Inventory";
-        if (totalMenus == 1)
+        if (pageLength.Length == 1)
         {
-            for (int i = 0; i < toggleables.ToArray().Length; i++)
+            for (int i = 0; i < toggleables.Length; i++)
             {
                 inventory.controls.Add(new VRCExpressionsMenu.Control() { name = aliases[i], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = i + 1 });
             }
@@ -507,16 +501,18 @@ public class AV3InventoriesManager : UnityEngine.Object
         else
         {
             List<VRCExpressionsMenu> pages = new List<VRCExpressionsMenu>();
-            for(int i = 0; i < totalMenus; i++)
+            int index = 0;
+            for (int i = 0; i < pageLength.Length; i++)
             {
                 pages.Add(ScriptableObject.CreateInstance<VRCExpressionsMenu>());
-                pages[pages.ToArray().Length - 1].name = "Page " + (i + 1);
-                inventory.controls.Add(new VRCExpressionsMenu.Control() { name = pages[pages.ToArray().Length - 1].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[pages.ToArray().Length - 1] });
-            }
-            for (int i = 0; i < toggleables.ToArray().Length; i++)
-            {
-                pages[i / 8].controls.Add(new VRCExpressionsMenu.Control() { name = aliases[i], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = i + 1 });
-            }
+                pages[i].name = pageNames[i];
+                inventory.controls.Add(new VRCExpressionsMenu.Control() { name = pages[i].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[i] });
+                for (int j = 0; j < pageLength[i]; j++)
+                {
+                    pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = aliases[index], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
+                    index++;
+                }
+            }           
             if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus"))
                 AssetDatabase.CreateFolder(outputPath, "Menus");
             foreach (VRCExpressionsMenu page in pages)
@@ -542,7 +538,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 else
                 {
                     exists = false;
-                }                
+                }
                 AssetDatabase.CreateAsset(page, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -630,9 +626,9 @@ public class AV3InventoriesManager : UnityEngine.Object
             conditions = null
         };
 
-        for (int i = 0; i < toggleables.ToArray().Length; i++)
+        for (int i = 0; i < toggleables.Length; i++)
         {
-            EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Item Layers: {0} ({1:#0.##%})", aliases[i], (i + 1f) / toggleables.ToArray().Length), 0.55f + (0.35f * (float.Parse(i.ToString()) / toggleables.ToArray().Length)));
+            EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Item Layers: {0} ({1:#0.##%})", aliases[i], (i + 1f) / toggleables.Length), 0.55f + (0.35f * (float.Parse(i.ToString()) / toggleables.Length)));
             int[] active = activeStates[i];
             source.AddLayer(aliases[i]);
             AnimatorControllerLayer[] layers = source.layers;
@@ -655,7 +651,7 @@ public class AV3InventoriesManager : UnityEngine.Object
         return;
     }
 
-    private bool CreateMasterLayer(AnimatorController source, int itemTotal, out List<int[]> activeStates)
+    private void CreateMasterLayer(AnimatorController source, int itemTotal, out List<int[]> activeStates)
     {
         EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Master Layer: Preparing", 0.1f);
         for (int i = 0; i < source.layers.Length; i++)
@@ -835,7 +831,7 @@ public class AV3InventoriesManager : UnityEngine.Object
         AnimatorControllerLayer[] layers = source.layers;
         layers[layers.Length - 1] = masterLayer;
         source.layers = layers;
-        return true;
+        return;
     }
 
     public static void ChangeTransition(AnimatorStateTransition transition, ref int value, AnimatorState state)
@@ -843,21 +839,6 @@ public class AV3InventoriesManager : UnityEngine.Object
         transition.destinationState = state;
         transition.conditions = new AnimatorCondition[0];
         transition.AddCondition(AnimatorConditionMode.Equals, value, "Inventory");
-    }
-
-    public static void ChangeTransition(AnimatorStateTransition transition, ref double value, ChildAnimatorState childState, bool first = true)
-    {
-        transition.destinationState = childState.state;
-        transition.conditions = new AnimatorCondition[0];
-        switch (first)
-        {
-            case true:
-                transition.AddCondition(AnimatorConditionMode.Less, float.Parse(value.ToString()) - 0.0000002f, "Inventory State");
-                break;
-            case false:
-                transition.AddCondition(AnimatorConditionMode.Greater, float.Parse(value.ToString()) + 0.0000002f, "Inventory State");
-                break;
-        }                      
     }
 
     public static void ChangeTransition(AnimatorStateTransition transition, ChildAnimatorState childState, int name, bool value)

@@ -2,54 +2,163 @@
 using System;
 using System.IO;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
-public class AV3InventoriesWindow : EditorWindow
+public class InventoryInventor : EditorWindow
 {
-    private readonly AV3InventoriesManager manager = new AV3InventoriesManager();
+    //Model Object
+    private readonly InventoryInventorManager manager = new InventoryInventorManager();
 
+    //Window Size
+    private Rect windowSize = new Rect(0, 0, 375f, 800f);
+
+    //Various Trackers
     private int windowTab;
     private bool focused;
-    private readonly List<bool> pages = new List<bool>();
+    private ReorderableList itemList;
+    private readonly List<Page> pages = new List<Page>();
     private int currentPage = 0;
+
+    //Class used for representing an Inventory Page
+    //string name           = name of the page
+    //List<ListItem> items  = list of items held in the page
+    private class Page
+    {
+        public string name;
+        public readonly List<ListItem> items;
+
+        //Constructor
+        public Page(string name, ref ReorderableList itemList)
+        {
+            this.name = name;
+            items = new List<ListItem>() { new ListItem("Slot 1") };
+            itemList.list = items;
+        }
+
+        //Returns array of item names
+        public string[] GetNames()
+        {
+            List<string> names = new List<string>();
+            foreach (ListItem item in items)
+            {
+                names.Add(item.name);
+            }
+            return names.ToArray();
+        }
+
+        //Returns array of item clips
+        public AnimationClip[] GetClips()
+        {
+            List<AnimationClip> clips = new List<AnimationClip>();
+            foreach (ListItem item in items)
+            {
+                clips.Add(item.clip);
+            }
+            return clips.ToArray();
+        }
+    }
+
+    //Class used for storing page items
+    //string name   = name of the item
+    //AnimationClip = animation to be toggled
+    [Serializable]
+    private class ListItem
+    {
+        public string name;
+        public AnimationClip clip;
+
+        //Default Constructor
+        public ListItem()
+        {
+            name = "Slot 1";
+            clip = null;
+        }
+
+        //Additional Constructor
+        public ListItem(string name)
+        {
+            this.name = name;
+            clip = null;
+        }
+    }
 
     [MenuItem("Window/AV3 Tools/Inventory Inventor/Manage Inventory")]
     public static void ManageInventory()
     {
-        AV3InventoriesWindow window = (AV3InventoriesWindow)GetWindow(typeof(AV3InventoriesWindow), false, "Inventory Inventor");
-        window.minSize = new Vector2(375f, 525f);
+        InventoryInventor window = (InventoryInventor)GetWindow(typeof(InventoryInventor), false, "Inventory Inventor");
+        window.minSize = new Vector2(375f, 545f);
         window.wantsMouseMove = true;
         window.Show();
     }
     [MenuItem("Window/AV3 Tools/Inventory Inventor/Check For Updates")]
     public static void CheckForUpdates()
     {
-        AV3InventoriesManager.CheckForUpdates();
+        InventoryInventorManager.CheckForUpdates();
     }
 
+    //Remove listeners when window is closed to prevent memory leaks
+    private void OnDestroy()
+    {
+        if (itemList != null)
+        {
+            itemList.drawHeaderCallback -= DrawHeader;
+            itemList.drawElementCallback -= DrawElement;
+            itemList.onAddCallback -= AddItem;
+            itemList.onRemoveCallback -= RemoveItem;
+        }       
+    }
+
+    //Relocate file directory path
     private void OnFocus()
     {
         manager.UpdatePaths();
     }
 
+    //Assign listeners to itemList
+    private void AssignListeners()
+    {
+        itemList.drawHeaderCallback += DrawHeader;
+        itemList.drawElementCallback += DrawElement;
+        itemList.onAddCallback += AddItem;
+        itemList.onRemoveCallback += RemoveItem;
+    }
+
+    //Draw GUI
     private void OnGUI()
     {
+        //Make sure itemList isn't null and has listeners assigned
+        if (itemList == null)
+        {
+            itemList = new ReorderableList(null, typeof(ListItem), true, true, true, true);
+            AssignListeners();
+        }
+
+        //Define main window area
         GUILayout.BeginVertical();
-        GUILayout.BeginArea(new Rect((position.width / 2f) - (375f / 2f), 5f, 375f, 800f));
+        windowSize.x = (position.width / 2f) - (375f / 2f);
+        windowSize.y = 5f;
+        GUILayout.BeginArea(windowSize);
+
+        //Create toolbar
         windowTab = GUILayout.Toolbar(windowTab, new string[] { "Create", "About" });
         DrawLine(false);
+
+        //Respond to current toolbar selection
         switch (windowTab)
         {
             case 0:
                 if (EditorApplication.isPlaying)
                 {
+                    //Stop usage within play mode
                     EditorGUILayout.Space();
                     EditorGUILayout.HelpBox("Inventories can only be created outside of Play Mode.", MessageType.Info);
                 }
                 else
                 {
+                    //Draw setup window
                     GUILayout.BeginVertical();
                     DrawSetupWindow();
                     GUILayout.EndVertical();
@@ -60,6 +169,7 @@ public class AV3InventoriesWindow : EditorWindow
                 }
                 break;
             case 1:
+                //Draw about window
                 GUILayout.BeginVertical();
                 DrawAboutWindow();
                 GUILayout.EndVertical();
@@ -69,13 +179,21 @@ public class AV3InventoriesWindow : EditorWindow
                 GUILayout.EndVertical();
                 break;
         }
+        if (GUI.Button(windowSize, "", GUIStyle.none))
+        {
+            //Unfocus item in window when empty space is clicked
+            GUI.FocusControl(null);
+            itemList.index = 8;
+        }
     }
 
+    //Draws the setup GUI
     private void DrawSetupWindow()
     {
         EditorGUILayout.BeginVertical();
+        
+        //Check for avatars in the scene
         GUILayout.BeginVertical(GUILayout.Height(54f));
-        EditorGUI.BeginChangeCheck();
         GUILayout.FlexibleSpace();
         SelectAvatarDescriptor();
         if (manager.avatar == null)
@@ -85,104 +203,121 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.FlexibleSpace();
         GUILayout.EndVertical();
         DrawLine();
+
+        //List optional settings
         GUILayout.Label("Optional Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "(Optional) The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
+        manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each toggle is given to syncronize with late joiners (in seconds)."), manager.refreshRate);
         GUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
+
+        //List Inventory Settings
         GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
+        //Make sure at least one page exists
+        if (pages.ToArray().Length == 0)
+        {
+            pages.Add(new Page("Page 1", ref itemList));
+        }
         string[] pageNames = new string[pages.ToArray().Length];
-        for(int i = 0; i < pageNames.Length; i++)
+        for(int i = 0; i < pages.ToArray().Length; i++)
         {
-            pageNames[i] = "Page " + (i + 1);
+            pageNames[i] = (i + 1).ToString();
         }     
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.MaxHeight(215f));
-        currentPage = EditorGUILayout.Popup(currentPage, pageNames);
+        //Draw page renamer
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(new GUIContent("<b>Menu Name</b>", "Name used for the Expressions Menu."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { background = null }, richText = true }, GUILayout.Width(355f / 2));
-        GUILayout.FlexibleSpace();
-        EditorGUILayout.LabelField(new GUIContent("<b>Animation</b>", "Animation to be toggled by the menu."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { background = null }, richText = true }, GUILayout.Width(355f / 2));
-        EditorGUILayout.EndHorizontal();
-        int pageTotal = (manager.toggleables.ToArray().Length % 8 == 0) ? manager.toggleables.ToArray().Length / 8 : (manager.toggleables.ToArray().Length / 8) + 1;
-        while (pages.ToArray().Length > pageTotal)
+        GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
+        if (currentPage >= pages.ToArray().Length)
         {
-            pages.RemoveAt(pages.ToArray().Length - 1);
             currentPage = pages.ToArray().Length - 1;
         }
-        while (pages.ToArray().Length < pageTotal)
+        else if (currentPage < 0)
         {
-            pages.Add(true);
-            currentPage = pages.ToArray().Length - 1;
+            currentPage = 0;
         }
-        for (int i = 8 * currentPage; i < (8 * currentPage) + 8; i++)
+        pages[currentPage].name = EditorGUILayout.TextField(pages[currentPage].name);
+        //Draw page navigator
+        if (GUILayout.Button('\u25C0'.ToString()))
         {
-            if (i < manager.toggleables.ToArray().Length)
+            if (currentPage != 0)
             {
-                EditorGUILayout.BeginHorizontal();
-                manager.aliases[i] = EditorGUILayout.TextField(manager.aliases[i]);
-                manager.toggleables[i] = (AnimationClip)EditorGUILayout.ObjectField(manager.toggleables[i], typeof(AnimationClip), false);
-                EditorGUILayout.EndHorizontal();
+                currentPage--;
+                itemList.list = pages[currentPage].items;
             }
-            else
-                break;
         }
-        GUILayout.FlexibleSpace();
+        EditorGUI.BeginChangeCheck();
+        currentPage = EditorGUILayout.Popup(currentPage, pageNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
+        if (EditorGUI.EndChangeCheck())
+        {
+            itemList.list = pages[currentPage].items;
+        }
+        if (GUILayout.Button('\u25B6'.ToString()))
+        {
+            if (currentPage != pages.ToArray().Length - 1)
+            {              
+                currentPage++;
+                itemList.list = pages[currentPage].items;
+            }
+        }       
+        EditorGUILayout.EndHorizontal();      
+        //Draw page creator/remover
         EditorGUILayout.BeginHorizontal();
-        if (manager.toggleables.ToArray().Length < 64)
+        if (pages.ToArray().Length < 8)
         {
-            if (manager.toggleables.ToArray().Length == 1)
+            if (pages.ToArray().Length == 1)
             {
-                if (GUILayout.Button("Add", GUILayout.Width(355f)))
+                if (GUILayout.Button("Add Page", GUILayout.Width(356f)))
                 {
-                    manager.toggleables.Add(null);
-                    manager.aliases.Add("Slot " + manager.toggleables.ToArray().Length);
-                }
+                    pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
+                    currentPage = pages.ToArray().Length - 1;
+                    itemList.list = pages[currentPage].items;
+                }               
             }
-            else
-            {
-                if (GUILayout.Button("Add", GUILayout.Width(355f / 2)))
-                {
-                    manager.toggleables.Add(null);
-                    manager.aliases.Add("Slot " + manager.toggleables.ToArray().Length);
-                }
+            else if (GUILayout.Button("Add Page", GUILayout.Width(356f / 2)))
+            {              
+                pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
+                currentPage = pages.ToArray().Length - 1;
+                itemList.list = pages[currentPage].items;
             }
         }
-        GUILayout.FlexibleSpace();
-        if (manager.toggleables.ToArray().Length > 1)
+        if (pages.ToArray().Length > 1)
         {
-            if (manager.toggleables.ToArray().Length == 64)
+            if (pages.ToArray().Length == 8)
             {
-                if (GUILayout.Button("Remove", GUILayout.Width(355f)))
+                if (GUILayout.Button("Remove Page", GUILayout.Width(356f)))
                 {
-                    if (manager.toggleables.ToArray().Length > 1)
-                    {
-                        manager.toggleables.Remove(manager.toggleables[manager.toggleables.ToArray().Length - 1]);
-                        manager.aliases.Remove(manager.aliases[manager.aliases.ToArray().Length - 1]);
-                    }
+                    pages.RemoveAt(currentPage);
+                    currentPage--;
+                    itemList.list = pages[currentPage].items;
                 }
             }
-            else
+            else if (GUILayout.Button("Remove Page", GUILayout.Width(356f / 2)))
             {
-                if (GUILayout.Button("Remove", GUILayout.Width(355f / 2)))
-                {
-                    if (manager.toggleables.ToArray().Length > 1)
-                    {
-                        manager.toggleables.Remove(manager.toggleables[manager.toggleables.ToArray().Length - 1]);
-                        manager.aliases.Remove(manager.aliases[manager.aliases.ToArray().Length - 1]);
-                    }
-                }
+                pages.RemoveAt(currentPage);
+                currentPage--;
+                itemList.list = pages[currentPage].items;
             }
-        }        
+        }
         EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndVertical();
+        DrawLine();
+        //Draw currently selected page contents
+        EditorGUILayout.BeginVertical(GUILayout.Height(210f));
+        if (itemList != null)
+            itemList.DoLayoutList();
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
+
+        //List Output Settings
         GUILayout.Label("Output Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(50f));
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-        GUILayout.FlexibleSpace();
+        GUILayout.FlexibleSpace();      
+        //Format file path to fit in a button
         string displayPath = manager.outputPath.Replace('\\', '/');
         displayPath = ((new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }).CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
         while ((new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }).CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
@@ -198,6 +333,7 @@ public class AV3InventoriesWindow : EditorWindow
             }
         }
         EditorGUILayout.EndHorizontal();
+        //Auto-overwrite toggle
         GUILayout.BeginHorizontal();
         GUILayout.Label(new GUIContent("Overwrite All", "Automatically overwrite existing files if needed."), GUILayout.Width(145));
         manager.autoOverwrite = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.autoOverwrite), new string[] { "No", "Yes" }));
@@ -205,13 +341,32 @@ public class AV3InventoriesWindow : EditorWindow
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
+
+        //Draw create button
         if (GUILayout.Button("Create"))
         {
+            //Convert GUI data into data for the model to use
+            List<AnimationClip> allClips = new List<AnimationClip>();
+            List<string> allNames = new List<string>();
+            List<int> allPageSizes = new List<int>();
+            List<string> allPageNames = new List<string>();
+            foreach (Page page in pages)
+            {
+                allClips.AddRange(page.GetClips());
+                allNames.AddRange(page.GetNames());
+                allPageSizes.Add(page.GetClips().Length);
+                allPageNames.Add(page.name);
+            }
+            manager.toggleables = allClips.ToArray();
+            manager.aliases = allNames.ToArray();
+            manager.pageLength = allPageSizes.ToArray();
+            manager.pageNames = allPageNames.ToArray();
             manager.CreateInventory();
             EditorUtility.ClearProgressBar();
         }
         EditorGUILayout.EndVertical();
 
+        //Repaint when hovering over window (needed for directory button)
         if (mouseOverWindow != null && mouseOverWindow == this)
         {
             Repaint();
@@ -224,9 +379,13 @@ public class AV3InventoriesWindow : EditorWindow
         }
     }
 
+    //Draw about window
     private void DrawAboutWindow()
     {
+        //Load version number
         string version = (AssetDatabase.FindAssets("VERSION", new string[] { manager.relativePath }).Length > 0) ? " " + File.ReadAllText(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("VERSION", new string[] { manager.relativePath })[0])) : "";
+
+        //Display top header
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.Box("<b><size=18>Inventory Inventor" + version + "</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(300f));
@@ -239,6 +398,8 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
         DrawLine();
+
+        //Display summary
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.Box("<b><size=15>Summary</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
@@ -251,6 +412,8 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
         DrawLine();
+
+        //Display troubleshooting
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.Box("<b><size=15>Troubleshooting</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
@@ -258,12 +421,14 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Box("If you're having issues or want to contact me, you can find more information at the Github page linked below!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.Box("If you're having issues or want to contact me, you can find more information at the GitHub page linked below!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
         DrawLine(false);
-        GUILayout.Label("Github Repository", new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.UpperCenter });
+
+        //Display GitHub link
+        GUILayout.Label("GitHub Repository", new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.UpperCenter });
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Open in Browser", GUILayout.Width(250)))
@@ -308,6 +473,7 @@ public class AV3InventoriesWindow : EditorWindow
         manager.avatar = desc;
     }
 
+    //Draws a line across the GUI
     private void DrawLine(bool addSpace = true)
     {
         var rect = EditorGUILayout.BeginHorizontal();
@@ -318,5 +484,43 @@ public class AV3InventoriesWindow : EditorWindow
         {
             EditorGUILayout.Space();
         }
+    }
+
+    /*
+    //Reorderable List Code
+    */
+    
+    //Draws the list header
+    private void DrawHeader(Rect rect)
+    {
+        GUI.Label(rect, pages[currentPage].name);
+    }
+    
+    //Draws each element
+    private void DrawElement(Rect rect, int index, bool active, bool focused)
+    {
+        ListItem item = pages[currentPage].items[index];
+
+        item.name = EditorGUI.TextField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
+        item.clip = (AnimationClip)EditorGUI.ObjectField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), item.clip, typeof(AnimationClip), false);
+    }
+
+    //Adds a slot when the add button is pressed, if room is available
+    private void AddItem(ReorderableList list)
+    {
+        if (pages[currentPage].items.ToArray().Length < 8)
+            pages[currentPage].items.Add(new ListItem("Slot " + (pages[currentPage].GetClips().Length + 1)));
+        list.list = pages[currentPage].items;
+        list.index = list.list.Count - 1;
+    }
+
+    //Removes the currently selected item from the list, if at least two are present
+    private void RemoveItem(ReorderableList list)
+    {
+        if (pages[currentPage].items.ToArray().Length > 1)
+            pages[currentPage].items.RemoveAt(list.index);
+        list.list = pages[currentPage].items;
+        if (list.index == list.list.Count)
+            list.index -= 1;
     }
 }
