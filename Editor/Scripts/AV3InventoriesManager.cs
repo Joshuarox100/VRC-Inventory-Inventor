@@ -24,6 +24,7 @@ public class AV3InventoriesManager : UnityEngine.Object
     public string relativePath;
     public string outputPath;
     public bool autoOverwrite = false;
+    public float refreshRate = 0.05f;
 
     private Backup backupManager;
     private AssetList generated;
@@ -321,6 +322,7 @@ public class AV3InventoriesManager : UnityEngine.Object
                 {
                     param.name = "Inventory";
                     param.valueType = VRCExpressionParameters.ValueType.Int;
+                    break;
                 }
             }
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f);
@@ -706,7 +708,7 @@ public class AV3InventoriesManager : UnityEngine.Object
             destinationState = null,
             isExit = false,
             hasExitTime = true,
-            exitTime = 0.05f,
+            exitTime = refreshRate,
             duration = 0,
             canTransitionToSelf = false,
             conditions = null
@@ -751,12 +753,12 @@ public class AV3InventoriesManager : UnityEngine.Object
         states[(itemTotal * 2) - 1].state.AddExitTransition();
         states[(itemTotal * 2) - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
         states[(itemTotal * 2) - 1].state.transitions[0].hasExitTime = true;
-        states[(itemTotal * 2) - 1].state.transitions[0].exitTime = 0.05f;
+        states[(itemTotal * 2) - 1].state.transitions[0].exitTime = refreshRate;
         states[(itemTotal * 2) - 1].state.transitions[0].duration = 0;
         states[(itemTotal * 2) - 2].state.AddExitTransition();
         states[(itemTotal * 2) - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
         states[(itemTotal * 2) - 2].state.transitions[0].hasExitTime = true;
-        states[(itemTotal * 2) - 2].state.transitions[0].exitTime = 0.05f;
+        states[(itemTotal * 2) - 2].state.transitions[0].exitTime = refreshRate;
         states[(itemTotal * 2) - 2].state.transitions[0].duration = 0;
         states[itemTotal * 4].state.AddExitTransition();
         states[itemTotal * 4].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");

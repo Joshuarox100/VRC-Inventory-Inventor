@@ -13,14 +13,13 @@ public class AV3InventoriesWindow : EditorWindow
     private int windowTab;
     private bool focused;
     private readonly List<bool> pages = new List<bool>();
-
-    private Vector2 scroll;
+    private int currentPage = 0;
 
     [MenuItem("Window/AV3 Tools/Inventory Inventor/Manage Inventory")]
     public static void ManageInventory()
     {
         AV3InventoriesWindow window = (AV3InventoriesWindow)GetWindow(typeof(AV3InventoriesWindow), false, "Inventory Inventor");
-        //window.minSize = new Vector2(375f, 294f);
+        window.minSize = new Vector2(375f, 525f);
         window.wantsMouseMove = true;
         window.Show();
     }
@@ -93,44 +92,44 @@ public class AV3InventoriesWindow : EditorWindow
         EditorGUILayout.Space();
         DrawLine();
         GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.MaxHeight(200f));
+        string[] pageNames = new string[pages.ToArray().Length];
+        for(int i = 0; i < pageNames.Length; i++)
+        {
+            pageNames[i] = "Page " + (i + 1);
+        }     
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.MaxHeight(215f));
+        currentPage = EditorGUILayout.Popup(currentPage, pageNames);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(new GUIContent("<b>Menu Name</b>", "Name used for the Expressions Menu."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { background = null }, richText = true }, GUILayout.Width(355f / 2));
         GUILayout.FlexibleSpace();
         EditorGUILayout.LabelField(new GUIContent("<b>Animation</b>", "Animation to be toggled by the menu."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { background = null }, richText = true }, GUILayout.Width(355f / 2));
         EditorGUILayout.EndHorizontal();
-        scroll = EditorGUILayout.BeginScrollView(scroll);
-        int pageTotal = (manager.toggleables.ToArray().Length / 8) + 1;
+        int pageTotal = (manager.toggleables.ToArray().Length % 8 == 0) ? manager.toggleables.ToArray().Length / 8 : (manager.toggleables.ToArray().Length / 8) + 1;
         while (pages.ToArray().Length > pageTotal)
         {
             pages.RemoveAt(pages.ToArray().Length - 1);
+            currentPage = pages.ToArray().Length - 1;
         }
         while (pages.ToArray().Length < pageTotal)
         {
             pages.Add(true);
+            currentPage = pages.ToArray().Length - 1;
         }
-        int count = 0;
-        for (int i = 0; i < manager.toggleables.ToArray().Length; i++)
+        for (int i = 8 * currentPage; i < (8 * currentPage) + 8; i++)
         {
-            if (i % 8 == 0 && manager.toggleables.ToArray().Length > 8)
-            {
-                count++;
-                EditorGUILayout.BeginHorizontal();
-                pages[count - 1] = EditorGUILayout.Foldout(pages[count - 1], "Page " + count, true);
-                EditorGUILayout.EndHorizontal();
-            }
-            if (count == 0 || pages[count - 1])
+            if (i < manager.toggleables.ToArray().Length)
             {
                 EditorGUILayout.BeginHorizontal();
                 manager.aliases[i] = EditorGUILayout.TextField(manager.aliases[i]);
                 manager.toggleables[i] = (AnimationClip)EditorGUILayout.ObjectField(manager.toggleables[i], typeof(AnimationClip), false);
                 EditorGUILayout.EndHorizontal();
             }
+            else
+                break;
         }
-        EditorGUILayout.EndScrollView();
         GUILayout.FlexibleSpace();
         EditorGUILayout.BeginHorizontal();
-        if (manager.toggleables.ToArray().Length < 24)
+        if (manager.toggleables.ToArray().Length < 64)
         {
             if (manager.toggleables.ToArray().Length == 1)
             {
@@ -152,7 +151,7 @@ public class AV3InventoriesWindow : EditorWindow
         GUILayout.FlexibleSpace();
         if (manager.toggleables.ToArray().Length > 1)
         {
-            if (manager.toggleables.ToArray().Length == 24)
+            if (manager.toggleables.ToArray().Length == 64)
             {
                 if (GUILayout.Button("Remove", GUILayout.Width(355f)))
                 {
