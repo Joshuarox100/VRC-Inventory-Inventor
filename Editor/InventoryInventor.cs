@@ -23,8 +23,8 @@ public class InventoryInventor : EditorWindow
     private int currentPage = 0;
 
     //Class used for representing an Inventory Page
-    //string name           = name of the page
-    //List<ListItem> items  = list of items held in the page
+    //         string name : name of the page
+    //List<ListItem> items : list of items held in the page
     private class Page
     {
         public string name;
@@ -62,8 +62,8 @@ public class InventoryInventor : EditorWindow
     }
 
     //Class used for storing page items
-    //string name   = name of the item
-    //AnimationClip = animation to be toggled
+    //  string name : name of the item
+    //AnimationClip : animation to be toggled
     [Serializable]
     private class ListItem
     {
