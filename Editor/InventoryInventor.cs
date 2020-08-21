@@ -89,7 +89,7 @@ public class InventoryInventor : EditorWindow
     public static void ManageInventory()
     {
         InventoryInventor window = (InventoryInventor)GetWindow(typeof(InventoryInventor), false, "Inventory Inventor");
-        window.minSize = new Vector2(375f, 545f);
+        window.minSize = new Vector2(375f, 585f);
         window.wantsMouseMove = true;
         window.Show();
     }
@@ -206,9 +206,16 @@ public class InventoryInventor : EditorWindow
 
         //List optional settings
         GUILayout.Label("Optional Settings", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(65f));
         manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "(Optional) The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
-        manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each toggle is given to syncronize with late joiners (in seconds)."), manager.refreshRate);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField(new GUIContent("Auto Sync", "Off: Items will not auto-sync with late joiners.\nOn: Items will auto-sync with late joiners."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } }, GUILayout.ExpandWidth(false));
+        manager.syncMode = GUILayout.Toolbar(manager.syncMode, new string[] { "Off", "On" }, GUILayout.Width(210f));
+        EditorGUILayout.EndHorizontal();
+        if (manager.syncMode == 1)
+            manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
+        if (manager.refreshRate < 0)
+            manager.refreshRate = 0.05f;
         GUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
@@ -319,8 +326,8 @@ public class InventoryInventor : EditorWindow
         GUILayout.FlexibleSpace();      
         //Format file path to fit in a button
         string displayPath = manager.outputPath.Replace('\\', '/');
-        displayPath = ((new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }).CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
-        while ((new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }).CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
+        displayPath = (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
+        while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
         {
             displayPath = "..." + displayPath.Substring(4);
         }
