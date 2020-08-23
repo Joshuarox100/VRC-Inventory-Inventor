@@ -377,6 +377,7 @@ public class InventoryInventor : EditorWindow
             manager.pageNames = allPageNames.ToArray();
             manager.CreateInventory();
             EditorUtility.ClearProgressBar();
+            EditorUtility.DisplayDialog("Inventory Inventory", "Success!", "Close");
         }
         EditorGUILayout.EndVertical();
 
