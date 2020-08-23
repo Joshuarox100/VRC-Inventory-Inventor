@@ -50,7 +50,7 @@ Common Questions
 
 Troubleshooting
 --------------
-**My Inventory isn't syncing correctly to people joining late**
+**My Inventory isn't syncing correctly to people joining late.**
 >Your Refresh Rate may be too fast for the network to handle. Try recreating your inventory using a slower time.
 
 **The Debug menu is just showing random numbers for each of the item layers.**
