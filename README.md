@@ -41,6 +41,10 @@ Common Questions
 **Can I make menus within menus using the UI?**
 >Not yet! That feature is planned for the future though.
 
+**Can I have multiple inventories on a single avatar?**
+>Let me answer your question with a another question: *Why do you need more than 64 toggles to begin with?*  
+	Truthfully though, if you are seriously needing that much inventory space, perhaps you should consider splitting it up into multiple avatars for performance reasons alone or consider other ways to achieve what you're attempting to do.
+
 **How do people who join the world late see me?**
 >If you leave Auto Sync on, the current state of your inventory will be synced to them over a short period of time while the system is idle. If Auto Sync is left off, late-joiners will only see the initial state of the objects until you toggle them again, a bit like how toggles used to work in Avatars 2.0.
 
