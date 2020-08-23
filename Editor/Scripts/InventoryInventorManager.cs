@@ -56,11 +56,13 @@ public class InventoryInventorManager : UnityEngine.Object
             else if (avatar.baseAnimationLayers.Length != 5)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar is not humanoid.\n(Non-Humanoid avatars are not supported yet)", "Close");
+                Selection.activeObject = avatar.gameObject;
                 return;
             }
             else if (avatar.expressionParameters == null)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar does not have an Expression Parameters object assigned in the descriptor.", "Close");
+                Selection.activeObject = avatar;
                 return;
             }
 
@@ -87,6 +89,7 @@ public class InventoryInventorManager : UnityEngine.Object
                         else
                         {
                             EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Expression Parameter \"" + param.name + "\" is present with the wrong type.", "Close");
+                            Selection.activeObject = avatar.expressionParameters;
                             return;
                         }
                         break;
@@ -100,6 +103,7 @@ public class InventoryInventorManager : UnityEngine.Object
             if (16 - paramCount < 1 - present)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No unused Expression Parameters found.", "Close");
+                Selection.activeObject = avatar.expressionParameters;
                 return;
             }
 
@@ -109,6 +113,7 @@ public class InventoryInventorManager : UnityEngine.Object
                 if (!CheckCompatibility(clip, false, out Type problem, out string propertyName))
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + clip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                    Selection.activeObject = clip;
                     return;
                 }
             }
@@ -243,6 +248,7 @@ public class InventoryInventorManager : UnityEngine.Object
                         {
                             EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
                             RevertChanges();
+                            Selection.activeObject = animator;
                             return;
                         }
                     }
@@ -256,6 +262,8 @@ public class InventoryInventorManager : UnityEngine.Object
                         else
                         {
                             EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
+                            RevertChanges();
+                            Selection.activeObject = animator;
                             return;
                         }
                     }
@@ -270,6 +278,7 @@ public class InventoryInventorManager : UnityEngine.Object
                         {
                             EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
                             RevertChanges();
+                            Selection.activeObject = animator;
                             return;
                         }
                     }
@@ -379,6 +388,7 @@ public class InventoryInventorManager : UnityEngine.Object
              */
 
             AssetDatabase.SaveAssets();
+            Selection.activeObject = menu != null ? menu : inventory;
             return;
         }
         catch (Exception err)
