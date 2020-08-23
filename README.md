@@ -51,7 +51,7 @@ Common Questions
 Troubleshooting
 --------------
 **My Inventory isn't syncing correctly to people joining late**
->Your Refresh Rate may be too fast for the network. Try recreating your inventory using a slower time.
+>Your Refresh Rate may be too fast for the network to handle. Try recreating your inventory using a slower time.
 
 **The Debug menu is just showing random numbers for each of the item layers.**
 >This is a visual bug caused by having State Machines named differently than their originating Layer. This doesn't actually cause any problems remotely or locally so you don't need to worry about it too much. A bug report for it exists on the Feedback forum if you want to upvote it [here](https://feedback.vrchat.com/avatar-30/p/bug-debug-menu-fails-to-show-state-names-when-the-state-machine-is-named-differe).
