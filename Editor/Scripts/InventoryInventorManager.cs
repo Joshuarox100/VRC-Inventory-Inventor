@@ -380,6 +380,10 @@ public class InventoryInventorManager : UnityEngine.Object
                     menu.controls.Add(new VRCExpressionsMenu.Control() { name = "Inventory", type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
                 }
             }
+            else if (menu != null && menu.controls.ToArray().Length >= 8)
+            {
+                EditorUtility.DisplayDialog("Inventory Inventory", "WARNING: Inventory menu not added to provided menu.\n(No space available in given menu.)", "Close");
+            }
             
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 1f);
 
@@ -388,6 +392,7 @@ public class InventoryInventorManager : UnityEngine.Object
              */
 
             AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog("Inventory Inventory", "Success!", "Close");
             Selection.activeObject = menu != null ? menu : inventory;
             return;
         }
