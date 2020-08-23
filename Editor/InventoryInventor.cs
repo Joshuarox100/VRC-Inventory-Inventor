@@ -210,7 +210,7 @@ public class InventoryInventor : EditorWindow
         //List optional settings
         GUILayout.Label("Optional Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(65f));
-        manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "(Optional) The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
+        manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(new GUIContent("Auto Sync", "Off: Items will not auto-sync with late joiners.\nOn: Items will auto-sync with late joiners."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } }, GUILayout.ExpandWidth(false));
         manager.syncMode = GUILayout.Toolbar(manager.syncMode, new string[] { "Off", "On" }, GUILayout.Width(210f));
