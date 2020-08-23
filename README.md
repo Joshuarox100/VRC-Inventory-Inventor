@@ -39,7 +39,7 @@ Everything should now be fully set up! If you have any issues or questions, look
 
 Common Questions
 --------------
-**Can I make menus within menus using the UI?**
+**Can I make submenus using the UI?**
 >Not yet! That feature is planned for the future though.
 
 **Can I have multiple inventories on a single avatar?**
