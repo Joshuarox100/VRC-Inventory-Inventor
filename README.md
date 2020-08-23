@@ -32,7 +32,7 @@ Before following these steps, set up your avatar how you normally would and ensu
 </p>
 
 4) Finally, click Create to generate the inventory for your avatar! 
-	>The inventory will be added to or replaced in the FX Animator contained within your descriptor. If an Animator hasn't been used for the FX layer, it will clone the VRCSDK template and add it there. 
+	>The inventory will be added to or replaced in the FX Animator contained within your descriptor. If an Animator hasn't been used for the FX layer, it will clone the VRCSDK FX template and add it there. 
 
 Everything should now be fully set up! If you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) section below before [contacting me](#contacting-me).
 
