@@ -375,6 +375,8 @@ public class InventoryInventor : EditorWindow
             manager.aliases = allNames.ToArray();
             manager.pageLength = allPageSizes.ToArray();
             manager.pageNames = allPageNames.ToArray();
+
+            //Create the inventory
             manager.CreateInventory();
             EditorUtility.ClearProgressBar();
         }
