@@ -26,6 +26,7 @@ Before following these steps, set up your avatar how you normally would and ensu
 </p>
 
 3) Next, configure how you want the inventory to be setup for your avatar.
+	>If you want to know what a particular option does, hover your mouse over its text for a brief explanation.
 
 <p align="center">
   <img width="80%" height="80%" src="Images/Step 3.png">
