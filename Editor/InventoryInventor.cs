@@ -85,15 +85,15 @@ public class InventoryInventor : EditorWindow
         }
     }
 
-    [MenuItem("Window/AV3 Tools/Inventory Inventor/Manage Inventory")]
+    [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory")]
     public static void ManageInventory()
     {
         InventoryInventor window = (InventoryInventor)GetWindow(typeof(InventoryInventor), false, "Inventory Inventor");
-        window.minSize = new Vector2(375f, 585f);
+        window.minSize = new Vector2(375f, 600f);
         window.wantsMouseMove = true;
         window.Show();
     }
-    [MenuItem("Window/AV3 Tools/Inventory Inventor/Check For Updates")]
+    [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Check For Updates")]
     public static void CheckForUpdates()
     {
         InventoryInventorManager.CheckForUpdates();
@@ -132,7 +132,10 @@ public class InventoryInventor : EditorWindow
         //Make sure itemList isn't null and has listeners assigned
         if (itemList == null)
         {
-            itemList = new ReorderableList(null, typeof(ListItem), true, true, true, true);
+            itemList = new ReorderableList(null, typeof(ListItem), true, true, true, true)
+            {
+                elementHeight = 18f
+            };
             AssignListeners();
         }
 
@@ -234,7 +237,7 @@ public class InventoryInventor : EditorWindow
         }     
         //Draw page renamer
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
         GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
         if (currentPage >= pages.ToArray().Length)
         {
@@ -244,7 +247,11 @@ public class InventoryInventor : EditorWindow
         {
             currentPage = 0;
         }
-        pages[currentPage].name = EditorGUILayout.TextField(pages[currentPage].name);
+        pages[currentPage].name = EditorGUILayout.TextField(pages[currentPage].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal });
+        if (pages[currentPage].name == "")
+        {
+            pages[currentPage].name = "Page " + (currentPage + 1);
+        }
         //Draw page navigator
         if (GUILayout.Button('\u25C0'.ToString()))
         {
@@ -253,7 +260,7 @@ public class InventoryInventor : EditorWindow
                 currentPage--;
                 itemList.list = pages[currentPage].items;
             }
-        }
+        }       
         EditorGUI.BeginChangeCheck();
         currentPage = EditorGUILayout.Popup(currentPage, pageNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
         if (EditorGUI.EndChangeCheck())
@@ -270,19 +277,19 @@ public class InventoryInventor : EditorWindow
         }       
         EditorGUILayout.EndHorizontal();      
         //Draw page creator/remover
-        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
         if (pages.ToArray().Length < 8)
         {
             if (pages.ToArray().Length == 1)
             {
-                if (GUILayout.Button("Add Page", GUILayout.Width(356f)))
+                if (GUILayout.Button("Add Page", GUILayout.Width(350f)))
                 {
                     pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
                     currentPage = pages.ToArray().Length - 1;
                     itemList.list = pages[currentPage].items;
                 }               
             }
-            else if (GUILayout.Button("Add Page", GUILayout.Width(356f / 2)))
+            else if (GUILayout.Button("Add Page", GUILayout.Width(348f / 2)))
             {              
                 pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
                 currentPage = pages.ToArray().Length - 1;
@@ -293,14 +300,14 @@ public class InventoryInventor : EditorWindow
         {
             if (pages.ToArray().Length == 8)
             {
-                if (GUILayout.Button("Remove Page", GUILayout.Width(356f)))
+                if (GUILayout.Button("Remove Page", GUILayout.Width(350f)))
                 {
                     pages.RemoveAt(currentPage);
                     currentPage--;
                     itemList.list = pages[currentPage].items;
                 }
             }
-            else if (GUILayout.Button("Remove Page", GUILayout.Width(356f / 2)))
+            else if (GUILayout.Button("Remove Page", GUILayout.Width(348f / 2)))
             {
                 pages.RemoveAt(currentPage);
                 currentPage--;
@@ -311,7 +318,7 @@ public class InventoryInventor : EditorWindow
         EditorGUILayout.EndVertical();
         DrawLine();
         //Draw currently selected page contents
-        EditorGUILayout.BeginVertical(GUILayout.Height(210f));
+        EditorGUILayout.BeginVertical(GUILayout.Height(185f));
         if (itemList != null)
             itemList.DoLayoutList();
         EditorGUILayout.EndVertical();
@@ -414,7 +421,21 @@ public class InventoryInventor : EditorWindow
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Box("Make upgrading to 3.0 a breeze with AV3 Overrides!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can create inventories with up to 64 synced toggles, all contained within a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+        DrawLine();
+
+        //Display special thanks
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Box("<b><size=15>Special Thanks</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
@@ -440,7 +461,7 @@ public class InventoryInventor : EditorWindow
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Open in Browser", GUILayout.Width(250)))
         {
-            Application.OpenURL("https://github.com/Joshuarox100/VRC-AV3-Inventories");
+            Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
@@ -463,7 +484,7 @@ public class InventoryInventor : EditorWindow
 
             //Select
             var currentIndex = Array.IndexOf(descriptors, manager.avatar);
-            var nextIndex = EditorGUILayout.Popup(new GUIContent("Active Avatar", "The Avatar you want to setup scaling for."), currentIndex, names);
+            var nextIndex = EditorGUILayout.Popup(new GUIContent("Active Avatar", "The Avatar you want to create an inventory for."), currentIndex, names);
             if (nextIndex < 0)
                 nextIndex = 0;
             if (nextIndex != currentIndex)
@@ -510,6 +531,11 @@ public class InventoryInventor : EditorWindow
 
         item.name = EditorGUI.TextField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
         item.clip = (AnimationClip)EditorGUI.ObjectField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), item.clip, typeof(AnimationClip), false);
+
+        if (item.name == "")
+        {
+            item.name = "Slot " + (index + 1);
+        }
     }
 
     //Adds a slot when the add button is pressed, if room is available

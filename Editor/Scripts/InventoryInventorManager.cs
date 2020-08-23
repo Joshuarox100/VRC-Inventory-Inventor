@@ -1102,7 +1102,7 @@ public class InventoryInventorManager : UnityEngine.Object
         GameObject netMan = new GameObject { hideFlags = HideFlags.HideInHierarchy };
 
         //Run a coroutine to retrieve the GitHub data.
-        netMan.AddComponent<NetworkManager>().StartCoroutine(GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-AV3-Overrides/master/Editor/VERSION", latestVersion => {
+        netMan.AddComponent<NetworkManager>().StartCoroutine(GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
             //Network Error
             if (latestVersion == "")
             {
@@ -1123,7 +1123,7 @@ public class InventoryInventorManager : UnityEngine.Object
             {
                 if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nOpen the Releases page?", "Yes", "No"))
                 {
-                    Application.OpenURL("https://github.com/Joshuarox100/VRC-AV3-Overrides/releases");
+                    Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
                 }
             }
             //Using latest version
