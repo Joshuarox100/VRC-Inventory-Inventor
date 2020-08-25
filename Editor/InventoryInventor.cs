@@ -259,6 +259,7 @@ public class InventoryInventor : EditorWindow
             {
                 currentPage--;
                 itemList.list = pages[currentPage].items;
+                GUI.FocusControl(null);
             }
         }       
         EditorGUI.BeginChangeCheck();
@@ -266,6 +267,7 @@ public class InventoryInventor : EditorWindow
         if (EditorGUI.EndChangeCheck())
         {
             itemList.list = pages[currentPage].items;
+            GUI.FocusControl(null);
         }
         if (GUILayout.Button('\u25B6'.ToString()))
         {
@@ -273,6 +275,7 @@ public class InventoryInventor : EditorWindow
             {              
                 currentPage++;
                 itemList.list = pages[currentPage].items;
+                GUI.FocusControl(null);
             }
         }       
         EditorGUILayout.EndHorizontal();      
@@ -287,6 +290,7 @@ public class InventoryInventor : EditorWindow
                     pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
                     currentPage = pages.ToArray().Length - 1;
                     itemList.list = pages[currentPage].items;
+                    GUI.FocusControl(null);
                 }               
             }
             else if (GUILayout.Button("Add Page", GUILayout.Width(348f / 2)))
@@ -294,6 +298,7 @@ public class InventoryInventor : EditorWindow
                 pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
                 currentPage = pages.ToArray().Length - 1;
                 itemList.list = pages[currentPage].items;
+                GUI.FocusControl(null);
             }
         }
         if (pages.ToArray().Length > 1)
@@ -305,6 +310,7 @@ public class InventoryInventor : EditorWindow
                     pages.RemoveAt(currentPage);
                     currentPage--;
                     itemList.list = pages[currentPage].items;
+                    GUI.FocusControl(null);
                 }
             }
             else if (GUILayout.Button("Remove Page", GUILayout.Width(348f / 2)))
@@ -312,6 +318,7 @@ public class InventoryInventor : EditorWindow
                 pages.RemoveAt(currentPage);
                 currentPage--;
                 itemList.list = pages[currentPage].items;
+                GUI.FocusControl(null);
             }
         }
         EditorGUILayout.EndHorizontal();
@@ -338,7 +345,7 @@ public class InventoryInventor : EditorWindow
         {
             displayPath = "..." + displayPath.Substring(4);
         }
-        if (GUILayout.Button("<i>" + displayPath + "</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
+        if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", manager.outputPath.Replace('\\', '/')), new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
         {
             string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
             if (absPath.StartsWith(Application.dataPath))

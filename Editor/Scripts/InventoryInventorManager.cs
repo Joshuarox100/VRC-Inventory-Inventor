@@ -363,7 +363,7 @@ public class InventoryInventorManager : UnityEngine.Object
             }
 
             //Assign inventory menu to given menu if possible.
-            if (menu != null && menu.controls.ToArray().Length < 8)
+            if (menu != null)
             {
                 bool exists = false;
                 foreach (VRCExpressionsMenu.Control control in menu.controls)
@@ -375,14 +375,14 @@ public class InventoryInventorManager : UnityEngine.Object
                         break;
                     }
                 }
-                if (!exists)
+                if (!exists && menu.controls.ToArray().Length < 8)
                 {
                     menu.controls.Add(new VRCExpressionsMenu.Control() { name = "Inventory", type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
                 }
-            }
-            else if (menu != null && menu.controls.ToArray().Length >= 8)
-            {
-                EditorUtility.DisplayDialog("Inventory Inventory", "WARNING: Inventory menu not added to provided menu.\n(No space available in given menu.)", "Close");
+                else if (!exists)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventory", "WARNING: Inventory controls were not added to the provided menu.\n(No space is available.)", "Close");
+                }
             }
             
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 1f);
