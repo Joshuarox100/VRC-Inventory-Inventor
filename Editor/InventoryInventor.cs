@@ -1,8 +1,7 @@
-﻿using Boo.Lang;
-using System;
+﻿using System;
 using System.IO;
 using UnityEditor;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
@@ -18,72 +17,6 @@ public class InventoryInventor : EditorWindow
     //Various Trackers
     private int windowTab;
     private bool focused;
-    private ReorderableList itemList;
-    private readonly List<Page> pages = new List<Page>();
-    private int currentPage = 0;
-
-    //Class used for representing an Inventory Page
-    //         string name : name of the page
-    //List<ListItem> items : list of items held in the page
-    private class Page
-    {
-        public string name;
-        public readonly List<ListItem> items;
-
-        //Constructor
-        public Page(string name, ref ReorderableList itemList)
-        {
-            this.name = name;
-            items = new List<ListItem>() { new ListItem("Slot 1") };
-            itemList.list = items;
-        }
-
-        //Returns array of item names
-        public string[] GetNames()
-        {
-            List<string> names = new List<string>();
-            foreach (ListItem item in items)
-            {
-                names.Add(item.name);
-            }
-            return names.ToArray();
-        }
-
-        //Returns array of item clips
-        public AnimationClip[] GetClips()
-        {
-            List<AnimationClip> clips = new List<AnimationClip>();
-            foreach (ListItem item in items)
-            {
-                clips.Add(item.clip);
-            }
-            return clips.ToArray();
-        }
-    }
-
-    //Class used for storing page items
-    //  string name : name of the item
-    //AnimationClip : animation to be toggled
-    [Serializable]
-    private class ListItem
-    {
-        public string name;
-        public AnimationClip clip;
-
-        //Default Constructor
-        public ListItem()
-        {
-            name = "Slot 1";
-            clip = null;
-        }
-
-        //Additional Constructor
-        public ListItem(string name)
-        {
-            this.name = name;
-            clip = null;
-        }
-    }
 
     [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory")]
     public static void ManageInventory()
@@ -99,46 +32,15 @@ public class InventoryInventor : EditorWindow
         InventoryInventorManager.CheckForUpdates();
     }
 
-    //Remove listeners when window is closed to prevent memory leaks
-    private void OnDestroy()
-    {
-        if (itemList != null)
-        {
-            itemList.drawHeaderCallback -= DrawHeader;
-            itemList.drawElementCallback -= DrawElement;
-            itemList.onAddCallback -= AddItem;
-            itemList.onRemoveCallback -= RemoveItem;
-        }       
-    }
-
     //Relocate file directory path
     private void OnFocus()
     {
         manager.UpdatePaths();
     }
 
-    //Assign listeners to itemList
-    private void AssignListeners()
-    {
-        itemList.drawHeaderCallback += DrawHeader;
-        itemList.drawElementCallback += DrawElement;
-        itemList.onAddCallback += AddItem;
-        itemList.onRemoveCallback += RemoveItem;
-    }
-
     //Draw GUI
     private void OnGUI()
     {
-        //Make sure itemList isn't null and has listeners assigned
-        if (itemList == null)
-        {
-            itemList = new ReorderableList(null, typeof(ListItem), true, true, true, true)
-            {
-                elementHeight = 18f
-            };
-            AssignListeners();
-        }
-
         //Define main window area
         GUILayout.BeginVertical();
         windowSize.x = (position.width / 2f) - (375f / 2f);
@@ -186,7 +88,6 @@ public class InventoryInventor : EditorWindow
         {
             //Unfocus item in window when empty space is clicked
             GUI.FocusControl(null);
-            itemList.index = 8;
         }
     }
 
@@ -209,14 +110,14 @@ public class InventoryInventor : EditorWindow
 
         //List optional settings
         GUILayout.Label("Optional Settings", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(65f));
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(new GUIContent("Auto Sync", "Off: Items will not auto-sync with late joiners.\nOn: Items will auto-sync with late joiners."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } }, GUILayout.ExpandWidth(false));
-        manager.syncMode = GUILayout.Toolbar(manager.syncMode, new string[] { "Off", "On" }, GUILayout.Width(210f));
-        EditorGUILayout.EndHorizontal();
-        if (manager.syncMode == 1)
-            manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
+        if (manager.avatar != null && manager.controller == null)
+        {
+            manager.controller = (manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null;
+        }
+        manager.controller = (AnimatorController)EditorGUILayout.ObjectField(new GUIContent("Animator", "The Animator Controller to modify.\n(If left empty, a new Animator will be created and used.)"), manager.controller, typeof(AnimatorController), false);
+        manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
         if (manager.refreshRate < 0)
             manager.refreshRate = 0.05f;
         GUILayout.EndVertical();
@@ -225,109 +126,8 @@ public class InventoryInventor : EditorWindow
 
         //List Inventory Settings
         GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
-        //Make sure at least one page exists
-        if (pages.ToArray().Length == 0)
-        {
-            pages.Add(new Page("Page 1", ref itemList));
-        }
-        string[] pageNames = new string[pages.ToArray().Length];
-        for(int i = 0; i < pages.ToArray().Length; i++)
-        {
-            pageNames[i] = (i + 1).ToString();
-        }     
-        //Draw page renamer
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-        GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
-        if (currentPage >= pages.ToArray().Length)
-        {
-            currentPage = pages.ToArray().Length - 1;
-        }
-        else if (currentPage < 0)
-        {
-            currentPage = 0;
-        }
-        pages[currentPage].name = EditorGUILayout.TextField(pages[currentPage].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal });
-        if (pages[currentPage].name == "")
-        {
-            pages[currentPage].name = "Page " + (currentPage + 1);
-        }
-        //Draw page navigator
-        if (GUILayout.Button('\u25C0'.ToString()))
-        {
-            if (currentPage != 0)
-            {
-                currentPage--;
-                itemList.list = pages[currentPage].items;
-                GUI.FocusControl(null);
-            }
-        }       
-        EditorGUI.BeginChangeCheck();
-        currentPage = EditorGUILayout.Popup(currentPage, pageNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
-        if (EditorGUI.EndChangeCheck())
-        {
-            itemList.list = pages[currentPage].items;
-            GUI.FocusControl(null);
-        }
-        if (GUILayout.Button('\u25B6'.ToString()))
-        {
-            if (currentPage != pages.ToArray().Length - 1)
-            {              
-                currentPage++;
-                itemList.list = pages[currentPage].items;
-                GUI.FocusControl(null);
-            }
-        }       
-        EditorGUILayout.EndHorizontal();      
-        //Draw page creator/remover
-        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-        if (pages.ToArray().Length < 8)
-        {
-            if (pages.ToArray().Length == 1)
-            {
-                if (GUILayout.Button("Add Page", GUILayout.Width(350f)))
-                {
-                    pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
-                    currentPage = pages.ToArray().Length - 1;
-                    itemList.list = pages[currentPage].items;
-                    GUI.FocusControl(null);
-                }               
-            }
-            else if (GUILayout.Button("Add Page", GUILayout.Width(348f / 2)))
-            {              
-                pages.Add(new Page("Page " + (pages.ToArray().Length + 1), ref itemList));
-                currentPage = pages.ToArray().Length - 1;
-                itemList.list = pages[currentPage].items;
-                GUI.FocusControl(null);
-            }
-        }
-        if (pages.ToArray().Length > 1)
-        {
-            if (pages.ToArray().Length == 8)
-            {
-                if (GUILayout.Button("Remove Page", GUILayout.Width(350f)))
-                {
-                    pages.RemoveAt(currentPage);
-                    currentPage--;
-                    itemList.list = pages[currentPage].items;
-                    GUI.FocusControl(null);
-                }
-            }
-            else if (GUILayout.Button("Remove Page", GUILayout.Width(348f / 2)))
-            {
-                pages.RemoveAt(currentPage);
-                currentPage--;
-                itemList.list = pages[currentPage].items;
-                GUI.FocusControl(null);
-            }
-        }
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.EndVertical();
-        DrawLine();
-        //Draw currently selected page contents
-        EditorGUILayout.BeginVertical(GUILayout.Height(185f));
-        if (itemList != null)
-            itemList.DoLayoutList();
+        manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset"), manager.preset, typeof(InventoryPreset), false);
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
@@ -366,24 +166,6 @@ public class InventoryInventor : EditorWindow
         //Draw create button
         if (GUILayout.Button("Create"))
         {
-            //Convert GUI data into data for the model to use
-            List<AnimationClip> allClips = new List<AnimationClip>();
-            List<string> allNames = new List<string>();
-            List<int> allPageSizes = new List<int>();
-            List<string> allPageNames = new List<string>();
-            foreach (Page page in pages)
-            {
-                allClips.AddRange(page.GetClips());
-                allNames.AddRange(page.GetNames());
-                allPageSizes.Add(page.GetClips().Length);
-                allPageNames.Add(page.name);
-            }
-            manager.toggleables = allClips.ToArray();
-            manager.aliases = allNames.ToArray();
-            manager.pageLength = allPageSizes.ToArray();
-            manager.pageNames = allPageNames.ToArray();
-
-            //Create the inventory
             manager.CreateInventory();
             EditorUtility.ClearProgressBar();
         }
@@ -521,48 +303,5 @@ public class InventoryInventor : EditorWindow
         {
             EditorGUILayout.Space();
         }
-    }
-
-    /*
-    //Reorderable List Code
-    */
-    
-    //Draws the list header
-    private void DrawHeader(Rect rect)
-    {
-        GUI.Label(rect, pages[currentPage].name);
-    }
-    
-    //Draws each element
-    private void DrawElement(Rect rect, int index, bool active, bool focused)
-    {
-        ListItem item = pages[currentPage].items[index];
-
-        item.name = EditorGUI.TextField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
-        item.clip = (AnimationClip)EditorGUI.ObjectField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), item.clip, typeof(AnimationClip), false);
-
-        if (item.name == "")
-        {
-            item.name = "Slot " + (index + 1);
-        }
-    }
-
-    //Adds a slot when the add button is pressed, if room is available
-    private void AddItem(ReorderableList list)
-    {
-        if (pages[currentPage].items.ToArray().Length < 8)
-            pages[currentPage].items.Add(new ListItem("Slot " + (pages[currentPage].GetClips().Length + 1)));
-        list.list = pages[currentPage].items;
-        list.index = list.list.Count - 1;
-    }
-
-    //Removes the currently selected item from the list, if at least two are present
-    private void RemoveItem(ReorderableList list)
-    {
-        if (pages[currentPage].items.ToArray().Length > 1)
-            pages[currentPage].items.RemoveAt(list.index);
-        list.list = pages[currentPage].items;
-        if (list.index == list.list.Count)
-            list.index -= 1;
     }
 }

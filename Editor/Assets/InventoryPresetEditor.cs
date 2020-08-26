@@ -100,7 +100,7 @@ public class InventoryPresetEditor : Editor
             {
                 foreach (PageItem pageItem in page.Items)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle && pageItem.Sync != 0)
+                    if (pageItem.Type == PageItem.ItemType.Toggle)
                     {
                         totalUsage += 1;
                     }
@@ -113,7 +113,7 @@ public class InventoryPresetEditor : Editor
             {
                 foreach (PageItem pageItem in page.Items)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle && pageItem.Sync != 0)
+                    if (pageItem.Type == PageItem.ItemType.Toggle)
                     {
                         totalUsage += 1;
                     }
@@ -122,7 +122,7 @@ public class InventoryPresetEditor : Editor
         }
         if (totalUsage > 85)
         {
-            EditorGUILayout.HelpBox("This preset exceeds the max number of synced toggles.\n(Max: 85 | Used: " + totalUsage + ")", MessageType.Warning);
+            EditorGUILayout.HelpBox("This preset exceeds the max number of toggles.\n(Max: 85 | Used: " + totalUsage + ")", MessageType.Warning);
         }
         serializedObject.Update();
         EditorGUILayout.BeginVertical();
@@ -702,7 +702,7 @@ public class InventoryPresetEditor : Editor
                 {
                     foreach (PageItem pageItem in page.Items)
                     {
-                        if (pageItem.Type == PageItem.ItemType.Toggle && (item.Item == null || pageItem != item.Item) && (((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
+                        if (pageItem.Type == PageItem.ItemType.Toggle)
                         {
                             toggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -716,7 +716,7 @@ public class InventoryPresetEditor : Editor
                 {
                     foreach (PageItem pageItem in page.Items)
                     {
-                        if (pageItem.Type == PageItem.ItemType.Toggle && (item.Item == null || pageItem != item.Item) && (((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
+                        if (pageItem.Type == PageItem.ItemType.Toggle)
                         {
                             toggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -812,9 +812,14 @@ public class InventoryPresetEditor : Editor
                     AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[pageContents.index].Group[list.index]);
                     preset.Pages[pageDirectory.index].Items[pageContents.index].Group[list.index] = null;
                     GroupItem[] newArray0 = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length - 1];
-                    for (int i = 0; i < newArray0.Length; i++)
+                    int index = 0;
+                    for (int i = 0; i < preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length; i++)
                     {
-                        newArray0[i] = preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i];
+                        if (preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i] != null)
+                        {
+                            newArray0[index] = preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i];
+                            index++;
+                        }                           
                     }
                     preset.Pages[pageDirectory.index].Items[pageContents.index].Group = newArray0;
                     break;
@@ -822,9 +827,14 @@ public class InventoryPresetEditor : Editor
                     AssetDatabase.RemoveObjectFromAsset(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[list.index]);
                     preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[list.index] = null;
                     GroupItem[] newArray1 = new GroupItem[preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length - 1];
-                    for (int i = 0; i < newArray1.Length; i++)
+                    index = 0;
+                    for (int i = 0; i < preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length; i++)
                     {
-                        newArray1[i] = preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i];
+                        if (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[i] != null)
+                        {
+                            newArray1[index] = preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[i];
+                            index++;
+                        }
                     }
                     preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group = newArray1;
                     break;
