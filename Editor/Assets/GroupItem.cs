@@ -15,10 +15,12 @@ public class GroupItem : ScriptableObject
     public enum GroupType
     {
         AlwaysDisable = 0,
-        DisableIfEnabled = 1,
-        Toggle = 2,
-        EnableIfDisabled = 3,
-        AlwaysEnable = 4
+        DisableOnDisable = 1,
+        DisableOnEnable = 2,
+        Toggle = 3,
+        EnableOnDisable = 4,
+        EnableOnEnable = 5,
+        AlwaysEnable = 6
     };
 
     //Constructors

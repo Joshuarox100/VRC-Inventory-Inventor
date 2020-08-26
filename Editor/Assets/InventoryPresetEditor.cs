@@ -371,7 +371,8 @@ public class InventoryPresetEditor : Editor
                     switch (preset.Pages[pageDirectory.index].Items[pageContents.index].Type)
                     {
                         case PageItem.ItemType.Toggle:
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].Clip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Toggle"), preset.Pages[pageDirectory.index].Items[pageContents.index].Clip, typeof(AnimationClip), false);
+                            preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip, typeof(AnimationClip), false);
+                            preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip, typeof(AnimationClip), false);
                             EditorGUILayout.BeginHorizontal();
                             EditorGUILayout.PrefixLabel(new GUIContent("Sync"));
                             preset.Pages[pageDirectory.index].Items[pageContents.index].Sync = GUILayout.Toolbar(preset.Pages[pageDirectory.index].Items[pageContents.index].Sync, new string[] { "Off", "Manual", "Auto" });
@@ -411,7 +412,8 @@ public class InventoryPresetEditor : Editor
                     switch (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type)
                     {
                         case PageItem.ItemType.Toggle:
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Clip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Toggle"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Clip, typeof(AnimationClip), false);
+                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].EnableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].EnableClip, typeof(AnimationClip), false);
+                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].DisableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].DisableClip, typeof(AnimationClip), false);
                             EditorGUILayout.BeginHorizontal();
                             EditorGUILayout.PrefixLabel(new GUIContent("Sync"));
                             preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Sync = GUILayout.Toolbar(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Sync, new string[] { "Off", "Manual", "Auto" });
@@ -465,7 +467,6 @@ public class InventoryPresetEditor : Editor
                 {
                     GroupItem item = ScriptableObject.CreateInstance<GroupItem>();
                     item.hideFlags = HideFlags.HideInHierarchy;
-                    item.Item = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index] : preset.Pages[pageDirectory.index].Items[pageContents.index];
                     item.Reaction = GroupItem.GroupType.Toggle;
                     item.name = ((pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name : preset.Pages[pageDirectory.index].Items[pageContents.index].name) + ": Group Item " + (groupContents.list.Count + 1);
                     string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
@@ -691,7 +692,7 @@ public class InventoryPresetEditor : Editor
         groupContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group : preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
         if (index < groupContents.list.Count && index >= 0 && pageContents.index < pageContents.list.Count && pageContents.index >= 0 && pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
         {
-            GroupItem item = (pageList == 1) ? (GroupItem)preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[index] : (GroupItem)preset.Pages[pageDirectory.index].Items[pageContents.index].Group[index];
+            GroupItem item = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[index] : preset.Pages[pageDirectory.index].Items[pageContents.index].Group[index];
 
             List<PageItem> toggles = new List<PageItem>();
             List<string> toggleNames = new List<string>();
@@ -701,7 +702,7 @@ public class InventoryPresetEditor : Editor
                 {
                     foreach (PageItem pageItem in page.Items)
                     {
-                        if (pageItem.Type == PageItem.ItemType.Toggle && (pageItem == item.Item || ((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
+                        if (pageItem.Type == PageItem.ItemType.Toggle && (item.Item == null || pageItem != item.Item) && (((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
                         {
                             toggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -715,7 +716,7 @@ public class InventoryPresetEditor : Editor
                 {
                     foreach (PageItem pageItem in page.Items)
                     {
-                        if (pageItem.Type == PageItem.ItemType.Toggle && (pageItem == item.Item || ((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
+                        if (pageItem.Type == PageItem.ItemType.Toggle && (item.Item == null || pageItem != item.Item) && (((pageList == 1) && System.Array.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1) || ((pageList == 0) && System.Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetGroupItems(), pageItem) == -1)))
                         {
                             toggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -724,7 +725,19 @@ public class InventoryPresetEditor : Editor
                 }                    
             }
 
-            item.Item = toggles[EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (toggles.IndexOf(item.Item) != -1) ? toggles.IndexOf(item.Item) : 0, toggleNames.ToArray())];
+            if (toggles.Count > 0)
+            {
+                if (item.Item == null)
+                {
+                    item.Item = toggles[0];
+                }
+                item.Item = toggles[EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (toggles.IndexOf(item.Item) != -1) ? toggles.IndexOf(item.Item) : 0, toggleNames.ToArray())];
+            }
+            else
+            {
+                EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), 0, new string[] { "None" });
+            }
+
             item.Reaction = (GroupItem.GroupType)EditorGUI.EnumPopup(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), item.Reaction);
         }
     }
@@ -759,7 +772,7 @@ public class InventoryPresetEditor : Editor
                 }
             }               
         }
-        if (totalUsage == list.list.Count)
+        if (totalUsage - 1 == list.list.Count)
         {
             return;
         }

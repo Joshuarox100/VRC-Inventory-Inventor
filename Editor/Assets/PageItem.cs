@@ -15,9 +15,13 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private int m_Sync;
 
-    public AnimationClip Clip { get { return m_Clip; } set { m_Clip = value; } }
+    public AnimationClip EnableClip { get { return m_EnableClip; } set { m_EnableClip = value; } }
     [SerializeField]
-    private AnimationClip m_Clip;
+    private AnimationClip m_EnableClip;
+
+    public AnimationClip DisableClip { get { return m_DisableClip; } set { m_DisableClip = value; } }
+    [SerializeField]
+    private AnimationClip m_DisableClip;
 
     public Page PageReference { get { return m_PageReference; } set { m_PageReference = value; } }
     [SerializeField]
@@ -46,7 +50,8 @@ public class PageItem : ScriptableObject
     public PageItem()
     {
         Type = ItemType.Toggle;
-        Clip = null;
+        EnableClip = null;
+        DisableClip = null;
         Sync = 2;
         Group = new GroupItem[0];
     }

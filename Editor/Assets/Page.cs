@@ -52,7 +52,7 @@ public class Page : ScriptableObject
         List<AnimationClip> clips = new List<AnimationClip>();
         foreach (PageItem item in Items)
         {
-            clips.Add(item.Clip);
+            clips.Add(item.EnableClip);
         }
         return clips.ToArray();
     }
