@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 
-[CustomEditor(typeof(Page))]
-public class PageInspector : Editor
+[CustomEditor(typeof(GroupItem))]
+public class GroupItemEditor : Editor
 {
     public override void OnInspectorGUI()
     {

@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 
-[CustomEditor(typeof(ListItem))]
-public class ListItemScript : Editor
+[CustomEditor(typeof(Page))]
+public class PageEditor : Editor
 {
     public override void OnInspectorGUI()
     {

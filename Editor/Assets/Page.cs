@@ -10,9 +10,9 @@ public class Page : ScriptableObject
     [SerializeField]
     private PageType m_Type;
 
-    public List<ListItem> Items { get { return m_Items; } set { m_Items = value; } }
+    public List<PageItem> Items { get { return m_Items; } set { m_Items = value; } }
     [SerializeField]
-    private List<ListItem> m_Items;
+    private List<PageItem> m_Items;
 
     public VRCExpressionsMenu Submenu { get { return m_Submenu; } set { m_Submenu = value; } }
     [SerializeField]
@@ -32,14 +32,14 @@ public class Page : ScriptableObject
     public Page()
     {
         Type = PageType.Inventory;
-        Items = new List<ListItem>();
+        Items = new List<PageItem>();
     }
 
     //Returns array of item names
     public string[] GetNames()
     {
         List<string> names = new List<string>();
-        foreach (ListItem item in Items)
+        foreach (PageItem item in Items)
         {
             names.Add(item.name);
         }
@@ -50,7 +50,7 @@ public class Page : ScriptableObject
     public AnimationClip[] GetClips()
     {
         List<AnimationClip> clips = new List<AnimationClip>();
-        foreach (ListItem item in Items)
+        foreach (PageItem item in Items)
         {
             clips.Add(item.Clip);
         }
