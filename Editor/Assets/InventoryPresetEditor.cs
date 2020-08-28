@@ -1,5 +1,5 @@
 ﻿using Boo.Lang;
-using System.Text.RegularExpressions;
+using System;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -12,9 +12,8 @@ public class InventoryPresetEditor : Editor
 
     public ReorderableList pageContents;
     public ReorderableList pageDirectory;
-    public ReorderableList groupContents;
-
-    public int pageList = 0;
+    public ReorderableList enableGroupContents;
+    public ReorderableList disableGroupContents;
 
     public void OnEnable()
     {
@@ -45,14 +44,23 @@ public class InventoryPresetEditor : Editor
         pageContents.onAddCallback += AddPageItem;
         pageContents.onRemoveCallback += RemovePageItem;
 
-        groupContents = new ReorderableList(null, typeof(GroupItem), true, false, true, true)
+        enableGroupContents = new ReorderableList(null, typeof(GroupItem), true, false, true, true)
         {
             elementHeight = 18f
         };
-        groupContents.drawHeaderCallback += DrawGroupHeader;
-        groupContents.drawElementCallback += DrawGroupElement;
-        groupContents.onAddCallback += AddGroupItem;
-        groupContents.onRemoveCallback += RemoveGroupItem;
+        enableGroupContents.drawHeaderCallback += DrawEnableGroupHeader;
+        enableGroupContents.drawElementCallback += DrawEnableGroupElement;
+        enableGroupContents.onAddCallback += AddEnableGroupItem;
+        enableGroupContents.onRemoveCallback += RemoveEnableGroupItem;
+
+        disableGroupContents = new ReorderableList(null, typeof(GroupItem), true, false, true, true)
+        {
+            elementHeight = 18f
+        };
+        disableGroupContents.drawHeaderCallback += DrawDisableGroupHeader;
+        disableGroupContents.drawElementCallback += DrawDisableGroupElement;
+        disableGroupContents.onAddCallback += AddDisableGroupItem;
+        disableGroupContents.onRemoveCallback += RemoveDisableGroupItem;
     }
 
     public void OnDisable()
@@ -73,12 +81,20 @@ public class InventoryPresetEditor : Editor
             pageContents.onRemoveCallback -= RemovePageItem;
         }
 
-        if (groupContents != null)
+        if (enableGroupContents != null)
         {
-            groupContents.drawHeaderCallback -= DrawGroupHeader;
-            groupContents.drawElementCallback -= DrawGroupElement;
-            groupContents.onAddCallback -= AddGroupItem;
-            groupContents.onRemoveCallback -= RemoveGroupItem;
+            enableGroupContents.drawHeaderCallback -= DrawEnableGroupHeader;
+            enableGroupContents.drawElementCallback -= DrawEnableGroupElement;
+            enableGroupContents.onAddCallback -= AddEnableGroupItem;
+            enableGroupContents.onRemoveCallback -= RemoveEnableGroupItem;
+        }
+
+        if (disableGroupContents != null)
+        {
+            disableGroupContents.drawHeaderCallback -= DrawDisableGroupHeader;
+            disableGroupContents.drawElementCallback -= DrawDisableGroupElement;
+            disableGroupContents.onAddCallback -= AddDisableGroupItem;
+            disableGroupContents.onRemoveCallback -= RemoveDisableGroupItem;
         }
 
         AssetDatabase.SaveAssets();
@@ -102,77 +118,63 @@ public class InventoryPresetEditor : Editor
                 {
                     if (pageItem.Type == PageItem.ItemType.Toggle)
                     {
-                        totalUsage += 1;
+                        switch (pageItem.Sync)
+                        {
+                            case PageItem.SyncMode.Off:
+                                totalUsage += 1;
+                                if (pageItem.EnableGroup.Length > 0)
+                                    totalUsage++;
+                                if (pageItem.DisableGroup.Length > 0)
+                                    totalUsage++;
+                                break;
+                            case PageItem.SyncMode.Manual:
+                                totalUsage += 3;
+                                break;
+                            case PageItem.SyncMode.Auto:
+                                totalUsage += 3;
+                                if (pageItem.EnableGroup.Length > 0)
+                                    totalUsage++;
+                                if (pageItem.DisableGroup.Length > 0)
+                                    totalUsage++;
+                                break;
+                        }
                     }
                 }
             }
         }
-        foreach (Page page in preset.ExtraPages)
+        if (totalUsage > 255)
         {
-            if (page.Type == Page.PageType.Inventory)
-            {
-                foreach (PageItem pageItem in page.Items)
-                {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
-                    {
-                        totalUsage += 1;
-                    }
-                }
-            }
-        }
-        if (totalUsage > 85)
-        {
-            EditorGUILayout.HelpBox("This preset exceeds the max number of toggles.\n(Max: 85 | Used: " + totalUsage + ")", MessageType.Warning);
+            EditorGUILayout.HelpBox("This preset uses more synced data than an Integer can hold.\n(Max: 255 | Used: " + totalUsage + ")", MessageType.Warning);
+            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 3 + (1 for each Toggle Group used)", MessageType.Info);
         }
         serializedObject.Update();
         EditorGUILayout.BeginVertical();
-        //List Inventory Settings
-        GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-        GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
-        preset.MenuName = EditorGUILayout.TextField(preset.MenuName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.PrefixLabel("Icon");
-        preset.Icon = (Texture2D)EditorGUILayout.ObjectField(preset.Icon, typeof(Texture2D), false);
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.EndVertical();
-        EditorGUILayout.Space();
-        DrawLine();
 
+        //List Page Settings
         GUILayout.Label("Page Settings", EditorStyles.boldLabel);
-        pageDirectory.list = ((pageList = GUILayout.Toolbar(pageList, new string[] { "Main", "Extra" })) == 1) ? preset.ExtraPages : preset.Pages;
+        pageDirectory.list = preset.Pages;
         //Make sure at least one page exists
         if (pageDirectory.list.Count == 0)
         {
             Page page = ScriptableObject.CreateInstance<Page>();
-            page.name = ((pageList == 1) ? "Extra " : "Page ") + (pageDirectory.list.Count + 1);
+            page.name = "Page " + (pageDirectory.list.Count + 1);
             page.hideFlags = HideFlags.HideInHierarchy;
             string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
             AssetDatabase.AddObjectToAsset(page, _path);
-            switch (pageList)
-            {
-                case 0:
-                    preset.Pages.Add(page);
-                    pageContents.list = preset.Pages[0].Items;
-                    break;
-                case 1:
-                    preset.ExtraPages.Add(page);
-                    pageContents.list = preset.ExtraPages[0].Items;
-                    break;
-            }            
-            AssetDatabase.SaveAssets();
+            preset.Pages.Add(page);
+            pageContents.list = preset.Pages[0].Items;
+            AssetDatabase.SaveAssets();  
         }       
         else if (pageContents.list == null)
         {
-            pageContents.list = (pageList == 1) ? preset.ExtraPages[0].Items : preset.Pages[0].Items;
+            pageContents.list = preset.Pages[0].Items;
         }
         string[] pageNames = new string[pageDirectory.list.Count];
         for (int i = 0; i < pageDirectory.list.Count; i++)
         {
             pageNames[i] = (i + 1).ToString();
         }
+
         //Draw page renamer
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
@@ -185,30 +187,18 @@ public class InventoryPresetEditor : Editor
         {
             pageDirectory.index = 0;
         }
-        switch (pageList)
+        preset.Pages[pageDirectory.index].name = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+        if (preset.Pages[pageDirectory.index].name == "")
         {
-            case 0:
-                preset.Pages[pageDirectory.index].name = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-                if (preset.Pages[pageDirectory.index].name == "")
-                {
-                    preset.Pages[pageDirectory.index].name = "Page " + (pageDirectory.index + 1);
-                }
-                break;
-            case 1:
-                preset.ExtraPages[pageDirectory.index].name = EditorGUILayout.TextField(preset.ExtraPages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-                if (preset.ExtraPages[pageDirectory.index].name == "")
-                {
-                    preset.ExtraPages[pageDirectory.index].name = "Page " + (pageDirectory.index + 1);
-                }
-                break;
-        }     
+            preset.Pages[pageDirectory.index].name = "Page " + (pageDirectory.index + 1);
+        }
         //Draw page navigator
         if (GUILayout.Button('\u25C0'.ToString(), GUILayout.Width(30f)))
         {
             if (pageDirectory.index > 0)
             {
                 pageDirectory.index--;
-                pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+                pageContents.list = preset.Pages[pageDirectory.index].Items;
                 GUI.FocusControl(null);
             }
         }
@@ -216,7 +206,7 @@ public class InventoryPresetEditor : Editor
         pageDirectory.index = EditorGUILayout.Popup(pageDirectory.index, pageNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
         if (EditorGUI.EndChangeCheck())
         {
-            pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+            pageContents.list = preset.Pages[pageDirectory.index].Items;
             GUI.FocusControl(null);
         }
         if (GUILayout.Button('\u25B6'.ToString(), GUILayout.Width(30f)))
@@ -224,53 +214,38 @@ public class InventoryPresetEditor : Editor
             if (pageDirectory.index < pageDirectory.list.Count - 1)
             {
                 pageDirectory.index++;
-                pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+                pageContents.list = preset.Pages[pageDirectory.index].Items;
                 GUI.FocusControl(null);
             }
         }
         EditorGUILayout.EndHorizontal();
-        switch (pageList)
-        {
-            case 0:
-                EditorGUILayout.BeginVertical();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel("Icon");
-                preset.Pages[pageDirectory.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Icon, typeof(Texture2D), false);
-                EditorGUILayout.EndHorizontal();
-                preset.Pages[pageDirectory.index].Type = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.Pages[pageDirectory.index].Type);
-                if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
-                    preset.Pages[pageDirectory.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.Pages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
-                EditorGUILayout.EndVertical();
-                break;
-            case 1:
-                EditorGUILayout.BeginVertical();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel("Icon");
-                preset.ExtraPages[pageDirectory.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.ExtraPages[pageDirectory.index].Icon, typeof(Texture2D), false);
-                EditorGUILayout.EndHorizontal();
-                preset.ExtraPages[pageDirectory.index].Type = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.ExtraPages[pageDirectory.index].Type);
-                if (preset.ExtraPages[pageDirectory.index].Type == Page.PageType.Submenu)
-                    preset.ExtraPages[pageDirectory.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.ExtraPages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
-                EditorGUILayout.EndVertical();
-                break;
-        }
+        EditorGUILayout.BeginVertical();
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("Icon");
+        preset.Pages[pageDirectory.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Icon, typeof(Texture2D), false);
+        EditorGUILayout.EndHorizontal();
+        if (pageDirectory.index != 0)
+            preset.Pages[pageDirectory.index].Type = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.Pages[pageDirectory.index].Type);
+        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
+            preset.Pages[pageDirectory.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.Pages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
+        EditorGUILayout.EndVertical();
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical();
         if (pageDirectory != null)
             pageDirectory.DoLayoutList();
-        EditorGUILayout.EndVertical();
+        EditorGUILayout.EndVertical();      
         EditorGUILayout.Space();
         DrawLine();
 
         int temp = pageDirectory.index;
         pageDirectory.index = (pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count) ? pageDirectory.index : pageDirectory.index;
         if (temp != pageDirectory.index) 
-            pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+            pageContents.list = preset.Pages[pageDirectory.index].Items;
 
         //Draw currently selected page contents
         GUILayout.Label("Item Settings", EditorStyles.boldLabel);
         
-        if (((pageList == 1) ? preset.ExtraPages[pageDirectory.index] : preset.Pages[pageDirectory.index]).Type == Page.PageType.Inventory)
+        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Inventory)
         {
             if (pageContents.list.Count < 1)
             {
@@ -279,15 +254,7 @@ public class InventoryPresetEditor : Editor
                 item.hideFlags = HideFlags.HideInHierarchy;
                 AssetDatabase.AddObjectToAsset(item, _path);
                 item.name = "Slot 1";
-                switch (pageList)
-                {
-                    case 0:
-                        preset.Pages[pageDirectory.index].Items.Add(item);
-                        break;
-                    case 1:
-                        preset.ExtraPages[pageDirectory.index].Items.Add(item);
-                        break;
-                }
+                preset.Pages[pageDirectory.index].Items.Add(item);
             }
 
             string[] itemNames = new string[pageContents.list.Count];
@@ -299,7 +266,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
             GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
 
-            pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+            pageContents.list = preset.Pages[pageDirectory.index].Items;
             if (pageContents.index >= pageContents.list.Count)
             {
                 pageContents.index = pageContents.list.Count - 1;
@@ -309,31 +276,16 @@ public class InventoryPresetEditor : Editor
                 pageContents.index = 0;
             }
 
-            switch (pageList)
+            preset.Pages[pageDirectory.index].Items[pageContents.index].name = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+            if (preset.Pages[pageDirectory.index].Items[pageContents.index].name == "")
             {
-                case 0:
-                    preset.Pages[pageDirectory.index].Items[pageContents.index].name = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-                    if (preset.Pages[pageDirectory.index].Items[pageContents.index].name == "")
-                    {
-                        preset.Pages[pageDirectory.index].Items[pageContents.index].name = "Slot " + (pageContents.index + 1);
-                    }
-                    else if (preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Inventory)
-                    {
-                        preset.Pages[pageDirectory.index].Items[pageContents.index].name = (preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null) ? preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference.name : "None";
-                    }
-                    break;
-                case 1:
-                    preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name = EditorGUILayout.TextField(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-                    if (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name == "")
-                    {
-                        preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name = "Slot " + (pageContents.index + 1);
-                    }
-                    else if (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Inventory)
-                    {
-                        preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name = (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].PageReference != null) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].PageReference.name : "None";
-                    }
-                    break;
+                preset.Pages[pageDirectory.index].Items[pageContents.index].name = "Slot " + (pageContents.index + 1);
             }
+            else if (preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Inventory && preset.Pages[pageDirectory.index].Items[pageContents.index].name != ((preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null) ? preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference.name : "None"))
+            {
+                preset.Pages[pageDirectory.index].Items[pageContents.index].name = (preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null) ? preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference.name : "None";
+            }
+                    
             //Draw page navigator
             if (GUILayout.Button('\u25C0'.ToString(), GUILayout.Width(30f)))
             {
@@ -359,87 +311,52 @@ public class InventoryPresetEditor : Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            switch (pageList)
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Icon");
+            preset.Pages[pageDirectory.index].Items[pageContents.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Items[pageContents.index].Icon, typeof(Texture2D), false);
+            EditorGUILayout.EndHorizontal();
+            preset.Pages[pageDirectory.index].Items[pageContents.index].Type = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.Pages[pageDirectory.index].Items[pageContents.index].Type);
+            switch (preset.Pages[pageDirectory.index].Items[pageContents.index].Type)
             {
-                case 0:
-                    EditorGUILayout.BeginVertical();
+                case PageItem.ItemType.Toggle:
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PrefixLabel("Icon");
-                    preset.Pages[pageDirectory.index].Items[pageContents.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Items[pageContents.index].Icon, typeof(Texture2D), false);
+                    EditorGUILayout.PrefixLabel(new GUIContent("Start"));
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].InitialState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(preset.Pages[pageDirectory.index].Items[pageContents.index].InitialState), new string[] { "Off", "On" }));
                     EditorGUILayout.EndHorizontal();
-                    preset.Pages[pageDirectory.index].Items[pageContents.index].Type = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.Pages[pageDirectory.index].Items[pageContents.index].Type);
-                    switch (preset.Pages[pageDirectory.index].Items[pageContents.index].Type)
-                    {
-                        case PageItem.ItemType.Toggle:
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip, typeof(AnimationClip), false);
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip, typeof(AnimationClip), false);
-                            EditorGUILayout.BeginHorizontal();
-                            EditorGUILayout.PrefixLabel(new GUIContent("Sync"));
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].Sync = GUILayout.Toolbar(preset.Pages[pageDirectory.index].Items[pageContents.index].Sync, new string[] { "Off", "Manual", "Auto" });
-                            EditorGUILayout.EndHorizontal();
-                            EditorGUILayout.BeginVertical();
-                            EditorGUILayout.EndVertical();
-                            break;
-                        case PageItem.ItemType.Inventory:
-                            string[] names = new string[preset.ExtraPages.Count];
-                            for (int i = 0; i < names.Length; i++)
-                            {
-                                names[i] = preset.ExtraPages[i].name;
-                            }
-                            if (preset.ExtraPages.Count > 0)
-                            {
-                                preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference = preset.ExtraPages[EditorGUILayout.Popup(new GUIContent("Inventory"), preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null ? preset.ExtraPages.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference) : 0, names)];
-                            }
-                            else
-                            {
-                                EditorGUILayout.Popup(new GUIContent("Inventory"), 0, new string[] { "None" });
-                            }
-                            break;
-                        case PageItem.ItemType.Submenu:
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.Pages[pageDirectory.index].Items[pageContents.index].Submenu, typeof(VRCExpressionsMenu), false);
-                            break;
-                    }
-                    EditorGUILayout.EndVertical();
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), preset.Pages[pageDirectory.index].Items[pageContents.index].EnableClip, typeof(AnimationClip), false);
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), preset.Pages[pageDirectory.index].Items[pageContents.index].DisableClip, typeof(AnimationClip), false);
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].Sync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync"), preset.Pages[pageDirectory.index].Items[pageContents.index].Sync);
+                    EditorGUILayout.BeginVertical();
                     EditorGUILayout.EndVertical();
                     break;
-                case 1:
-                    EditorGUILayout.BeginVertical();
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PrefixLabel("Icon");
-                    preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Icon = (Texture2D)EditorGUILayout.ObjectField(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Icon, typeof(Texture2D), false);
-                    EditorGUILayout.EndHorizontal();
-                    preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type);
-                    switch (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type)
+                case PageItem.ItemType.Inventory:
+                    string[] names = new string[preset.Pages.Count - 1];
+                    int index = 0;
+                    for (int i = 0; i < preset.Pages.Count; i++)
                     {
-                        case PageItem.ItemType.Toggle:
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].EnableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].EnableClip, typeof(AnimationClip), false);
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].DisableClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].DisableClip, typeof(AnimationClip), false);
-                            EditorGUILayout.BeginHorizontal();
-                            EditorGUILayout.PrefixLabel(new GUIContent("Sync"));
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Sync = GUILayout.Toolbar(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Sync, new string[] { "Off", "Manual", "Auto" });
-                            EditorGUILayout.EndHorizontal();
-                            EditorGUILayout.BeginVertical();
-                            EditorGUILayout.EndVertical();
-                            break;
-                        case PageItem.ItemType.Inventory:
-                            string[] names = new string[preset.ExtraPages.Count - 1];
-                            for (int i = 0; i < names.Length; i++)
-                            {
-                                if (i == pageDirectory.index + 1)
-                                    continue;
-                                names[i] = preset.ExtraPages[i].name;
-                            }
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].PageReference = preset.ExtraPages[EditorGUILayout.Popup(new GUIContent("Inventory"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].PageReference != null ? preset.ExtraPages.IndexOf(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].PageReference) : 0, names)];
-                            break;
-                        case PageItem.ItemType.Submenu:
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Submenu, typeof(VRCExpressionsMenu), false);
-                            break;
+                        if (i != pageDirectory.index)
+                        {
+                            names[index] = preset.Pages[i].name;
+                            index++;
+                        }                            
                     }
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.EndVertical();
+                    if (preset.Pages.Count - 1 > 0)
+                    {
+                        preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference = preset.Pages[EditorGUILayout.Popup(new GUIContent("Inventory"), preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null ? preset.Pages.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference) : 0, names)];
+                    }
+                    else
+                    {
+                        EditorGUILayout.Popup(new GUIContent("Inventory"), 0, new string[] { "None" });
+                    }
+                    break;
+                case PageItem.ItemType.Submenu:
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].Submenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.Pages[pageDirectory.index].Items[pageContents.index].Submenu, typeof(VRCExpressionsMenu), false);
                     break;
             }
-
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndVertical();
+                
             EditorGUILayout.BeginVertical();
             if (pageContents != null)
                 pageContents.DoLayoutList();
@@ -447,58 +364,97 @@ public class InventoryPresetEditor : Editor
         }
         else
         {
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             EditorGUILayout.HelpBox("Only Inventory pages can be modified.", MessageType.Info);
+            EditorGUILayout.EndVertical();
         }
         EditorGUILayout.Space();
         DrawLine();
 
-        GUILayout.Label("Group Settings", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical();
-        if (((pageList == 1) ? preset.ExtraPages[pageDirectory.index] : preset.Pages[pageDirectory.index]).Type == Page.PageType.Submenu)
+        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Inventory && preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle)
         {
-            EditorGUILayout.HelpBox("Only Inventory pages can be modified.", MessageType.Info);
+            GUILayout.Label(preset.Pages[pageDirectory.index].Items[pageContents.index].name + "'s Groups", EditorStyles.boldLabel);
         }
-        else if ((pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle : preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle)
+        else
         {
-            groupContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group : preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
-            if (groupContents.list.Count == 0)
+            GUILayout.Label("Toggle Groups", EditorStyles.boldLabel);
+        }
+        EditorGUILayout.BeginVertical();
+        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
+        {
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+            EditorGUILayout.HelpBox("Only Inventory pages can be modified.", MessageType.Info);
+            EditorGUILayout.EndVertical();
+        }
+        else if (preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle)
+        {
+            enableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup;
+            if (enableGroupContents.list.Count == 0)
             {
+                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+                GUILayout.Label("When Enabled...");
                 if (GUILayout.Button(new GUIContent("Create Group")))
                 {
                     GroupItem item = ScriptableObject.CreateInstance<GroupItem>();
                     item.hideFlags = HideFlags.HideInHierarchy;
-                    item.Reaction = GroupItem.GroupType.Toggle;
-                    item.name = ((pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name : preset.Pages[pageDirectory.index].Items[pageContents.index].name) + ": Group Item " + (groupContents.list.Count + 1);
+                    item.Reaction = GroupItem.GroupType.Enable;
+                    item.name = preset.Pages[pageDirectory.index].Items[pageContents.index].name + ": Enable Group Item " + (enableGroupContents.list.Count + 1);
+                    item.Reaction = GroupItem.GroupType.Enable;
                     string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
-                    AssetDatabase.AddObjectToAsset(item, _path);
-                    switch (pageList)
-                    {
-                        case 0:
-                            GroupItem[] newArray0 = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length + 1];
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].Group.CopyTo(newArray0, 0);
-                            newArray0[newArray0.GetUpperBound(0)] = item;
-                            preset.Pages[pageDirectory.index].Items[pageContents.index].Group = newArray0;
-                            groupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
-                            break;
-                        case 1:
-                            GroupItem[] newArray1 = new GroupItem[preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length + 1];
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.CopyTo(newArray1, 0);
-                            newArray1[newArray1.GetUpperBound(0)] = item;
-                            preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group = newArray1;
-                            groupContents.list = preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group;
-                            break;
-                    }
+                    AssetDatabase.AddObjectToAsset(item, _path);                    
+                    GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.Length + 1];
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.CopyTo(newArray, 0);
+                    newArray[newArray.GetUpperBound(0)] = item;
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup = newArray;
+                    enableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup;     
                     AssetDatabase.SaveAssets();
                 }
+                EditorGUILayout.BeginVertical();
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndVertical();
             }
             else
             {
-                groupContents.DoLayoutList();
+                enableGroupContents.DoLayoutList();
+            }
+
+            EditorGUILayout.Space();
+
+            disableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup;
+            if (disableGroupContents.list.Count == 0)
+            {
+                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+                GUILayout.Label("When Disabled...");
+                if (GUILayout.Button(new GUIContent("Create Group")))
+                {
+                    GroupItem item = ScriptableObject.CreateInstance<GroupItem>();
+                    item.hideFlags = HideFlags.HideInHierarchy;
+                    item.Reaction = GroupItem.GroupType.Enable;
+                    item.name = preset.Pages[pageDirectory.index].Items[pageContents.index].name + ": Disable Group Item " + (disableGroupContents.list.Count + 1);
+                    item.Reaction = GroupItem.GroupType.Disable;
+                    string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+                    AssetDatabase.AddObjectToAsset(item, _path);
+                    GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.Length + 1];
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.CopyTo(newArray, 0);
+                    newArray[newArray.GetUpperBound(0)] = item;
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup = newArray;
+                    disableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup;
+                    AssetDatabase.SaveAssets();
+                }
+                EditorGUILayout.BeginVertical();
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndVertical();
+            }
+            else
+            {
+                disableGroupContents.DoLayoutList();
             }
         }
         else
         {
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             EditorGUILayout.HelpBox("Groups are only usable with Toggles.", MessageType.Info);
+            EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
@@ -536,10 +492,12 @@ public class InventoryPresetEditor : Editor
     //Draws each element
     private void DrawDirectoryElement(Rect rect, int index, bool active, bool focused)
     {
-        Page item = (pageList == 1) ? preset.ExtraPages[index] : preset.Pages[index];
+        Page item = preset.Pages[index];
+        if (index == 0 && item.Type != Page.PageType.Inventory)
+            item.Type = Page.PageType.Inventory;
 
         EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
-        EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == Page.PageType.Inventory) ? "Inventory" : "Submenu");
+        EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == Page.PageType.Inventory) ? ((index == 0) ? "Default" : "Inventory") : "Submenu");
 
         if (item.name == "")
         {
@@ -550,60 +508,44 @@ public class InventoryPresetEditor : Editor
     //Adds a page when the add button is pressed, if room is available
     private void AddDirectoryItem(ReorderableList list)
     {
-        if (pageList == 1 || list.list.Count < 8)
-        {
-            Page page = ScriptableObject.CreateInstance<Page>();
-            string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
-            page.hideFlags = HideFlags.HideInHierarchy;
-            page.name = ((pageList == 1) ? "Extra " : "Page ") + (pageDirectory.list.Count + 1);
-            AssetDatabase.AddObjectToAsset(page, _path);
-            switch (pageList)
-            {
-                case 0:
-                    preset.Pages.Add(page);
-                    pageContents.list = preset.Pages[0].Items;
-                    break;
-                case 1:
-                    preset.ExtraPages.Add(page);
-                    pageContents.list = preset.ExtraPages[0].Items;
-                    break;
-            }
-        }
-        list.list = (pageList == 1) ? preset.ExtraPages : preset.Pages;
+        Page page = ScriptableObject.CreateInstance<Page>();
+        string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+        page.hideFlags = HideFlags.HideInHierarchy;
+        page.name = "Page " + (pageDirectory.list.Count + 1);
+        AssetDatabase.AddObjectToAsset(page, _path);
+        preset.Pages.Add(page);
+        pageContents.list = preset.Pages[0].Items;
+        list.list = preset.Pages;
         list.index = list.list.Count - 1;        
-        pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+        pageContents.list = preset.Pages[pageDirectory.index].Items;
         AssetDatabase.SaveAssets();
     }
 
     //Removes the currently selected item from the list, if at least two are present
     private void RemoveDirectoryItem(ReorderableList list)
     {
-        if (list.list.Count > 1)
-        {
-            switch (pageList)
+        if (preset.Pages.Count > 1)
+        {           
+            foreach (PageItem item in preset.Pages[list.index].Items)
             {
-                case 0:
-                    foreach (PageItem item in preset.Pages[list.index].Items)
-                    {
-                        AssetDatabase.RemoveObjectFromAsset(item);
-                    }
-                    AssetDatabase.RemoveObjectFromAsset(preset.Pages[list.index]);
-                    preset.Pages.RemoveAt(list.index);
-                    break;
-                case 1:
-                    foreach (PageItem item in preset.ExtraPages[list.index].Items)
-                    {
-                        AssetDatabase.RemoveObjectFromAsset(item);
-                    }
-                    AssetDatabase.RemoveObjectFromAsset(preset.ExtraPages[list.index]);
-                    preset.ExtraPages.RemoveAt(list.index);
-                    break;
-            }            
+                foreach (GroupItem groupItem in item.EnableGroup)
+                {
+                    AssetDatabase.RemoveObjectFromAsset(groupItem);
+                }
+                foreach (GroupItem groupItem in item.DisableGroup)
+                {
+                    AssetDatabase.RemoveObjectFromAsset(groupItem);
+                }
+                AssetDatabase.RemoveObjectFromAsset(item);
+            }
+            AssetDatabase.RemoveObjectFromAsset(preset.Pages[list.index]);
+            preset.Pages.RemoveAt(list.index);                    
         }          
-        list.list = (pageList == 1) ? preset.ExtraPages : preset.Pages;
-        if (list.index == list.list.Count)
+        list.list = preset.Pages;
+        if (list.index == list.list.Count && list.list.Count != 0)
             list.index -= 1;
-        pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+        if (list.list.Count != 0)
+            pageContents.list = preset.Pages[pageDirectory.index].Items;
         AssetDatabase.SaveAssets();
     }
 
@@ -613,16 +555,16 @@ public class InventoryPresetEditor : Editor
     private void DrawPageHeader(Rect rect)
     {
         if (pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
-            GUI.Label(rect, (pageList == 1) ? preset.ExtraPages[pageDirectory.index].name : preset.Pages[pageDirectory.index].name);
+            GUI.Label(rect, preset.Pages[pageDirectory.index].name);
     }
 
     //Draws each element
     private void DrawPageElement(Rect rect, int index, bool active, bool focused)
     {
-        pageContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+        pageContents.list = preset.Pages[pageDirectory.index].Items;
         if (index < pageContents.list.Count && index >= 0 && pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
         {
-            PageItem item = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[index] : preset.Pages[pageDirectory.index].Items[index];
+            PageItem item = preset.Pages[pageDirectory.index].Items[index];
 
             EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
             EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == PageItem.ItemType.Toggle) ? "Toggle" : (item.Type == PageItem.ItemType.Inventory) ? "Inventory" : "Submenu");
@@ -639,18 +581,9 @@ public class InventoryPresetEditor : Editor
             item.hideFlags = HideFlags.HideInHierarchy;
             item.name = "Slot " + (list.list.Count + 1);
             AssetDatabase.AddObjectToAsset(item, _path);       
-            switch (pageList)
-            {
-                case 0:
-                    preset.Pages[pageDirectory.index].Items.Add(item);
-                    break;
-                case 1:
-                    preset.ExtraPages[pageDirectory.index].Items.Add(item);
-                    break;
-            }
-            
+            preset.Pages[pageDirectory.index].Items.Add(item);            
         }            
-        list.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+        list.list = preset.Pages[pageDirectory.index].Items;
         list.index = list.list.Count - 1;
         AssetDatabase.SaveAssets();
     }
@@ -660,19 +593,18 @@ public class InventoryPresetEditor : Editor
     {
         if (list.list.Count > 1)
         {           
-            switch (pageList)
+            foreach (GroupItem groupItem in preset.Pages[pageDirectory.index].Items[list.index].EnableGroup)
             {
-                case 0:
-                    AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[list.index]);
-                    preset.Pages[pageDirectory.index].Items.RemoveAt(list.index);
-                    break;
-                case 1:
-                    AssetDatabase.RemoveObjectFromAsset(preset.ExtraPages[pageDirectory.index].Items[list.index]);
-                    preset.ExtraPages[pageDirectory.index].Items.RemoveAt(list.index);
-                    break;
-            }           
+                AssetDatabase.RemoveObjectFromAsset(groupItem);
+            }
+            foreach (GroupItem groupItem in preset.Pages[pageDirectory.index].Items[list.index].DisableGroup)
+            {
+                AssetDatabase.RemoveObjectFromAsset(groupItem);
+            }
+            AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[list.index]);
+            preset.Pages[pageDirectory.index].Items.RemoveAt(list.index);                       
         }           
-        list.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items : preset.Pages[pageDirectory.index].Items;
+        list.list = preset.Pages[pageDirectory.index].Items;
         if (list.index == list.list.Count)
             list.index -= 1;
         AssetDatabase.SaveAssets();
@@ -680,21 +612,24 @@ public class InventoryPresetEditor : Editor
 
     //Group Contents
 
+    //Enable Group
+
     //Draws the list header
-    private void DrawGroupHeader(Rect rect)
+    private void DrawEnableGroupHeader(Rect rect)
     {
-        GUI.Label(rect, (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name + " Group" : preset.Pages[pageDirectory.index].Items[pageContents.index].name + " Group");
+        GUI.Label(rect, "When Enabled...");
     }
 
     //Draws each element
-    private void DrawGroupElement(Rect rect, int index, bool active, bool focused)
+    private void DrawEnableGroupElement(Rect rect, int index, bool active, bool focused)
     {
-        groupContents.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group : preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
-        if (index < groupContents.list.Count && index >= 0 && pageContents.index < pageContents.list.Count && pageContents.index >= 0 && pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
+        enableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup;
+        if (index < enableGroupContents.list.Count && index >= 0 && pageContents.index < pageContents.list.Count && pageContents.index >= 0 && pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
         {
-            GroupItem item = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[index] : preset.Pages[pageDirectory.index].Items[pageContents.index].Group[index];
+            GroupItem item = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup[index];
 
-            List<PageItem> toggles = new List<PageItem>();
+            List<PageItem> allToggles = new List<PageItem>();
+            List<PageItem> remainingToggles = new List<PageItem>();
             List<string> toggleNames = new List<string>();
             foreach (Page page in preset.Pages)
             {
@@ -704,34 +639,24 @@ public class InventoryPresetEditor : Editor
                     {
                         if (pageItem.Type == PageItem.ItemType.Toggle)
                         {
-                            toggles.Add(pageItem);
-                            toggleNames.Add(page.name + ": " + pageItem.name);
+                            allToggles.Add(pageItem);
+                            if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetEnableGroupItems(), pageItem) == -1))
+                            {
+                                remainingToggles.Add(pageItem);
+                                toggleNames.Add(page.name + ": " + pageItem.name);
+                            }
                         }
                     }
                 }                
             }
-            foreach (Page page in preset.ExtraPages)
-            {
-                if (page.Type == Page.PageType.Inventory)
-                {
-                    foreach (PageItem pageItem in page.Items)
-                    {
-                        if (pageItem.Type == PageItem.ItemType.Toggle)
-                        {
-                            toggles.Add(pageItem);
-                            toggleNames.Add(page.name + ": " + pageItem.name);
-                        }
-                    }
-                }                    
-            }
 
-            if (toggles.Count > 0)
+            if (allToggles.Count > 0 && remainingToggles.Count > 0)
             {
                 if (item.Item == null)
                 {
-                    item.Item = toggles[0];
+                    item.Item = allToggles[0];
                 }
-                item.Item = toggles[EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (toggles.IndexOf(item.Item) != -1) ? toggles.IndexOf(item.Item) : 0, toggleNames.ToArray())];
+                item.Item = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
             }
             else
             {
@@ -743,7 +668,7 @@ public class InventoryPresetEditor : Editor
     }
 
     //Adds a slot when the add button is pressed, if room is available
-    private void AddGroupItem(ReorderableList list)
+    private void AddEnableGroupItem(ReorderableList list)
     {
         int totalUsage = 0;
         foreach (Page page in preset.Pages)
@@ -759,7 +684,110 @@ public class InventoryPresetEditor : Editor
                 }
             }            
         }
-        foreach (Page page in preset.ExtraPages)
+        if (totalUsage - 1 == list.list.Count)
+        {
+            return;
+        }
+
+        GroupItem item = ScriptableObject.CreateInstance<GroupItem>();
+        string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+        item.hideFlags = HideFlags.HideInHierarchy;
+        item.name = preset.Pages[pageDirectory.index].Items[pageContents.index].name + ": Group Item " + (list.list.Count + 1);
+        item.Reaction = GroupItem.GroupType.Enable;
+        AssetDatabase.AddObjectToAsset(item, _path);
+        GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.Length + 1];
+        preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.CopyTo(newArray, 0);
+        newArray[newArray.GetUpperBound(0)] = item;
+        preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup = newArray;
+        list.list = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup;
+        AssetDatabase.SaveAssets();
+    }
+
+    //Removes the currently selected item from the list, if at least one is present
+    private void RemoveEnableGroupItem(ReorderableList list)
+    {
+        if (list.list.Count > 0)
+        {
+            AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup[list.index]);
+            preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup[list.index] = null;
+            GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.Length - 1];
+            int index = 0;
+            for (int i = 0; i < preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup.Length; i++)
+            {
+                if (preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup[i] != null)
+                {
+                    newArray[index] = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup[i];
+                    index++;
+                }                           
+            }
+            preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup = newArray;                   
+        }
+        list.list = preset.Pages[pageDirectory.index].Items[pageContents.index].EnableGroup;
+        if (list.index == list.list.Count)
+            list.index -= 1;
+        AssetDatabase.SaveAssets();
+    }
+
+    //Disable Group
+
+    //Draws the list header
+    private void DrawDisableGroupHeader(Rect rect)
+    {
+        GUI.Label(rect, "When Disabled...");
+    }
+
+    //Draws each element
+    private void DrawDisableGroupElement(Rect rect, int index, bool active, bool focused)
+    {
+        disableGroupContents.list = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup;
+        if (index < disableGroupContents.list.Count && index >= 0 && pageContents.index < pageContents.list.Count && pageContents.index >= 0 && pageDirectory.index >= 0 && pageDirectory.index < pageDirectory.list.Count)
+        {
+            GroupItem item = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup[index];
+
+            List<PageItem> allToggles = new List<PageItem>();
+            List<PageItem> remainingToggles = new List<PageItem>();
+            List<string> toggleNames = new List<string>();
+            foreach (Page page in preset.Pages)
+            {
+                if (page.Type == Page.PageType.Inventory)
+                {
+                    foreach (PageItem pageItem in page.Items)
+                    {
+                        if (pageItem.Type == PageItem.ItemType.Toggle)
+                        {
+                            allToggles.Add(pageItem);
+                            if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetDisableGroupItems(), pageItem) == -1))
+                            {
+                                remainingToggles.Add(pageItem);
+                                toggleNames.Add(page.name + ": " + pageItem.name);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (allToggles.Count > 0 && remainingToggles.Count > 0)
+            {
+                if (item.Item == null)
+                {
+                    item.Item = allToggles[0];
+                }
+                item.Item = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
+            }
+            else
+            {
+                EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width / 2, rect.height), 0, new string[] { "None" });
+            }
+
+            item.Reaction = (GroupItem.GroupType)EditorGUI.EnumPopup(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), item.Reaction);
+        }
+    }
+
+    //Adds a slot when the add button is pressed, if room is available
+    private void AddDisableGroupItem(ReorderableList list)
+    {
+        int totalUsage = 0;
+        foreach (Page page in preset.Pages)
         {
             if (page.Type == Page.PageType.Inventory)
             {
@@ -770,7 +798,7 @@ public class InventoryPresetEditor : Editor
                         totalUsage += 1;
                     }
                 }
-            }               
+            }
         }
         if (totalUsage - 1 == list.list.Count)
         {
@@ -780,67 +808,37 @@ public class InventoryPresetEditor : Editor
         GroupItem item = ScriptableObject.CreateInstance<GroupItem>();
         string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
         item.hideFlags = HideFlags.HideInHierarchy;
-        item.name = ((pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].name : preset.Pages[pageDirectory.index].Items[pageContents.index].name) + ": Group Item " + (list.list.Count + 1);
+        item.name = preset.Pages[pageDirectory.index].Items[pageContents.index].name + ": Group Item " + (list.list.Count + 1);
+        item.Reaction = GroupItem.GroupType.Disable;
         AssetDatabase.AddObjectToAsset(item, _path);
-        switch (pageList)
-        {
-            case 0:
-                GroupItem[] newArray0 = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length + 1];
-                preset.Pages[pageDirectory.index].Items[pageContents.index].Group.CopyTo(newArray0, 0);
-                newArray0[newArray0.GetUpperBound(0)] = item;
-                preset.Pages[pageDirectory.index].Items[pageContents.index].Group = newArray0;
-                break;
-            case 1:
-                GroupItem[] newArray1 = new GroupItem[preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length + 1];
-                preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.CopyTo(newArray1, 0);
-                newArray1[newArray1.GetUpperBound(0)] = item;
-                preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group = newArray1;
-                break;
-        }
-        list.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group : preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
+        GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.Length + 1];
+        preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.CopyTo(newArray, 0);
+        newArray[newArray.GetUpperBound(0)] = item;
+        preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup = newArray;
+        list.list = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup;
         AssetDatabase.SaveAssets();
     }
 
-    //Removes the currently selected item from the list, if at least two are present
-    private void RemoveGroupItem(ReorderableList list)
+    //Removes the currently selected item from the list, if at least one is present
+    private void RemoveDisableGroupItem(ReorderableList list)
     {
         if (list.list.Count > 0)
         {
-            switch (pageList)
+            AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup[list.index]);
+            preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup[list.index] = null;
+            GroupItem[] newArray = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.Length - 1];
+            int index = 0;
+            for (int i = 0; i < preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup.Length; i++)
             {
-                case 0:
-                    AssetDatabase.RemoveObjectFromAsset(preset.Pages[pageDirectory.index].Items[pageContents.index].Group[list.index]);
-                    preset.Pages[pageDirectory.index].Items[pageContents.index].Group[list.index] = null;
-                    GroupItem[] newArray0 = new GroupItem[preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length - 1];
-                    int index = 0;
-                    for (int i = 0; i < preset.Pages[pageDirectory.index].Items[pageContents.index].Group.Length; i++)
-                    {
-                        if (preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i] != null)
-                        {
-                            newArray0[index] = preset.Pages[pageDirectory.index].Items[pageContents.index].Group[i];
-                            index++;
-                        }                           
-                    }
-                    preset.Pages[pageDirectory.index].Items[pageContents.index].Group = newArray0;
-                    break;
-                case 1:
-                    AssetDatabase.RemoveObjectFromAsset(preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[list.index]);
-                    preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[list.index] = null;
-                    GroupItem[] newArray1 = new GroupItem[preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length - 1];
-                    index = 0;
-                    for (int i = 0; i < preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group.Length; i++)
-                    {
-                        if (preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[i] != null)
-                        {
-                            newArray1[index] = preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group[i];
-                            index++;
-                        }
-                    }
-                    preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group = newArray1;
-                    break;
+                if (preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup[i] != null)
+                {
+                    newArray[index] = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup[i];
+                    index++;
+                }
             }
+            preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup = newArray;                    
         }
-        list.list = (pageList == 1) ? preset.ExtraPages[pageDirectory.index].Items[pageContents.index].Group : preset.Pages[pageDirectory.index].Items[pageContents.index].Group;
+        list.list = preset.Pages[pageDirectory.index].Items[pageContents.index].DisableGroup;
         if (list.index == list.list.Count)
             list.index -= 1;
         AssetDatabase.SaveAssets();

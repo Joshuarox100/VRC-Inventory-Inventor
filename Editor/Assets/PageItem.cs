@@ -11,9 +11,13 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private ItemType m_Type;
 
-    public int Sync { get { return m_Sync; } set { m_Sync = value; } }
+    public SyncMode Sync { get { return m_Sync; } set { m_Sync = value; } }
     [SerializeField]
-    private int m_Sync;
+    private SyncMode m_Sync;
+
+    public bool InitialState { get { return m_InitialState; } set { m_InitialState = value; } }
+    [SerializeField]
+    private bool m_InitialState;
 
     public AnimationClip EnableClip { get { return m_EnableClip; } set { m_EnableClip = value; } }
     [SerializeField]
@@ -27,9 +31,13 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private Page m_PageReference;
 
-    public GroupItem[] Group { get { return m_Group; } set { m_Group = value; } }
+    public GroupItem[] EnableGroup { get { return m_EnableGroup; } set { m_EnableGroup = value; } }
     [SerializeField]
-    private GroupItem[] m_Group;
+    private GroupItem[] m_EnableGroup;
+
+    public GroupItem[] DisableGroup { get { return m_DisableGroup; } set { m_DisableGroup = value; } }
+    [SerializeField]
+    private GroupItem[] m_DisableGroup;
 
     public VRCExpressionsMenu Submenu { get { return m_Submenu; } set { m_Submenu = value; } }
     [SerializeField]
@@ -46,22 +54,40 @@ public class PageItem : ScriptableObject
         Submenu = 2
     };
 
+    public enum SyncMode
+    {
+        Off = 0,
+        Manual = 1,
+        Auto = 2
+    }
+
     //Default Constructor
     public PageItem()
     {
         Type = ItemType.Toggle;
+        InitialState = false;
         EnableClip = null;
         DisableClip = null;
-        Sync = 2;
-        Group = new GroupItem[0];
+        Sync = SyncMode.Auto;
+        EnableGroup = new GroupItem[0];
+        DisableGroup = new GroupItem[0];
     }
 
-    public PageItem[] GetGroupItems()
+    public PageItem[] GetEnableGroupItems()
     {
-        PageItem[] items = new PageItem[Group.Length];
+        PageItem[] items = new PageItem[EnableGroup.Length];
         for (int i = 0; i < items.Length; i++)
         {
-            items[i] = Group[i].Item;
+            items[i] = EnableGroup[i].Item;
+        }
+        return items;
+    }
+    public PageItem[] GetDisableGroupItems()
+    {
+        PageItem[] items = new PageItem[DisableGroup.Length];
+        for (int i = 0; i < items.Length; i++)
+        {
+            items[i] = DisableGroup[i].Item;
         }
         return items;
     }

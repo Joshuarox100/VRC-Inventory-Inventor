@@ -25,7 +25,7 @@ public class Page : ScriptableObject
     public enum PageType
     {
         Inventory = 0,
-        Submenu = 1,
+        Submenu = 1
     };
 
     //Constructors

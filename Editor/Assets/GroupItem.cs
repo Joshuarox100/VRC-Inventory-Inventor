@@ -14,19 +14,14 @@ public class GroupItem : ScriptableObject
 
     public enum GroupType
     {
-        AlwaysDisable = 0,
-        DisableOnDisable = 1,
-        DisableOnEnable = 2,
-        Toggle = 3,
-        EnableOnDisable = 4,
-        EnableOnEnable = 5,
-        AlwaysEnable = 6
+        Disable = 0,
+        Enable = 1
     };
 
     //Constructors
     public GroupItem()
     {
         Item = null;
-        Reaction = GroupType.Toggle;
+        Reaction = GroupType.Enable;
     }
 }

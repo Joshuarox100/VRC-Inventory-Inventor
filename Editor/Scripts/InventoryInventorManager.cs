@@ -65,6 +65,13 @@ public class InventoryInventorManager : UnityEngine.Object
                 return;
             }
 
+            //Make sure a preset was actually provided
+            if (preset == null)
+            {
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No preset provided.", "Close");
+                return;
+            }
+
             /*
                 Check for space in parameters list & check for incompatible Animations.
             */
@@ -108,6 +115,7 @@ public class InventoryInventorManager : UnityEngine.Object
 
             //Check that no animations modify a rig or Transform
             totalToggles = 0;
+            int totalUsage = 0;
             foreach (Page page in preset.Pages)
             {
                 foreach (PageItem item in page.Items)
@@ -127,30 +135,34 @@ public class InventoryInventorManager : UnityEngine.Object
                             return;
                         }
                         totalToggles++;
+                        switch (item.Sync)
+                        {
+                            case PageItem.SyncMode.Off:
+                                totalUsage += 1;
+                                if (item.EnableGroup.Length > 0)
+                                    totalUsage++;
+                                if (item.DisableGroup.Length > 0)
+                                    totalUsage++;
+                                break;
+                            case PageItem.SyncMode.Manual:
+                                totalUsage += 3;
+                                break;
+                            case PageItem.SyncMode.Auto:
+                                totalUsage += 3;
+                                if (item.EnableGroup.Length > 0)
+                                    totalUsage++;
+                                if (item.DisableGroup.Length > 0)
+                                    totalUsage++;
+                                break;
+                        }
                     }
                 }
             }
-            foreach (Page page in preset.ExtraPages)
+            if (totalUsage > 255)
             {
-                foreach (PageItem item in page.Items)
-                {
-                    if (item.Type == PageItem.ItemType.Toggle)
-                    {
-                        if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                            Selection.activeObject = item.EnableClip;
-                            return;
-                        }
-                        if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                            Selection.activeObject = item.DisableClip;
-                            return;
-                        }
-                        totalToggles++;
-                    }
-                }
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Preset uses more than 255 values of data for syncing!", "Close");
+                Selection.activeObject = preset;
+                return;
             }
 
             //Check that the file destination exists
@@ -167,7 +179,7 @@ public class InventoryInventorManager : UnityEngine.Object
              */
 
             AnimatorController animator = controller != null ? controller : null;
-            bool replaceAnimator = animator != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController;
+            bool replaceAnimator = animator != null && avatar.baseAnimationLayers[4].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController;
 
             //Create new Animator from SDK template if none provided.
             if (animator == null)
@@ -213,16 +225,7 @@ public class InventoryInventorManager : UnityEngine.Object
             //Clone provided Animator into the new object, without any Inventory layers or parameters.
             for (int i = 0; i < animator.layers.Length; i++)
             {
-                bool invLayer = false;
-                for (int j = 0; j < totalToggles; j++)
-                {
-                    if (animator.layers[i].stateMachine.name == "Inventory " + (j + 1))
-                    {
-                        invLayer = true;
-                        break;
-                    }
-                }
-                if (!invLayer && animator.layers[i].stateMachine.name != "Inventory Master")
+                if (animator.layers[i].stateMachine.behaviours.Length < 1 || animator.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine))
                 {
                     EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Cloning Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse(i.ToString()) / animator.layers.Length));
                     newAnimator.AddLayer(animator.layers[i].name);
@@ -402,17 +405,17 @@ public class InventoryInventorManager : UnityEngine.Object
                 bool exists = false;
                 foreach (VRCExpressionsMenu.Control control in menu.controls)
                 {
-                    if (control.name == preset.MenuName && control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && control.subMenu == null)
+                    if (control.name == preset.Pages[0].name && control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && control.subMenu == null)
                     {
                         exists = true;
-                        control.icon = preset.Icon;
+                        control.icon = preset.Pages[0].Icon;
                         control.subMenu = inventory;
                         break;
                     }
                 }
                 if (!exists && menu.controls.ToArray().Length < 8)
                 {
-                    menu.controls.Add(new VRCExpressionsMenu.Control() { name = preset.MenuName, icon = preset.Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
+                    menu.controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[0].name, icon = preset.Pages[0].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
                 }
                 else if (!exists)
                 {
@@ -519,92 +522,14 @@ public class InventoryInventorManager : UnityEngine.Object
     private int CreateMenus(out VRCExpressionsMenu mainMenu)
     {
         mainMenu = null;
-        
-        //Create a main menu
-        VRCExpressionsMenu inventory = ScriptableObject.CreateInstance<VRCExpressionsMenu>();
-        inventory.name = avatar.name + "_Inventory";
-
-        //If there's a single page, put all the controls on the top level
-        //if (pageLength.Length == 1)
-        //{
-        //    //For each item in the page, add it to the menu
-        //    for (int i = 0; i < toggleables.Length; i++)
-        //    {
-        //        inventory.controls.Add(new VRCExpressionsMenu.Control() { name = aliases[i], type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = i + 1 });
-        //    }
-            
-        //    //Create output folder if not present
-        //    if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus"))
-        //        AssetDatabase.CreateFolder(outputPath, "Menus");
-
-        //    //Create or overwrite the menu asset
-        //    bool existed = true;
-        //    if (File.Exists(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"))
-        //    {
-        //        if (!autoOverwrite)
-        //        {
-        //            switch (EditorUtility.DisplayDialogComplex("Inventory Inventor", inventory.name + ".asset" + " already exists!\nOverwrite the file?", "Overwrite", "Cancel", "Skip"))
-        //            {
-        //                case 1:
-        //                    return 1;
-        //                case 2:
-        //                    return 2;
-        //            }
-        //        }
-        //        backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
-        //        AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
-        //        AssetDatabase.SaveAssets();
-        //        AssetDatabase.Refresh();
-        //    }
-        //    else
-        //    {
-        //        existed = false;
-        //    }
-        //    AssetDatabase.CreateAsset(inventory, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
-        //    AssetDatabase.SaveAssets();
-        //    AssetDatabase.Refresh();
-
-        //    //Check that it was created successfully
-        //    if (AssetDatabase.FindAssets(inventory.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
-        //    {
-        //        return 3;
-        //    }
-        //    else
-        //    {
-        //        AssetDatabase.Refresh();
-        //        if (!existed)
-        //            generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
-        //    }
-
-        //    //out the main menu
-        //    mainMenu = inventory;
-        //    return 0;
-        //}
-        //If there is more than one page...
 
         //Create a list of menu objects and instantiate a new one for each page
         List<VRCExpressionsMenu> pages = new List<VRCExpressionsMenu>();
 
         for (int i = 0; i < preset.Pages.Count; i++)
         {
-            //Add controls for the items contained in each page
             pages.Add(ScriptableObject.CreateInstance<VRCExpressionsMenu>());
-            switch (preset.Pages[i].Type)
-            {
-                case Page.PageType.Inventory:
-                    pages[i].name = preset.Pages[i].name;
-                    inventory.controls.Add(new VRCExpressionsMenu.Control() { name = pages[i].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[i] });
-                    break;
-                case Page.PageType.Submenu:
-                    inventory.controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Submenu.name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Submenu });
-                    break;
-            }
-        }
-        for (int i = 0; i < preset.ExtraPages.Count; i++)
-        {
-            pages.Add(ScriptableObject.CreateInstance<VRCExpressionsMenu>());
-            if (preset.ExtraPages[i].Type == Page.PageType.Inventory)
-                pages[pages.Count - 1].name = preset.ExtraPages[i].name;                   
+            pages[i].name = preset.Pages[i].name;                   
         }
 
         int index = 0;
@@ -619,31 +544,11 @@ public class InventoryInventorManager : UnityEngine.Object
                         index++;
                         break;
                     case PageItem.ItemType.Inventory:
-                        int val = preset.Pages.Count + preset.ExtraPages.IndexOf(preset.Pages[i].Items[j].PageReference);
+                        int val = preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference);
                         pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = pages[val].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
                         break;
                     case PageItem.ItemType.Submenu:
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].Submenu.name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].Submenu });
-                        break;
-                }
-            }
-        }
-        for (int i = 0; i < preset.ExtraPages.Count; i++)
-        {
-            for (int j = 0; j < preset.ExtraPages[i].Items.Count; j++)
-            {
-                switch (preset.ExtraPages[i].Items[j].Type)
-                {
-                    case PageItem.ItemType.Toggle:
-                        pages[preset.Pages.Count + i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.ExtraPages[i].Items[j].name, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
-                        index++;
-                        break;
-                    case PageItem.ItemType.Inventory:
-                        int val = preset.Pages.Count + preset.ExtraPages.IndexOf(preset.ExtraPages[i].Items[j].PageReference);
-                        pages[preset.Pages.Count + i].controls.Add(new VRCExpressionsMenu.Control() { name = pages[val].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
-                        break;
-                    case PageItem.ItemType.Submenu:
-                        pages[preset.Pages.Count + i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.ExtraPages[i].Items[j].Submenu.name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.ExtraPages[i].Items[j].Submenu });
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].Submenu });
                         break;
                 }
             }
@@ -695,57 +600,19 @@ public class InventoryInventorManager : UnityEngine.Object
             }
         }
 
-        //Create / overwrite the main menu asset
-        bool existed = true;
-        if (File.Exists(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"))
-        {
-            if (!autoOverwrite)
-            {
-                switch (EditorUtility.DisplayDialogComplex("Inventory Inventor", inventory.name + ".asset" + " already exists!\nOverwrite the file?", "Overwrite", "Cancel", "Skip"))
-                {
-                    case 1:
-                        return 1;
-                    case 2:
-                        return 2;
-                }
-            }
-            backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
-            AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
-        else
-        {
-            existed = false;
-        }
-        AssetDatabase.CreateAsset(inventory, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset");
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
-        //Check that the asset was saved successfully
-        if (AssetDatabase.FindAssets(inventory.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
-        {
-            return 3;
-        }
-        else
-        {
-            AssetDatabase.Refresh();
-            if (!existed)
-                generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + inventory.name + ".asset"));
-        }
-
         //out the main menu
-        mainMenu = inventory;
+        mainMenu = pages[0];
         return 0;
     }
 
     //Creates layers for each item in the inventory (ordered by page)
     private void CreateItemLayers(AnimatorController source, ref List<PageItem> items, ref List<KeyValuePair<List<int>, List<int>>> activeStates)
     {
-        
-
         //Create a template machine to duplicate
-        AnimatorStateMachine templateMachine = new AnimatorStateMachine();
+        AnimatorStateMachine templateMachine = new AnimatorStateMachine 
+        {
+            behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() }
+        };
         ChildAnimatorState[] states = new ChildAnimatorState[templateMachine.states.Length + 2];
         templateMachine.states.CopyTo(states, 2);
 
@@ -756,8 +623,10 @@ public class InventoryInventorManager : UnityEngine.Object
             {
                 name = "",
                 motion = null,
+                behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<VRCAvatarParameterDriver>() }
             }
         };
+        ((VRCAvatarParameterDriver)templateState.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
 
         //Get a starting position for the states
         Vector3 pos = templateMachine.anyStatePosition;
@@ -786,6 +655,47 @@ public class InventoryInventorManager : UnityEngine.Object
             conditions = null
         };
 
+        //Pregenerate and assign layer names
+        List<string> layerNames = new List<string>();
+        for (int i = 0; i < items.Count; i++)
+        {
+            string name = items[i].name;
+            if (layerNames.Contains(name))
+            {
+                string pageName = "";
+                int occurance = 0;
+                for (int j = 0; j < i; j++)
+                {
+                    if (items[j].name == name)
+                    {
+                        foreach (Page page in preset.Pages)
+                        {
+                            if (page.Items.Contains(items[j]))
+                            {
+                                pageName = page.name;
+                                break;
+                            }
+                        }
+
+                        layerNames[j] = items[j].name + " (" + pageName + " [" + occurance + "])";
+                        occurance++;
+                    }
+                }
+
+                pageName = "";
+                foreach (Page page in preset.Pages)
+                {
+                    if (page.Items.Contains(items[i]))
+                    {
+                        pageName = page.name;
+                        break;
+                    }
+                }
+
+                name = items[i].name + " (" + pageName + " [" + occurance + "])";
+            }
+            layerNames.Add(name);
+        }
 
         //For each item in the inventory...
         for (int i = 0; i < items.Count; i++)
@@ -794,7 +704,7 @@ public class InventoryInventorManager : UnityEngine.Object
             KeyValuePair<List<int>, List<int>> active = activeStates[i];
 
             //Create a layer
-            source.AddLayer(items[i].name);
+            source.AddLayer(layerNames[i]);
             AnimatorControllerLayer[] layers = source.layers;
             AnimatorControllerLayer currentLayer = layers[layers.Length - 1];
             currentLayer.defaultWeight = 1;
@@ -804,24 +714,49 @@ public class InventoryInventorManager : UnityEngine.Object
 
             //Disable
             ChangeState(templateMachine.states[0].state, items[i].DisableClip);
+            ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
+            ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].value = 0;
             for (int j = 0; j < active.Key.Count; j++)
             {
                 ChangeTransition(templateTransition, active.Key[j], templateMachine.states[0].state);
                 transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
+                if (items[i].Sync == PageItem.SyncMode.Off)
+                {
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+                }
+            }
+            if (items[i].Sync == PageItem.SyncMode.Off)
+            {
+                ChangeTransition(templateTransition, i + 1, false, templateMachine.states[0].state);
+                transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
+                transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
             }
 
             //Enable
             ChangeState(templateMachine.states[1].state, items[i].EnableClip);
+            ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
+            ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].value = 1;
             for (int j = 0; j < active.Value.Count; j++)
             {
                 ChangeTransition(templateTransition, active.Value[j], templateMachine.states[1].state);
                 transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
+                if (items[i].Sync == PageItem.SyncMode.Off)
+                {
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+                }
+            }
+            if (items[i].Sync == PageItem.SyncMode.Off)
+            {
+                ChangeTransition(templateTransition, i + 1, true, templateMachine.states[1].state);
+                transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
+                transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
             }
 
             templateMachine.anyStateTransitions = transitions.ToArray();
 
             //Name the machine for detection later and clone it
-            templateMachine.name = "Inventory " + (i + 1);
+            templateMachine.name = currentLayer.name;
+            templateMachine.defaultState = items[i].InitialState ? templateMachine.states[1].state : templateMachine.states[0].state;
             currentLayer.stateMachine = templateMachine.DeepClone();
             layers[layers.Length - 1] = currentLayer;
             source.layers = layers;
@@ -846,20 +781,11 @@ public class InventoryInventorManager : UnityEngine.Object
         //Add Master Layer
         source.AddLayer("Inventory Master");
         AnimatorControllerLayer masterLayer = source.layers[source.layers.Length - 1];
+        masterLayer.stateMachine.behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() };
 
         //Get list of toggles
         items = new List<PageItem>();
         foreach (Page page in preset.Pages)
-        {
-            foreach (PageItem item in page.Items)
-            {
-                if (item.Type == PageItem.ItemType.Toggle)
-                {
-                    items.Add(item);
-                }
-            }
-        }
-        foreach (Page page in preset.ExtraPages)
         {
             foreach (PageItem item in page.Items)
             {
@@ -875,8 +801,40 @@ public class InventoryInventorManager : UnityEngine.Object
         int value = itemTotal + 1;
         for (int i = 0; i < itemTotal; i++)
         {
-            activeStates.Add(new KeyValuePair<List<int>, List<int>>(new List<int>() { value }, new List<int>() { value + 1 }));
-            value += 2;
+            switch (items[i].Sync)
+            {
+                case PageItem.SyncMode.Off:
+                    activeStates.Add(new KeyValuePair<List<int>, List<int>>(new List<int>() { }, new List<int>() { }));
+                    if (items[i].EnableGroup.Length > 0)
+                    {
+                        activeStates[activeStates.Count - 1].Value.Add(value);
+                        value++;
+                    }
+                    if (items[i].DisableGroup.Length > 0)
+                    {
+                        activeStates[activeStates.Count - 1].Key.Add(value);
+                        value++;
+                    }
+                    break;
+                case PageItem.SyncMode.Manual:
+                    activeStates.Add(new KeyValuePair<List<int>, List<int>>(new List<int>() { value }, new List<int>() { value + 1 }));
+                    value += 2;
+                    break;
+                case PageItem.SyncMode.Auto:
+                    activeStates.Add(new KeyValuePair<List<int>, List<int>>(new List<int>() { value }, new List<int>() { value + 1 }));
+                    value += 2;
+                    if (items[i].EnableGroup.Length > 0)
+                    {
+                        activeStates[activeStates.Count - 1].Value.Add(value);
+                        value++;
+                    }
+                    if (items[i].DisableGroup.Length > 0)
+                    {
+                        activeStates[activeStates.Count - 1].Key.Add(value);
+                        value++;
+                    }
+                    break;
+            }
         } 
 
         //Create an array states to be created
@@ -892,9 +850,11 @@ public class InventoryInventorManager : UnityEngine.Object
             position = pos + new Vector3(-25, 50),
             state = new AnimatorState
             {
-                name = "Remote Clients",
+                name = "Start",
+                behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<VRCAvatarParameterDriver>() }
             }
         });
+        ((VRCAvatarParameterDriver)states[states.Count - 1].state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
 
         //Create a template state for cloning
         ChildAnimatorState templateState = new ChildAnimatorState
@@ -928,7 +888,7 @@ public class InventoryInventorManager : UnityEngine.Object
             EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format(CultureInfo.InvariantCulture, "Creating Master Layer: Creating States ({0:#0.##%})", (i + 1f) / (items.Count * 2)), 0.1f + (0.225f * ((i + 1f) / (items.Count * 2))));
 
             //Only create the states if Auto Sync is enabled
-            if (items[i].Sync == 2)
+            if (items[i].Sync == PageItem.SyncMode.Auto)
             {
                 //Create the enabled sync state
                 ChangeState(templateState.state, "Syncing " + (i + 1), activeStates[i].Value[0]);
@@ -965,16 +925,19 @@ public class InventoryInventorManager : UnityEngine.Object
             }
         }
         //Final Transitions
-        states[states.Count - 1].state.AddExitTransition();
-        states[states.Count - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-        states[states.Count - 1].state.transitions[0].hasExitTime = true;
-        states[states.Count - 1].state.transitions[0].exitTime = refreshRate;
-        states[states.Count - 1].state.transitions[0].duration = 0;
-        states[states.Count - 2].state.AddExitTransition();
-        states[states.Count - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-        states[states.Count - 2].state.transitions[0].hasExitTime = true;
-        states[states.Count - 2].state.transitions[0].exitTime = refreshRate;
-        states[states.Count - 2].state.transitions[0].duration = 0;
+        if (states.Count > 2)
+        {
+            states[states.Count - 1].state.AddExitTransition();
+            states[states.Count - 1].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+            states[states.Count - 1].state.transitions[0].hasExitTime = true;
+            states[states.Count - 1].state.transitions[0].exitTime = refreshRate;
+            states[states.Count - 1].state.transitions[0].duration = 0;
+            states[states.Count - 2].state.AddExitTransition();
+            states[states.Count - 2].state.transitions[0].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+            states[states.Count - 2].state.transitions[0].hasExitTime = true;
+            states[states.Count - 2].state.transitions[0].exitTime = refreshRate;
+            states[states.Count - 2].state.transitions[0].duration = 0;
+        }       
         
         //First transition to trap remote clients (or acts as an idle state when Auto Sync is disabled for all items)
         states[0].state.AddExitTransition();
@@ -988,7 +951,6 @@ public class InventoryInventorManager : UnityEngine.Object
         {
             state = new AnimatorState { behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<VRCAvatarParameterDriver>() } }
         };
-        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
 
         //Create a template toggle transition
         AnimatorStateTransition toggleTransition = new AnimatorStateTransition
@@ -1017,57 +979,92 @@ public class InventoryInventorManager : UnityEngine.Object
             templateToggle.position = pos - new Vector3(150, 0);
 
             //Adjust parameter settings
-            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Value[0];
-            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 1 });
-
-            //Add group settings
-            for (int j = 0; j < items[i].Group.Length; j++)
+            switch (items[i].Sync)
             {
-                int react;
-                switch (items[i].Group[j].Reaction)
-                {
-                    case GroupItem.GroupType.AlwaysDisable:
-                        react = 0;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Contains(activeStates[i].Value[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Add(activeStates[i].Value[0]);
-                        break;
-                    //Nothing
-                    case GroupItem.GroupType.DisableOnDisable:
-                        break;
-                    case GroupItem.GroupType.DisableOnEnable:
-                        react = 0;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Contains(activeStates[i].Value[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Add(activeStates[i].Value[0]);
-                        break;
-                    //Do Later
-                    case GroupItem.GroupType.Toggle:
-                        break;
-                    //Nothing
-                    case GroupItem.GroupType.EnableOnDisable:
-                        break;
-                    case GroupItem.GroupType.EnableOnEnable:
-                        react = 1;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Contains(activeStates[i].Value[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Add(activeStates[i].Value[0]);
-                        break;
-                    case GroupItem.GroupType.AlwaysEnable:
-                        react = 1;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Contains(activeStates[i].Value[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Add(activeStates[i].Value[0]);
-                        break;
-                }
+                case PageItem.SyncMode.Off:
+                    if (items[i].EnableGroup.Length > 0)
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = activeStates[i].Value[0] });                     
+                    else
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 1 });
+                    break;
+                case PageItem.SyncMode.Manual:
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Value[0];
+                    break;
+                case PageItem.SyncMode.Auto:
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+                    if (items[i].EnableGroup.Length > 0)
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Value[1];
+                    else
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Value[0];
+                    break;
+            }
+            
+            //Add group settings
+            for (int j = 0; j < items[i].EnableGroup.Length; j++)
+            {
+                if (items[i].EnableGroup[j].Item != null)
+                    switch (items[i].EnableGroup[j].Reaction)
+                    {
+                        case GroupItem.GroupType.Disable:
+                            switch (items[i].Sync) 
+                            {
+                                case PageItem.SyncMode.Off:
+                                    if (items[i].EnableGroup.Length > 0)
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Contains(activeStates[i].Value[0]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Add(activeStates[i].Value[0]);                
+                                    break;
+                                case PageItem.SyncMode.Manual:
+                                    if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Contains(activeStates[i].Value[0]))
+                                        activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Add(activeStates[i].Value[0]);
+                                    break;
+                                case PageItem.SyncMode.Auto:
+                                    if (items[i].EnableGroup.Length > 0)
+                                    {
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Contains(activeStates[i].Value[1]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Add(activeStates[i].Value[1]);
+                                    }                                        
+                                    else
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Contains(activeStates[i].Value[0]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Key.Add(activeStates[i].Value[0]);
+                                    break;
+                            }
+                            break;
+                        case GroupItem.GroupType.Enable:
+                            switch (items[i].Sync)
+                            {
+                                case PageItem.SyncMode.Off:
+                                    if (items[i].EnableGroup.Length > 0)
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Contains(activeStates[i].Value[0]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Add(activeStates[i].Value[0]);
+                                    break;
+                                case PageItem.SyncMode.Manual:
+                                    if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Contains(activeStates[i].Value[0]))
+                                        activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Add(activeStates[i].Value[0]);
+                                    break;
+                                case PageItem.SyncMode.Auto:
+                                    if (items[i].EnableGroup.Length > 0)
+                                    {
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Contains(activeStates[i].Value[1]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Add(activeStates[i].Value[1]);
+                                    }
+                                    else
+                                        if (!activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Contains(activeStates[i].Value[0]))
+                                            activeStates[items.IndexOf(items[i].EnableGroup[j].Item)].Value.Add(activeStates[i].Value[0]);
+                                    break;
+                            }
+                            break;
+                    }
             }
 
             //Clone the template state
             states.Add(templateToggle.DeepClone());
 
-            //Remove additional parameters in the driver for the next state
-            while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 1)
-                ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(1);
+            //Remove the parameters
+            while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
+            {
+                ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
+            }
 
             //Clone an exit transition
             states[states.Count - 1].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
@@ -1087,57 +1084,92 @@ public class InventoryInventorManager : UnityEngine.Object
             templateToggle.position = pos + new Vector3(100, 0);
 
             //Adjust parameter settings
-            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Key[0];
-            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 0 });
+            switch (items[i].Sync)
+            {
+                case PageItem.SyncMode.Off:
+                    if (items[i].DisableGroup.Length > 0)
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = activeStates[i].Key[0] });
+                    else
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (i + 1), value = 0 });
+                    break;
+                case PageItem.SyncMode.Manual:
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Key[0];
+                    break;
+                case PageItem.SyncMode.Auto:
+                    ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+                    if (items[i].DisableGroup.Length > 0)
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Key[1];
+                    else
+                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Key[0];
+                    break;
+            }
 
             //Add group settings
-            for (int j = 0; j < items[i].Group.Length; j++)
+            for (int j = 0; j < items[i].DisableGroup.Length; j++)
             {
-                int react;
-                switch (items[i].Group[j].Reaction)
-                {
-                    case GroupItem.GroupType.AlwaysDisable:
-                        react = 0;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Contains(activeStates[i].Key[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Add(activeStates[i].Key[0]);
-                        break;                   
-                    case GroupItem.GroupType.DisableOnDisable:
-                        react = 0;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Contains(activeStates[i].Key[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Key.Add(activeStates[i].Key[0]);
-                        break;
-                    //Nothing
-                    case GroupItem.GroupType.DisableOnEnable:
-                        break;
-                    //Do Later
-                    case GroupItem.GroupType.Toggle:
-                        break;                   
-                    case GroupItem.GroupType.EnableOnDisable:
-                        react = 1;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Contains(activeStates[i].Key[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Add(activeStates[i].Key[0]);
-                        break;
-                    //Nothing
-                    case GroupItem.GroupType.EnableOnEnable:                       
-                        break;
-                    case GroupItem.GroupType.AlwaysEnable:
-                        react = 1;
-                        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory " + (items.IndexOf(items[i].Group[j].Item) + 1), value = react });
-                        if (!activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Contains(activeStates[i].Key[0]))
-                            activeStates[items.IndexOf(items[i].Group[j].Item)].Value.Add(activeStates[i].Key[0]);
-                        break;
-                }
+                if (items[i].DisableGroup[j].Item != null)
+                    switch (items[i].DisableGroup[j].Reaction)
+                    {
+                        case GroupItem.GroupType.Disable:
+                            switch (items[i].Sync)
+                            {
+                                case PageItem.SyncMode.Off:
+                                    if (items[i].DisableGroup.Length > 0)
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Contains(activeStates[i].Key[0]))
+                                            activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Add(activeStates[i].Key[0]);
+                                    break;
+                                case PageItem.SyncMode.Manual:
+                                    if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Contains(activeStates[i].Key[0]))
+                                        activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Add(activeStates[i].Key[0]);
+                                    break;
+                                case PageItem.SyncMode.Auto:
+                                    if (items[i].DisableGroup.Length > 0)
+                                    {
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Contains(activeStates[i].Key[1]))
+                                            activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Add(activeStates[i].Key[1]);
+                                    }
+                                    else
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Contains(activeStates[i].Key[0]))
+                                        activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Key.Add(activeStates[i].Key[0]);
+                                    break;
+                            }
+                            break;
+                        case GroupItem.GroupType.Enable:
+                            switch (items[i].Sync)
+                            {
+                                case PageItem.SyncMode.Off:
+                                    if (items[i].DisableGroup.Length > 0)
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Contains(activeStates[i].Key[0]))
+                                            activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Add(activeStates[i].Key[0]);
+                                    break;
+                                case PageItem.SyncMode.Manual:
+                                    if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Contains(activeStates[i].Key[0]))
+                                        activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Add(activeStates[i].Key[0]);
+                                    break;
+                                case PageItem.SyncMode.Auto:
+                                    if (items[i].DisableGroup.Length > 0)
+                                    {
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Contains(activeStates[i].Key[1]))
+                                            activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Add(activeStates[i].Key[1]);
+                                    }
+                                    else
+                                        if (!activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Contains(activeStates[i].Key[0]))
+                                        activeStates[items.IndexOf(items[i].DisableGroup[j].Item)].Value.Add(activeStates[i].Key[0]);
+                                    break;
+                            }
+                            break;
+                    }
             }
 
             //Clone the template state
             states.Add(templateToggle.DeepClone());
 
-            //Remove additional parameter in the driver for the next state
-            while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 1)
-                ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(1);
+            //Remove the parameters
+            while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
+            {
+                ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
+            }
 
             //Clone an exit transition
             states[states.Count - 1].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
@@ -1186,6 +1218,13 @@ public class InventoryInventorManager : UnityEngine.Object
         transition.destinationState = state;
         transition.conditions = new AnimatorCondition[0];
         transition.AddCondition(AnimatorConditionMode.Equals, value, "Inventory");
+    }
+
+    public static void ChangeTransition(AnimatorStateTransition transition, int item, bool value, AnimatorState state)
+    {
+        transition.destinationState = state;
+        transition.conditions = new AnimatorCondition[0];
+        transition.AddCondition(value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0, "Inventory " + item);
     }
 
     //Helper method for modifying transitions
