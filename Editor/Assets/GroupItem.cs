@@ -15,6 +15,7 @@ public class GroupItem : ScriptableObject
     public enum GroupType
     {
         Disable = 0,
+        //Toggle = 1,
         Enable = 1
     };
 
