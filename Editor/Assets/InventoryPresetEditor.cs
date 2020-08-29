@@ -109,7 +109,7 @@ public class InventoryPresetEditor : Editor
             return;
         }
         //Check if toggle limit exceeded
-        int totalUsage = 0;
+        int totalUsage = 1;
         foreach (Page page in preset.Pages)
         {
             if (page.Type == Page.PageType.Inventory)
@@ -142,9 +142,9 @@ public class InventoryPresetEditor : Editor
                 }
             }
         }
-        if (totalUsage > 255)
+        if (totalUsage > 256)
         {
-            EditorGUILayout.HelpBox("This preset uses more synced data than an Integer can hold.\n(Max: 255 | Used: " + totalUsage + ")", MessageType.Warning);
+            EditorGUILayout.HelpBox("This preset uses more synced data than an Integer can hold.\n(Max: 256 | Used: " + totalUsage + ")", MessageType.Warning);
             EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 3 + (1 for each Toggle Group used)", MessageType.Info);
         }
 

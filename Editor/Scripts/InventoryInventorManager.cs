@@ -52,12 +52,6 @@ public class InventoryInventorManager : UnityEngine.Object
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No Avatar selected.", "Close");
                 return;
             }
-            else if (avatar.baseAnimationLayers.Length != 5)
-            {
-                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar is not humanoid.\n(Non-Humanoid avatars are not supported yet)", "Close");
-                Selection.activeObject = avatar.gameObject;
-                return;
-            }
             else if (avatar.expressionParameters == null)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar does not have an Expression Parameters object assigned in the descriptor.", "Close");
@@ -115,7 +109,7 @@ public class InventoryInventorManager : UnityEngine.Object
 
             //Check that no animations modify a rig or Transform
             totalToggles = 0;
-            int totalUsage = 0;
+            int totalUsage = 1;
             foreach (Page page in preset.Pages)
             {
                 foreach (PageItem item in page.Items)
@@ -158,9 +152,9 @@ public class InventoryInventorManager : UnityEngine.Object
                     }
                 }
             }
-            if (totalUsage > 255)
+            if (totalUsage > 256)
             {
-                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Preset uses more than 255 values of data for syncing!", "Close");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Preset uses too much data for syncing!", "Close");
                 Selection.activeObject = preset;
                 return;
             }
@@ -178,8 +172,10 @@ public class InventoryInventorManager : UnityEngine.Object
                 Get FX Animator
              */
 
+            bool humanoid = avatar.baseAnimationLayers.Length == 5;
+
             AnimatorController animator = controller != null ? controller : null;
-            bool replaceAnimator = animator != null && avatar.baseAnimationLayers[4].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController;
+            bool replaceAnimator = humanoid ? (animator != null && avatar.baseAnimationLayers[4].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController) : (animator != null && avatar.baseAnimationLayers[2].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[2].animatorController);
 
             //Create new Animator from SDK template if none provided.
             if (animator == null)
@@ -245,7 +241,12 @@ public class InventoryInventorManager : UnityEngine.Object
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             if (replaceAnimator)
-                avatar.baseAnimationLayers[4].animatorController = newAnimator;
+            {
+                if (humanoid)
+                    avatar.baseAnimationLayers[4].animatorController = newAnimator;
+                else
+                    avatar.baseAnimationLayers[2].animatorController = newAnimator;
+            }                
 
             /*
                 Create parameters

@@ -294,7 +294,7 @@ public class InventoryInventor : EditorWindow
         if (manager.avatar != null)
         {
             if (manager.controller == null)
-                manager.controller = (manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null;
+                manager.controller = manager.avatar.baseAnimationLayers.Length == 5 ? ((manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null) : ((manager.avatar.baseAnimationLayers[2].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[2].animatorController : null);            
             if (manager.menu == null)
                 manager.menu = manager.avatar.expressionsMenu != null ? manager.avatar.expressionsMenu : null;
         }
