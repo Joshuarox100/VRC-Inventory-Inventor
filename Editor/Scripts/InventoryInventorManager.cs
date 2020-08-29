@@ -850,7 +850,7 @@ public class InventoryInventorManager : UnityEngine.Object
             position = pos + new Vector3(-25, 50),
             state = new AnimatorState
             {
-                name = "Start",
+                name = "Idle",
                 behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<VRCAvatarParameterDriver>() }
             }
         });

@@ -179,7 +179,7 @@ public class InventoryPresetEditor : Editor
         //Draw page renamer
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-        GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
+        GUILayout.Label(new GUIContent("Name:", "Name of the selected page."), GUILayout.ExpandWidth(false));
         if (pageDirectory.index >= pageDirectory.list.Count)
         {
             pageDirectory.index = pageDirectory.list.Count - 1;
@@ -228,16 +228,16 @@ public class InventoryPresetEditor : Editor
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginVertical();
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.PrefixLabel("Icon");
+        EditorGUILayout.PrefixLabel(new GUIContent("Icon", "Icon to use for the control."));
         EditorGUI.BeginChangeCheck();
         Texture2D pageIcon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Icon, typeof(Texture2D), false);
         EditorGUILayout.EndHorizontal();
         Page.PageType pageType = preset.Pages[pageDirectory.index].Type;
         if (pageDirectory.index != 0)
-            pageType = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type"), preset.Pages[pageDirectory.index].Type);
+            pageType = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of page."), preset.Pages[pageDirectory.index].Type);
         VRCExpressionsMenu pageMenu = preset.Pages[pageDirectory.index].Submenu;
         if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
-            pageMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), preset.Pages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
+            pageMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), preset.Pages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(preset.Pages[pageDirectory.index], "Page Modified");
@@ -282,7 +282,7 @@ public class InventoryPresetEditor : Editor
             }
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-            GUILayout.Label("Name:", GUILayout.ExpandWidth(false));
+            GUILayout.Label(new GUIContent("Name:", "The name of the item."), GUILayout.ExpandWidth(false));
 
             pageContents.list = preset.Pages[pageDirectory.index].Items;
             if (pageContents.index >= pageContents.list.Count)
@@ -342,21 +342,21 @@ public class InventoryPresetEditor : Editor
             if (itemType != PageItem.ItemType.Inventory)
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel("Icon");
+                EditorGUILayout.PrefixLabel(new GUIContent("Icon", "The icon to use for the control."));
                 itemIcon = (Texture2D)EditorGUILayout.ObjectField(itemIcon, typeof(Texture2D), false);
                 EditorGUILayout.EndHorizontal();
             }
-            itemType = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type"), itemType);
+            itemType = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of item."), itemType);
             switch (itemType)
             {
                 case PageItem.ItemType.Toggle:
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PrefixLabel(new GUIContent("Start"));
+                    EditorGUILayout.PrefixLabel(new GUIContent("Start", "What state the toggle starts in."));
                     itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disable", "Enable" }));
                     EditorGUILayout.EndHorizontal();
-                    itemEnable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable"), itemEnable, typeof(AnimationClip), false);
-                    itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable"), itemDisable, typeof(AnimationClip), false);
-                    itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync"), itemSync);
+                    itemEnable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable", "The Animation to play when the toggle is enabled."), itemEnable, typeof(AnimationClip), false);
+                    itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
+                    itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
                     EditorGUILayout.BeginVertical();
                     EditorGUILayout.EndVertical();
                     break;
@@ -375,15 +375,15 @@ public class InventoryPresetEditor : Editor
                     }
                     if (preset.Pages.Count - 1 > 0)
                     {
-                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Inventory"), itemPage != null ? Array.IndexOf(pages, itemPage) : 0, names)])];
+                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Inventory", "The page to direct to."), itemPage != null ? Array.IndexOf(pages, itemPage) : 0, names)])];
                     }
                     else
                     {
-                        EditorGUILayout.Popup(new GUIContent("Inventory"), 0, new string[] { "None" });
+                        EditorGUILayout.Popup(new GUIContent("Inventory", "The page to direct to."), 0, new string[] { "None" });
                     }
                     break;
                 case PageItem.ItemType.Submenu:
-                    itemMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu"), itemMenu, typeof(VRCExpressionsMenu), false);
+                    itemMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), itemMenu, typeof(VRCExpressionsMenu), false);
                     break;
             }
             EditorGUILayout.EndVertical();
@@ -449,7 +449,7 @@ public class InventoryPresetEditor : Editor
             if (enableGroupContents.list.Count == 0)
             {
                 EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-                GUILayout.Label("When Enabled...");
+                GUILayout.Label(new GUIContent("When Enabled...", "Modifies listed toggles when this toggle is enabled."));
                 if (GUILayout.Button(new GUIContent("Create Group")))
                 {
                     GroupItem item = CreateInstance<GroupItem>();
@@ -481,7 +481,7 @@ public class InventoryPresetEditor : Editor
             if (disableGroupContents.list.Count == 0)
             {
                 EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-                GUILayout.Label("When Disabled...");
+                GUILayout.Label(new GUIContent("When Disabled...", "Modifies listed toggles when this toggle is disabled."));
                 if (GUILayout.Button(new GUIContent("Create Group")))
                 {
                     GroupItem item = CreateInstance<GroupItem>();
@@ -543,7 +543,7 @@ public class InventoryPresetEditor : Editor
     //Draws the list header
     private void DrawDirectoryHeader(Rect rect)
     {
-        GUI.Label(rect, "Directory");
+        GUI.Label(rect, new GUIContent("Directory"));
     }
 
     //Draws each element
@@ -674,7 +674,7 @@ public class InventoryPresetEditor : Editor
     //Draws the list header
     private void DrawEnableGroupHeader(Rect rect)
     {
-        GUI.Label(rect, "When Enabled...");
+        GUI.Label(rect, new GUIContent("When Enabled...", "Modifies listed toggles when this toggle is enabled."));
     }
 
     //Draws each element
@@ -796,7 +796,7 @@ public class InventoryPresetEditor : Editor
     //Draws the list header
     private void DrawDisableGroupHeader(Rect rect)
     {
-        GUI.Label(rect, "When Disabled...");
+        GUI.Label(rect, new GUIContent("When Disabled...", "Modifies listed toggles when this toggle is disabled."));
     }
 
     //Draws each element

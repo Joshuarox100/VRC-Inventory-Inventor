@@ -112,10 +112,6 @@ public class InventoryInventor : EditorWindow
         GUILayout.Label("Optional Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         manager.menu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "The Expressions Menu you want the inventory controls added to. Leave this empty if you don't want any menus to be affected.\n(Controls will be added as a submenu.)"), manager.menu, typeof(VRCExpressionsMenu), true);
-        if (manager.avatar != null && manager.controller == null)
-        {
-            manager.controller = (manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null;
-        }
         manager.controller = (AnimatorController)EditorGUILayout.ObjectField(new GUIContent("Animator", "The Animator Controller to modify.\n(If left empty, a new Animator will be created and used.)"), manager.controller, typeof(AnimatorController), false);
         manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
         if (manager.refreshRate < 0)
@@ -127,7 +123,7 @@ public class InventoryInventor : EditorWindow
         //List Inventory Settings
         GUILayout.Label("Inventory Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-        manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset"), manager.preset, typeof(InventoryPreset), false);
+        manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
@@ -212,7 +208,7 @@ public class InventoryInventor : EditorWindow
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can create inventories with up to 64 synced toggles, all contained within a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all contained within a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
@@ -227,6 +223,11 @@ public class InventoryInventor : EditorWindow
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Box("<i><size=12>FlowerBunny</size></i>\nFor being my guinea pig to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         EditorGUILayout.Space();
@@ -290,6 +291,13 @@ public class InventoryInventor : EditorWindow
             return;
 
         manager.avatar = desc;
+        if (manager.avatar != null)
+        {
+            if (manager.controller == null)
+                manager.controller = (manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null;
+            if (manager.menu == null)
+                manager.menu = manager.avatar.expressionsMenu != null ? manager.avatar.expressionsMenu : null;
+        }
     }
 
     //Draws a line across the GUI
