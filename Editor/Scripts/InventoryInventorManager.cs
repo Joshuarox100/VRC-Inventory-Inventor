@@ -544,7 +544,7 @@ public class InventoryInventorManager : UnityEngine.Object
                         pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
                         index++;
                         break;
-                    case PageItem.ItemType.Inventory:
+                    case PageItem.ItemType.Page:
                         int val = preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference);
                         pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = pages[val].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
                         break;

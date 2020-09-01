@@ -1,6 +1,4 @@
-﻿using Boo.Lang;
-using System;
-using System.Text.RegularExpressions;
+﻿using System;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -50,7 +48,7 @@ public class PageItem : ScriptableObject
     public enum ItemType
     {
         Toggle = 0,
-        Inventory = 1,
+        Page = 1,
         Submenu = 2
     };
 
