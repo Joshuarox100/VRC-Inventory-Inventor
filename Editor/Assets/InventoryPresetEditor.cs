@@ -150,35 +150,32 @@ public class InventoryPresetEditor : Editor
         // Loop through each item in every Inventory page.
         foreach (Page page in preset.Pages)
         {
-            if (page.Type == Page.PageType.Inventory)
+            foreach (PageItem pageItem in page.Items)
             {
-                foreach (PageItem pageItem in page.Items)
+                if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
+                    switch (pageItem.Sync)
                     {
-                        switch (pageItem.Sync)
-                        {
-                            // If the toggle is local, add one for the menu and one for each group used.
-                            case PageItem.SyncMode.Off:
-                                totalUsage += 1;
-                                if (pageItem.EnableGroup.Length > 0)
-                                    totalUsage++;
-                                if (pageItem.DisableGroup.Length > 0)
-                                    totalUsage++;
-                                break;
-                            // If the toggle is manual, add three: one for the menu, being enabled, and being disabled.
-                            case PageItem.SyncMode.Manual:
-                                totalUsage += 3;
-                                break;
-                            // If the toggle is auto-synced, add the same as manual, plus one for each group used.
-                            case PageItem.SyncMode.Auto:
-                                totalUsage += 3;
-                                if (pageItem.EnableGroup.Length > 0)
-                                    totalUsage++;
-                                if (pageItem.DisableGroup.Length > 0)
-                                    totalUsage++;
-                                break;
-                        }
+                        // If the toggle is local, add one for the menu and one for each group used.
+                        case PageItem.SyncMode.Off:
+                            totalUsage += 1;
+                            if (pageItem.EnableGroup.Length > 0)
+                                totalUsage++;
+                            if (pageItem.DisableGroup.Length > 0)
+                                totalUsage++;
+                            break;
+                        // If the toggle is manual, add three: one for the menu, being enabled, and being disabled.
+                        case PageItem.SyncMode.Manual:
+                            totalUsage += 3;
+                            break;
+                        // If the toggle is auto-synced, add the same as manual, plus one for each group used.
+                        case PageItem.SyncMode.Auto:
+                            totalUsage += 3;
+                            if (pageItem.EnableGroup.Length > 0)
+                                totalUsage++;
+                            if (pageItem.DisableGroup.Length > 0)
+                                totalUsage++;
+                            break;
                     }
                 }
             }
@@ -311,24 +308,12 @@ public class InventoryPresetEditor : Editor
         Texture2D pageIcon = (Texture2D)EditorGUILayout.ObjectField(preset.Pages[pageDirectory.index].Icon, typeof(Texture2D), false);
         EditorGUILayout.EndHorizontal();
 
-        // Page type.
-        Page.PageType pageType = preset.Pages[pageDirectory.index].Type;
-        if (pageDirectory.index != 0)
-            pageType = (Page.PageType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of page."), preset.Pages[pageDirectory.index].Type);
-
-        // Page submenu (if page is of type Submenu)
-        VRCExpressionsMenu pageMenu = preset.Pages[pageDirectory.index].Submenu;
-        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
-            pageMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), preset.Pages[pageDirectory.index].Submenu, typeof(VRCExpressionsMenu), false);
-
         // Record the current state of the page and update any modified values.
         if (EditorGUI.EndChangeCheck())
         {
             EditorUtility.SetDirty(preset);
             Undo.RecordObject(preset.Pages[pageDirectory.index], "Page Modified");
             preset.Pages[pageDirectory.index].Icon = pageIcon;
-            preset.Pages[pageDirectory.index].Type = pageType;
-            preset.Pages[pageDirectory.index].Submenu = pageMenu;
         }
         EditorGUILayout.EndVertical();
 
@@ -356,220 +341,210 @@ public class InventoryPresetEditor : Editor
         // Begin item settings section.
         GUILayout.Label("Item Settings", EditorStyles.boldLabel);
         
-        // Only draw this section if the currently selected page is of type Inventory.
-        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Inventory)
+        // Make sure that there is at least one item in the page.
+        if (pageContents.list.Count < 1)
         {
-            // Make sure that there is at least one item in the page.
-            if (pageContents.list.Count < 1)
-            {
-                PageItem item = CreateInstance<PageItem>();
-                string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
-                item.hideFlags = HideFlags.HideInHierarchy;
-                AssetDatabase.AddObjectToAsset(item, _path);
-                item.name = "Slot 1";
-                preset.Pages[pageDirectory.index].Items.Add(item);
-            }
+            PageItem item = CreateInstance<PageItem>();
+            string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+            item.hideFlags = HideFlags.HideInHierarchy;
+            AssetDatabase.AddObjectToAsset(item, _path);
+            item.name = "Slot 1";
+            preset.Pages[pageDirectory.index].Items.Add(item);
+        }
 
-            // Create a list of indicies to use in the dropdown item select.
-            string[] itemNames = new string[pageContents.list.Count];
-            for (int i = 0; i < itemNames.Length; i++)
-            {
-                itemNames[i] = (i + 1).ToString();
-            }
+        // Create a list of indicies to use in the dropdown item select.
+        string[] itemNames = new string[pageContents.list.Count];
+        for (int i = 0; i < itemNames.Length; i++)
+        {
+            itemNames[i] = (i + 1).ToString();
+        }
 
-            // Correct pageContents index if it has left the list bounds.
-            if (pageContents.index >= pageContents.list.Count)
-            {
-                pageContents.index = pageContents.list.Count - 1;
-            }
-            else if (pageContents.index < 0)
-            {
-                pageContents.index = 0;
-            }
+        // Correct pageContents index if it has left the list bounds.
+        if (pageContents.index >= pageContents.list.Count)
+        {
+            pageContents.index = pageContents.list.Count - 1;
+        }
+        else if (pageContents.index < 0)
+        {
+            pageContents.index = 0;
+        }
 
-            // Draw item control container.
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        // Draw item control container.
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
 
-            // Draw item renamer.
-            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
-            GUILayout.Label(new GUIContent("Name:", "The name of the item."), GUILayout.ExpandWidth(false));
-            EditorGUI.BeginChangeCheck();
-            string itemName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+        // Draw item renamer.
+        EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+        GUILayout.Label(new GUIContent("Name:", "The name of the item."), GUILayout.ExpandWidth(false));
+        EditorGUI.BeginChangeCheck();
+        string itemName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
             
-            // Remember if the name was modified for later.
-            bool nameChanged = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                nameChanged = true;
-            }
+        // Remember if the name was modified for later.
+        bool nameChanged = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            nameChanged = true;
+        }
                     
-            // Draw left arrow.
-            if (GUILayout.Button('\u25C0'.ToString(), GUILayout.Width(30f)))
+        // Draw left arrow.
+        if (GUILayout.Button('\u25C0'.ToString(), GUILayout.Width(30f)))
+        {
+            if (pageContents.index > 0)
             {
-                if (pageContents.index > 0)
-                {
-                    pageContents.index--;
-                    GUI.FocusControl(null);
-                }
-            }
-
-            // Draw dropdown item selector.
-            EditorGUI.BeginChangeCheck();
-            pageContents.index = EditorGUILayout.Popup(pageContents.index, itemNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
-            if (EditorGUI.EndChangeCheck())
-            {
+                pageContents.index--;
                 GUI.FocusControl(null);
             }
-
-            // Draw right arrow.
-            if (GUILayout.Button('\u25B6'.ToString(), GUILayout.Width(30f)))
-            {
-                if (pageContents.index < pageContents.list.Count - 1)
-                {
-                    pageContents.index++;
-                    GUI.FocusControl(null);
-                }
-            }
-            EditorGUILayout.EndHorizontal();
-
-            // Other item settings.
-            EditorGUILayout.BeginVertical();
-
-            EditorGUI.BeginChangeCheck();
-
-            // Store the current state of each item to use for each control (less code overall).
-            PageItem currentItem = preset.Pages[pageDirectory.index].Items[pageContents.index];
-
-            Texture2D itemIcon = currentItem.Icon;
-            PageItem.ItemType itemType = currentItem.Type;
-            bool itemState = currentItem.InitialState;
-            AnimationClip itemEnable = currentItem.EnableClip;
-            AnimationClip itemDisable = currentItem.DisableClip;
-            PageItem.SyncMode itemSync = currentItem.Sync;
-            Page itemPage = currentItem.PageReference;
-            VRCExpressionsMenu itemMenu = currentItem.Submenu;
-
-            // Item icon (only if the item is not of type Page).
-            if (itemType != PageItem.ItemType.Page)
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel(new GUIContent("Icon", "The icon to use for the control."));
-                itemIcon = (Texture2D)EditorGUILayout.ObjectField(itemIcon, typeof(Texture2D), false);
-                EditorGUILayout.EndHorizontal();
-            }
-            
-            // Item type.
-            itemType = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of item."), itemType);
-
-            // Type based settings.
-            switch (itemType)
-            {
-                case PageItem.ItemType.Toggle:
-                    // Item starting state.
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PrefixLabel(new GUIContent("Start", "What state the toggle starts in."));
-                    itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disable", "Enable" }));
-                    EditorGUILayout.EndHorizontal();
-
-                    // Item enabled clip.
-                    itemEnable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable", "The Animation to play when the toggle is enabled."), itemEnable, typeof(AnimationClip), false);
-
-                    // Item disabled clip.
-                    itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
-
-                    // Item sync setting.
-                    itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
-
-                    // Like EditorGUILayout.Space(), but smaller.
-                    EditorGUILayout.BeginVertical();
-                    EditorGUILayout.EndVertical();
-                    break;
-                case PageItem.ItemType.Page:
-                    // Check if another page besides the current one exists.
-                    if (preset.Pages.Count - 1 > 0)
-                    {
-                        string[] names = new string[preset.Pages.Count - 1];
-                        Page[] pages = new Page[preset.Pages.Count - 1];
-
-                        // Store each page's name and index (excluding the currently selected page).
-                        int index = 0;
-                        for (int i = 0; i < preset.Pages.Count; i++)
-                        {
-                            if (i != pageDirectory.index)
-                            {
-                                names[index] = preset.Pages[i].name;
-                                pages[index] = preset.Pages[i];
-                                index++;
-                            }
-                        }
-
-                        // Item page reference.
-                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null ? Array.IndexOf(pages, itemPage) : 0, names)])];
-                    }
-                    else
-                    {
-                        // Display an empty list.
-                        EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), 0, new string[] { "None" });
-                    }
-                    break;
-                case PageItem.ItemType.Submenu:
-                    // Item submenu.
-                    itemMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), itemMenu, typeof(VRCExpressionsMenu), false);
-                    break;
-            }
-            EditorGUILayout.EndVertical();
-
-            // Record and update the current item if a setting was changed.
-            if (EditorGUI.EndChangeCheck() || nameChanged)
-            {
-                EditorUtility.SetDirty(preset);
-                Undo.RecordObject(currentItem, "Item Modified");
-
-                // Correct the name if it is blank or update it to the name of the page it directs to.
-                if (itemType == PageItem.ItemType.Page && itemName != ((itemPage != null) ? itemPage.name : "None"))
-                {
-                    itemName = (itemPage != null) ? itemPage.name : "None";
-                    itemIcon = (itemPage != null) ? itemPage.Icon : itemIcon;
-                }
-                else if (itemName == "")
-                {
-                    itemName = "Slot " + (pageContents.index + 1);
-                }
-
-                // Update the item's values.
-                currentItem.name = itemName;
-                currentItem.Icon = itemIcon;
-                currentItem.Type = itemType;
-                currentItem.InitialState = itemState;
-                currentItem.EnableClip = itemEnable;
-                currentItem.DisableClip = itemDisable;
-                currentItem.Sync = itemSync;
-                currentItem.PageReference = itemPage;
-                currentItem.Submenu = itemMenu;
-
-                // Reassign the item to the list (might be redundant, haven't checked).
-                preset.Pages[pageDirectory.index].Items[pageContents.index] = currentItem;
-            }
-
-            // End item settings container.
-            EditorGUILayout.EndVertical();
-
-            // Determine whether or not to display the add or remove buttons this Repaint.
-            pageContents.displayAdd = preset.Pages[pageDirectory.index].Items.Count < 8;
-            pageContents.displayRemove = preset.Pages[pageDirectory.index].Items.Count > 1;
-
-            // Display the pageContents list (without scrollbar).
-            EditorGUILayout.BeginVertical();
-            if (pageContents != null)
-                pageContents.DoLayoutList();
-            EditorGUILayout.EndVertical();
         }
-        else
+
+        // Draw dropdown item selector.
+        EditorGUI.BeginChangeCheck();
+        pageContents.index = EditorGUILayout.Popup(pageContents.index, itemNames, new GUIStyle(GUI.skin.GetStyle("Dropdown")), GUILayout.Width(30f));
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-            EditorGUILayout.HelpBox("Only Inventory pages can be modified.", MessageType.Info);
-            EditorGUILayout.EndVertical();
+            GUI.FocusControl(null);
         }
+
+        // Draw right arrow.
+        if (GUILayout.Button('\u25B6'.ToString(), GUILayout.Width(30f)))
+        {
+            if (pageContents.index < pageContents.list.Count - 1)
+            {
+                pageContents.index++;
+                GUI.FocusControl(null);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // Other item settings.
+        EditorGUILayout.BeginVertical();
+
+        EditorGUI.BeginChangeCheck();
+
+        // Store the current state of each item to use for each control (less code overall).
+        PageItem currentItem = preset.Pages[pageDirectory.index].Items[pageContents.index];
+
+        Texture2D itemIcon = currentItem.Icon;
+        PageItem.ItemType itemType = currentItem.Type;
+        bool itemState = currentItem.InitialState;
+        AnimationClip itemEnable = currentItem.EnableClip;
+        AnimationClip itemDisable = currentItem.DisableClip;
+        PageItem.SyncMode itemSync = currentItem.Sync;
+        Page itemPage = currentItem.PageReference;
+        VRCExpressionsMenu itemMenu = currentItem.Submenu;
+
+        // Item icon (only if the item is not of type Page).
+        if (itemType != PageItem.ItemType.Page)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Icon", "The icon to use for the control."));
+            itemIcon = (Texture2D)EditorGUILayout.ObjectField(itemIcon, typeof(Texture2D), false);
+            EditorGUILayout.EndHorizontal();
+        }
+            
+        // Item type.
+        itemType = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of item."), itemType);
+
+        // Type based settings.
+        switch (itemType)
+        {
+            case PageItem.ItemType.Toggle:
+                // Item starting state.
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent("Start", "What state the toggle starts in."));
+                itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disable", "Enable" }));
+                EditorGUILayout.EndHorizontal();
+
+                // Item enabled clip.
+                itemEnable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Enable", "The Animation to play when the toggle is enabled."), itemEnable, typeof(AnimationClip), false);
+
+                // Item disabled clip.
+                itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
+
+                // Item sync setting.
+                itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
+
+                // Like EditorGUILayout.Space(), but smaller.
+                EditorGUILayout.BeginVertical();
+                EditorGUILayout.EndVertical();
+                break;
+            case PageItem.ItemType.Page:
+                // Check if another page besides the current one exists.
+                if (preset.Pages.Count - 1 > 0)
+                {
+                    string[] names = new string[preset.Pages.Count - 1];
+                    Page[] pages = new Page[preset.Pages.Count - 1];
+
+                    // Store each page's name and index (excluding the currently selected page).
+                    int index = 0;
+                    for (int i = 0; i < preset.Pages.Count; i++)
+                    {
+                        if (i != pageDirectory.index)
+                        {
+                            names[index] = preset.Pages[i].name;
+                            pages[index] = preset.Pages[i];
+                            index++;
+                        }
+                    }
+
+                    // Item page reference.
+                    itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null ? Array.IndexOf(pages, itemPage) : 0, names)])];
+                }
+                else
+                {
+                    // Display an empty list.
+                    EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), 0, new string[] { "None" });
+                }
+                break;
+            case PageItem.ItemType.Submenu:
+                // Item submenu.
+                itemMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), itemMenu, typeof(VRCExpressionsMenu), false);
+                break;
+        }
+        EditorGUILayout.EndVertical();
+
+        // Record and update the current item if a setting was changed.
+        if (EditorGUI.EndChangeCheck() || nameChanged)
+        {
+            EditorUtility.SetDirty(preset);
+            Undo.RecordObject(currentItem, "Item Modified");
+
+            // Correct the name if it is blank or update it to the name of the page it directs to.
+            if (itemType == PageItem.ItemType.Page && itemName != ((itemPage != null) ? itemPage.name : "None"))
+            {
+                itemName = (itemPage != null) ? itemPage.name : "None";
+                itemIcon = (itemPage != null) ? itemPage.Icon : itemIcon;
+            }
+            else if (itemName == "")
+            {
+                itemName = "Slot " + (pageContents.index + 1);
+            }
+
+            // Update the item's values.
+            currentItem.name = itemName;
+            currentItem.Icon = itemIcon;
+            currentItem.Type = itemType;
+            currentItem.InitialState = itemState;
+            currentItem.EnableClip = itemEnable;
+            currentItem.DisableClip = itemDisable;
+            currentItem.Sync = itemSync;
+            currentItem.PageReference = itemPage;
+            currentItem.Submenu = itemMenu;
+
+            // Reassign the item to the list (might be redundant, haven't checked).
+            preset.Pages[pageDirectory.index].Items[pageContents.index] = currentItem;
+        }
+
+        // End item settings container.
+        EditorGUILayout.EndVertical();
+
+        // Determine whether or not to display the add or remove buttons this Repaint.
+        pageContents.displayAdd = preset.Pages[pageDirectory.index].Items.Count < 8;
+        pageContents.displayRemove = preset.Pages[pageDirectory.index].Items.Count > 1;
+
+        // Display the pageContents list (without scrollbar).
+        EditorGUILayout.BeginVertical();
+        if (pageContents != null)
+            pageContents.DoLayoutList();
+        EditorGUILayout.EndVertical();
 
         // End section.
         EditorGUILayout.Space();
@@ -578,7 +553,7 @@ public class InventoryPresetEditor : Editor
         // Begin toggle groups section.
 
         // If a toggle is selected, rename the section to use the toggle's name. Otherwise display the default name.
-        if (preset.Pages[pageDirectory.index].Type == Page.PageType.Inventory && preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle)
+        if (preset.Pages[pageDirectory.index].Items[pageContents.index].Type == PageItem.ItemType.Toggle)
         {
             GUILayout.Label(preset.Pages[pageDirectory.index].Items[pageContents.index].name + "'s Groups", EditorStyles.boldLabel);
         }
@@ -687,19 +662,9 @@ public class InventoryPresetEditor : Editor
         }
         else
         {
-            // Display different messages based on what is currently selected.
-            if (preset.Pages[pageDirectory.index].Type == Page.PageType.Submenu)
-            {
-                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-                EditorGUILayout.HelpBox("Only Inventory pages can be modified.", MessageType.Info);
-                EditorGUILayout.EndVertical();
-            }
-            else
-            {
-                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-                EditorGUILayout.HelpBox("Groups are only usable with Toggles.", MessageType.Info);
-                EditorGUILayout.EndVertical();
-            }                
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+            EditorGUILayout.HelpBox("Groups are only usable with Toggles.", MessageType.Info);
+            EditorGUILayout.EndVertical();            
         }
         EditorGUILayout.EndVertical();
 
@@ -918,13 +883,9 @@ public class InventoryPresetEditor : Editor
         // The element being drawn.
         Page item = preset.Pages[index];
 
-        // Force the first element to be of type Inventory.
-        if (index == 0 && item.Type != Page.PageType.Inventory)
-            item.Type = Page.PageType.Inventory;
-
         // Draw the page name and type. If the element is first in the list, display "Default" as the type.
         EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
-        EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == Page.PageType.Inventory) ? ((index == 0) ? "Default" : "Inventory") : "Submenu");
+        EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (index == 0) ? "Default" : "");
     }
 
     // pageDirectory.onAddCallback
@@ -1051,23 +1012,20 @@ public class InventoryPresetEditor : Editor
         List<string> toggleNames = new List<string>();
         foreach (Page page in preset.Pages)
         {
-            if (page.Type == Page.PageType.Inventory)
+            foreach (PageItem pageItem in page.Items)
             {
-                foreach (PageItem pageItem in page.Items)
+                if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
-                    {
-                        allToggles.Add(pageItem);
+                    allToggles.Add(pageItem);
 
-                        // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetEnableGroupItems(), pageItem) == -1))
-                        {
-                            remainingToggles.Add(pageItem);
-                            toggleNames.Add(page.name + ": " + pageItem.name);
-                        }
+                    // Only add the toggle as a selectable one if it is one not currently in the group.
+                    if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetEnableGroupItems(), pageItem) == -1))
+                    {
+                        remainingToggles.Add(pageItem);
+                        toggleNames.Add(page.name + ": " + pageItem.name);
                     }
                 }
-            }                
+            }              
         }
 
         if (remainingToggles.Count > 0)
@@ -1114,14 +1072,11 @@ public class InventoryPresetEditor : Editor
         int totalUsage = 0;
         foreach (Page page in preset.Pages)
         {
-            if (page.Type == Page.PageType.Inventory)
+            foreach (PageItem pageItem in page.Items)
             {
-                foreach (PageItem pageItem in page.Items)
+                if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
-                    {
-                        totalUsage += 1;
-                    }
+                    totalUsage += 1;
                 }
             }            
         }
@@ -1208,20 +1163,17 @@ public class InventoryPresetEditor : Editor
         List<string> toggleNames = new List<string>();
         foreach (Page page in preset.Pages)
         {
-            if (page.Type == Page.PageType.Inventory)
+            foreach (PageItem pageItem in page.Items)
             {
-                foreach (PageItem pageItem in page.Items)
+                if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
-                    {
-                        allToggles.Add(pageItem);
+                    allToggles.Add(pageItem);
 
-                        // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetDisableGroupItems(), pageItem) == -1))
-                        {
-                            remainingToggles.Add(pageItem);
-                            toggleNames.Add(page.name + ": " + pageItem.name);
-                        }
+                    // Only add the toggle as a selectable one if it is one not currently in the group.
+                    if (pageItem != preset.Pages[pageDirectory.index].Items[pageContents.index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].GetDisableGroupItems(), pageItem) == -1))
+                    {
+                        remainingToggles.Add(pageItem);
+                        toggleNames.Add(page.name + ": " + pageItem.name);
                     }
                 }
             }
@@ -1271,14 +1223,11 @@ public class InventoryPresetEditor : Editor
         int totalUsage = 0;
         foreach (Page page in preset.Pages)
         {
-            if (page.Type == Page.PageType.Inventory)
+            foreach (PageItem pageItem in page.Items)
             {
-                foreach (PageItem pageItem in page.Items)
+                if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
-                    if (pageItem.Type == PageItem.ItemType.Toggle)
-                    {
-                        totalUsage += 1;
-                    }
+                    totalUsage += 1;
                 }
             }
         }
