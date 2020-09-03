@@ -90,7 +90,7 @@ An Item represents a control contained within a Page. An Item can be one of thre
 Toggles can be used to toggle between two Animations and can be configured in several different ways. Toggles can also use [Groups](#groups) for toggling other Toggles simultaneously. The function of each setting is listed below.
 
 | Setting | Description |
-| :----- | ------ |
+| :----: | ------ |
 | Name | The name that the Item's control will use in the Expressions Menu. |
 | Icon | The icon that the Item's control will use in the Expressions Menu. |
 | Start | The starting state of the Toggle.<br>The corresponding Animation will play by default when the Avatar is loaded or reset. |
