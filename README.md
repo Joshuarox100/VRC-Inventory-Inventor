@@ -93,10 +93,10 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | :----- | ------ |
 | Name | The name that the Item's control will use in the Expressions Menu. |
 | Icon | The icon that the Item's control will use in the Expressions Menu. |
-| Start | The starting state of the Toggle.<br>The corresponding Animation will play by default when the Avatar is loaded or reset. |
+| Start | The starting state of the Toggle. The corresponding Animation will play by default when the Avatar is loaded or reset. |
 | Enable | The Animation to play when the Toggle is activated. |
 | Disable | The Animation to play when the Toggle is deactivated. |
-| Sync | How the Toggle is synced with others.<br>Off: Local only; Remote clients will see the default state of the Toggle.<br>Manual: Syncs when triggered; Late-joiners will see the default state until the Toggle is reused.<br>Auto: Always synced; Any Toggles marked Auto will be synced while the Inventory is left idle. |
+| Sync | How the Toggle is synced with others.<br><br>Off: Local only; Remote clients will see the default state of the Toggle.<br>Manual: Syncs when triggered; Late-joiners will see the default state until the Toggle is reused.<br>Auto: Always synced; Any Toggles marked Auto will be synced while the Inventory is left idle. |
 
 #### Page
 <p align="center">
