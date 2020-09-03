@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Cube Preset
   m_EditorClassIdentifier: 
   m_Pages:
-  - {fileID: 114751815937736816}
   - {fileID: 114556488549054094}
+  - {fileID: 114751815937736816}
   - {fileID: 114907665713386326}
   - {fileID: 114248397600098376}
   - {fileID: 114370941908486564}
@@ -842,12 +842,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Group Controls
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114818806032990794}
   - {fileID: 114946877792045078}
   - {fileID: 114176101265683676}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114250046515167972
 MonoBehaviour:
@@ -903,13 +901,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Columns
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114134762237643930}
   - {fileID: 114761991821503528}
   - {fileID: 114477814405790596}
   - {fileID: 114361069388970676}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114253406201535252
 MonoBehaviour:
@@ -1309,13 +1305,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Rows
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114794750846642072}
   - {fileID: 114848850737251374}
   - {fileID: 114275072084654410}
   - {fileID: 114152888110051560}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114371528884246998
 MonoBehaviour:
@@ -2080,12 +2074,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Cubes
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114712913999993826}
   - {fileID: 114466485159153444}
   - {fileID: 114824829620554020}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114572658933411002
 MonoBehaviour:
@@ -2803,7 +2795,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Rows 1 & 2
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114572658933411002}
   - {fileID: 114677520182251748}
@@ -2813,7 +2804,6 @@ MonoBehaviour:
   - {fileID: 114199279951705182}
   - {fileID: 114330888503215362}
   - {fileID: 114946501580226528}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114761991821503528
 MonoBehaviour:
@@ -3421,7 +3411,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
   m_Name: Rows 3 & 4
   m_EditorClassIdentifier: 
-  m_Type: 0
   m_Items:
   - {fileID: 114131013947073648}
   - {fileID: 114333017304371322}
@@ -3431,7 +3420,6 @@ MonoBehaviour:
   - {fileID: 114492597391754426}
   - {fileID: 114678709192839252}
   - {fileID: 114687020662236800}
-  m_Submenu: {fileID: 0}
   m_Icon: {fileID: 0}
 --- !u!114 &114911644063417530
 MonoBehaviour:
