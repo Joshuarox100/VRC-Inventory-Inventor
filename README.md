@@ -96,7 +96,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Start | The starting state of the Toggle.<br>The corresponding Animation will play by default when the Avatar is loaded or reset. |
 | Enable | The Animation to play when the Toggle is activated. |
 | Disable | The Animation to play when the Toggle is deactivated. |
-| Sync | How the Toggle is synced with others.<br>Off: Toggle will be local only. Remote clients will see the default state of the Toggle.<br>Manual: Toggle will only sync when triggered. Late-joiners will see the default state until the Toggle is reused.<br>Auto: Toggle will always be synced. Any Toggles marked Auto will be syncronized on a loop while the Inventory is left to Idle. |
+| Sync | How the Toggle is synced with others.<br>Off: Local only; Remote clients will see the default state of the Toggle.<br>Manual: Syncs when triggered; Late-joiners will see the default state until the Toggle is reused.<br>Auto: Always synced; Any Toggles marked Auto will be synced while the Inventory is left idle. |
 
 #### Page
 <p align="center">
