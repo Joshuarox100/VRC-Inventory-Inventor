@@ -943,6 +943,15 @@ public class InventoryPresetEditor : Editor
         // The item being drawn.
         PageItem item = preset.Pages[pageDirectory.index].Items[index];
 
+        // Update the item to use the correct name if it directs to a Page.
+        if (item.Type == PageItem.ItemType.Page)
+        {
+            if (item.PageReference != null && item.name != item.PageReference.name)
+            {
+                item.name = item.PageReference.name;
+            }
+        }
+
         // Draw the item's name and type.
         EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
         EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == PageItem.ItemType.Toggle) ? "Toggle" : (item.Type == PageItem.ItemType.Page) ? "Page" : "Submenu");
