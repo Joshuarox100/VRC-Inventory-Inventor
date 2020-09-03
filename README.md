@@ -65,27 +65,67 @@ From here, it gets a lot more open ended. If you would like to jump to a particu
   <img width="80%" height="80%" src="Images/Preset/Pages/Overview.png">
 </p>
 
-Pages are a Preset's equivalent of a Submenu (quite literally). All pages can be given a custom name and an icon. These will be used in the Expressions Menus for controls that direct to other pages.
+Pages are a Preset's equivalent of a Submenu (quite literally). All Pages can be given a custom name and icon. These will be used in the Expressions Menus for any controls that direct to other pages within the Preset.
 
-If two pages are given the same name, the most recently modified page will be given an extension depending on its instance. Ex. "Name", "Name 0", & "Name" would become "Name", "Name 0", & "Name 1" and so on.
+If two Pages are given the same name, the most recently modified Page will be given an extension depending on its instance. For example: "Name", "Name 0", & "Name" would become "Name", "Name 0", & "Name 1" and so on.
 
 #### Default
-The first page in the list will always become the Default. The Default page functions exactly the same as a regular page, except that it will always be the first menu that the Inventory starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the page that will be added to it as a Submenu using the page's name and icon. The Default page will always be represented with the word 'Default' to right of the name.
+The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
 #### Regular
-Every other page aside from the first will be a regular page. Regular pages can contain up to 8 different Items used for toggling objects, accessing other pages, or for accessing external Menus.
+Every other Page aside from the first will be a regular Page. Regular Pages can contain up to 8 different [Items](#items) used for toggling objects, accessing other Pages, or for accessing external Menus.
 
 ### Items
-Default
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Items/Overview.png">
+</p>
+
+An Item represents a control contained within a Page. An Item can be one of three types: a Toggle, a Page, or a Submenu. Each type of Item functions differently.
+
+#### Toggle
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Items/Toggle.png">
+</p>
+
+Toggles can be used to toggle between two Animations and can be configured in several different ways. Toggles can also use [Groups](#groups) for toggling other Toggles simultaneously. The function of each setting is listed below.
+
+| Setting | Description |
+| :----- | ------ |
+| Name | The name that the Item's control will use in the Expressions Menu. |
+| Icon | The icon that the Item's control will use in the Expressions Menu. |
+| Start | The starting state of the Toggle.<br>The corresponding Animation will play by default when the Avatar is loaded or reset. |
+| Enable | The Animation to play when the Toggle is activated. |
+| Disable | The Animation to play when the Toggle is deactivated. |
+| Sync | How the Toggle is synced with others.<br>Off: Toggle will be local only. Remote clients will see the default state of the Toggle.<br>Manual: Toggle will only sync when triggered. Late-joiners will see the default state until the Toggle is reused.<br>Auto: Toggle will always be synced. Any Toggles marked Auto will be syncronized on a loop while the Inventory is left to Idle. |
+
+#### Page
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Items/Page.png">
+</p>
+
+Page Items can be used to access any other Pages in the inventory (excluding the one it's apart of). An Item using this type will automatically use both the name and icon of the Page it directs to.
+
+#### Submenu
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Items/Submenu.png">
+</p>
+
+Submenu Items are used to access any Expressions Menus that are not a part of the Inventory. The name and icon given to a Submenu Item will be used for the Submenu control within the Page's Expressions Menu.
 
 ### Groups
-Default
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Groups/Overview.png">
+</p>
+
+Groups are used for toggling multiple objects at once. Each Group can have as many members as there are Toggles in the Preset. Groups can only be used with Toggles, and each Toggle can trigger a different Group depending on if it is being enabled or disabled.
+
+Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled Item will be triggered, any other Groups within its members will be ignored.
 
 ### Hints
 Default
 
 ## Using the Manager
-
+Default
 
 ## Common Questions
 **Can I make submenus using the UI?**
