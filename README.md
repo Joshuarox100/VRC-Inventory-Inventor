@@ -61,7 +61,19 @@ From here, it gets a lot more open ended. If you would like to jump to a particu
 4. [Hints](#hints)
 
 ### Pages
-Default
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Pages/Overview.png">
+</p>
+
+Pages are a Preset's equivalent of a Submenu (quite literally). All pages can be given a custom name and an icon. These will be used in the Expressions Menus for controls that direct to other pages.
+
+If two pages are given the same name, the most recently modified page will be given an extension depending on its instance. Ex. "Name", "Name 0", & "Name" would become "Name", "Name 0", & "Name 1" and so on.
+
+#### Default
+The first page in the list will always become the Default. The Default page functions exactly the same as a regular page, except that it will always be the first menu that the Inventory starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the page that will be added to it as a Submenu using the page's name and icon. The Default page will always be represented with the word 'Default' to right of the name.
+
+#### Regular
+Every other page aside from the first will be a regular page. Regular pages can contain up to 8 different Items used for toggling objects, accessing other pages, or for accessing external Menus.
 
 ### Items
 Default
