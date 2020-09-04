@@ -16,25 +16,9 @@ Simply download and import the latest **Unity Package** from [**Releases**](http
 </p>
 
 ## How to Use
-1) To create an Inventory, first create an Inventory Preset as described in [Creating a Preset](#creating-a-preset).
+1) To create an Inventory, first create a Preset as described in [Creating a Preset](#creating-a-preset).
 
-<p align="center">
-  <img width="80%" height="80%" src="Images/How To Use/Step 1.png">
-</p>
-
-2) To apply the preset to your Avatar, open the manager located under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
-
-<p align="center">
-  <img width="80%" height="80%" src="Images/How To Use/Step 2.png">
-</p>
-
-3) Configure the manager with your preset as described in [Using the Manager](#using-the-manager).
-
-<p align="center">
-  <img width="80%" height="80%" src="Images/How To Use/Step 3.png">
-</p>
-
-4) Finally, click Create to apply the preset to your Avatar! 
+2) Then use the manager to apply your Preset as described in [Using the Manager](#using-the-manager).
 
 If you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
@@ -70,7 +54,7 @@ Pages are a Preset's equivalent of a Submenu (quite literally). All Pages can be
 If two Pages are given the same name, the most recently modified Page will be given an extension depending on its instance. For example: "Name", "Name 0", & "Name" would become "Name", "Name 0", & "Name 1" and so on.
 
 #### Default
-The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
+The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the Menu that the Inventory initially starts in when added to the Avatar. If a Menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
 #### Regular
 Every other Page aside from the first will be a regular Page. Regular Pages can contain up to 8 different [Items](#items) used for toggling objects, accessing other Pages, or for accessing external Menus.
@@ -80,7 +64,7 @@ Every other Page aside from the first will be a regular Page. Regular Pages can 
   <img width="80%" height="80%" src="Images/Preset/Items/Overview.png">
 </p>
 
-An Item represents a control contained within a Page. An Item can be one of three types: a Toggle, a Page, or a Submenu. Each type of Item functions differently.
+An Item represents a control contained within a [Page](#pages). An Item can be one of three types: a Toggle, a Page, or a Submenu. Each type of Item functions differently.
 
 #### Toggle
 <p align="center">
@@ -96,21 +80,21 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Start | The starting state of the Toggle.<br>The corresponding Animation will play by default when the Avatar is loaded or reset. |
 | Enable | The Animation to play when the Toggle is activated. |
 | Disable | The Animation to play when the Toggle is deactivated. |
-| Sync | How the Toggle is synced with others.<br>**Off**: Local only; Remote clients will see the default state of the Toggle.<br>**Manual**: Syncs when triggered; Late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; Any Toggles marked Auto will be synced while the Inventory is left idle. |
+| Sync | How the Toggle is synced with others.<br>**Off**: Local only; remote clients will only see the default state of the Toggle.<br>**Manual**: Syncs when triggered; late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; any Toggles marked Auto will be synced while the Inventory is left idle. |
 
 #### Page
 <p align="center">
   <img width="80%" height="80%" src="Images/Preset/Items/Page.png">
 </p>
 
-Page Items can be used to access any other Pages in the inventory (excluding the one it's apart of). An Item using this type will automatically use both the name and icon of the Page it directs to.
+Page Items can be used to access any other [Pages](#pages) in the Preset (excluding the one it's apart of). An Item using this type will automatically use both the name and icon of the [Page](#pages) it directs to.
 
 #### Submenu
 <p align="center">
   <img width="80%" height="80%" src="Images/Preset/Items/Submenu.png">
 </p>
 
-Submenu Items are used to access any Expressions Menus that are not a part of the Inventory. The name and icon given to a Submenu Item will be used for the Submenu control within the Page's Expressions Menu.
+Submenu Items are used to access any Expressions Menus that are not a part of the Preset. The name and icon given to a Submenu Item will be used for the Submenu control within the [Page's](#pages) Expressions Menu.
 
 ### Groups
 <p align="center">
@@ -119,12 +103,12 @@ Submenu Items are used to access any Expressions Menus that are not a part of th
 
 Groups are used for toggling multiple objects at once. Each Group can have as many members as there are Toggles in the Preset. Groups can only be used with Toggles, and each Toggle can trigger a different Group depending on if it is being enabled or disabled.
 
-Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled Item will be triggered, any other Groups within its members will be ignored.
+Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled [Item](#items) will be triggered, any other Groups within its members will be ignored.
 
 ### Hints
 Here are some things you should keep in mind as you create your Preset.
 
-1. The Animations you use for Toggles must be usable in the FX layer. If they're not compatible, you will recieve an error when applying the Preset to an Avatar.
+1. The Animations you use for Toggles must be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar.
 
 2. Any Pages that exist in the Preset but don't have a way to be accessed will still be created when the Preset is applied to an Avatar. You can then take the Menus for these Pages and put them elsewhere on your Avatar if you wish.
 
@@ -137,7 +121,11 @@ Here are some things you should keep in mind as you create your Preset.
 	- Toggles with syncing set to Auto will always use at least three values and another one for each Group it uses (3 - 5).
 
 ## Using the Manager
-The manager is used for both applying Presets and removing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
+The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
+
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Manager/Location.png">
+</p>
 
 You can choose which of these operations you wish to perform by selecting it on the toolbar. The settings you're able to configure vary depending on the operation you've chosen.
 
