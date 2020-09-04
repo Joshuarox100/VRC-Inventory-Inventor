@@ -1,8 +1,7 @@
 # Inventory Inventor
-
 Author: Joshuarox100
 
-Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with up to 64 synced toggles, all contained within a single Expression Parameter!
+Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all contained within a single Expression Parameter!
 
 Dependencies: 
 - [BMB Libraries](https://github.com/Joshuarox100/BMB-Libraries) (Included)
@@ -10,10 +9,7 @@ Dependencies:
 
 ## Installation Guide
 Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
-
-<p align="center">
-  <img width="80%" height="80%" src="Images/Install/Releases.png">
-</p>
+> **Do NOT download and try to use the source code on its own from the main page. It will not compile correctly unless you also download BMB Libraries and you will also be missing other minor files.**
 
 ## How to Use
 Before following these steps, set up your avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
@@ -73,7 +69,7 @@ An Item represents a control contained within a [Page](#pages). An Item can be o
   <img width="80%" height="80%" src="Images/Preset/Items/Toggle.png">
 </p>
 
-Toggles can be used to toggle between two Animations and can be configured in several different ways. Toggles can also use [Groups](#groups) for toggling other Toggles simultaneously. The function of each setting is listed below.
+Toggles can be used to toggle between two Animations and can be configured in several different ways. Toggles can also use [Groups](#groups) for affecting other Toggles simultaneously. The function of each setting is listed below.
 
 | Setting | Description |
 | :----: | ------ |
@@ -89,7 +85,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
   <img width="80%" height="80%" src="Images/Preset/Items/Page.png">
 </p>
 
-Page Items can be used to access any other [Pages](#pages) in the Preset (excluding the one it's apart of). An Item using this type will automatically use both the name and icon of the [Page](#pages) it directs to.
+Page Items can be used to access any other [Pages](#pages) in the Preset (excluding the one it's contained within). An Item using this type will automatically use both the name and icon of the [Page](#pages) it directs to.
 
 #### Submenu
 <p align="center">
@@ -154,7 +150,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 </p>
 
 The 'Remove' menu is used for removing an existing Inventory from a provided Animator Controller.
->This will NOT remove or delete any Menus or Expression Parameters from an Avatar.
+>This will **NOT** remove or delete any Menus or Expression Parameters from an Avatar.
 
 Any layers or parameters that will be removed from the provided Controller during the operation will be shown under 'Will Be Removed'.
 
