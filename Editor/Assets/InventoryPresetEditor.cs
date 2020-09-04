@@ -375,14 +375,62 @@ public class InventoryPresetEditor : Editor
         // Draw item renamer.
         EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
         GUILayout.Label(new GUIContent("Name:", "The name of the item."), GUILayout.ExpandWidth(false));
-        EditorGUI.BeginChangeCheck();
-        string itemName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-            
-        // Remember if the name was modified for later.
+
         bool nameChanged = false;
-        if (EditorGUI.EndChangeCheck())
+        string itemName = preset.Pages[pageDirectory.index].Items[pageContents.index].name;
+        if (preset.Pages[pageDirectory.index].Items[pageContents.index].Type != PageItem.ItemType.Page)
         {
-            nameChanged = true;
+            EditorGUI.BeginChangeCheck();
+            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+
+            // Remember if the name was modified for later.
+            if (EditorGUI.EndChangeCheck())
+            {
+                nameChanged = true;
+            }
+        }
+        else
+        {
+            if (preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference != null)
+            {
+                // If this is a Page Item, allow the name field to modify the page name instead.
+                EditorGUI.BeginChangeCheck();
+                string refPageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference.name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    // Revert to default name if left blank.
+                    if (refPageName == "")
+                    {
+                        refPageName = "Page " + (preset.Pages.IndexOf(preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference) + 1);
+                    }
+
+                    // Deal with pages that share the same name.
+                    List<string> names = new List<string>();
+                    foreach (Page page in preset.Pages)
+                    {
+                        if (page != preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference)
+                            names.Add(page.name);
+                    }
+                    if (names.Contains(refPageName))
+                    {
+                        int occurance = 0;
+                        while (names.Contains(refPageName + " " + occurance))
+                        {
+                            occurance++;
+                        }
+                        refPageName = refPageName + " " + occurance;
+                    }
+
+                    // Mark the preset as dirty, record the page, and update it.
+                    EditorUtility.SetDirty(preset);
+                    Undo.RecordObject(preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference, "Page Modified");
+                    preset.Pages[pageDirectory.index].Items[pageContents.index].PageReference.name = refPageName;
+                }
+            }
+            else
+            {
+                EditorGUILayout.TextField("None", new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+            }           
         }
                     
         // Draw left arrow.
@@ -507,13 +555,8 @@ public class InventoryPresetEditor : Editor
             EditorUtility.SetDirty(preset);
             Undo.RecordObject(currentItem, "Item Modified");
 
-            // Correct the name if it is blank or update it to the name of the page it directs to.
-            if (itemType == PageItem.ItemType.Page && itemName != ((itemPage != null) ? itemPage.name : "None"))
-            {
-                itemName = (itemPage != null) ? itemPage.name : "None";
-                itemIcon = (itemPage != null) ? itemPage.Icon : itemIcon;
-            }
-            else if (itemName == "")
+            // Correct the name if it is blank.
+            if (itemName == "")
             {
                 itemName = "Slot " + (pageContents.index + 1);
             }
@@ -883,6 +926,23 @@ public class InventoryPresetEditor : Editor
         // The element being drawn.
         Page item = preset.Pages[index];
 
+        // Deal with pages that share the same name.
+        List<string> names = new List<string>();
+        foreach (Page page in preset.Pages)
+        {
+            if (page != item)
+                names.Add(page.name);
+        }
+        if (names.Contains(item.name) && names.IndexOf(item.name) != index)
+        {
+            int occurance = 0;
+            while (names.Contains(item.name + " " + occurance))
+            {
+                occurance++;
+            }
+            item.name = item.name + " " + occurance;
+        }
+
         // Draw the page name and type. If the element is first in the list, display "Default" as the type.
         EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
         EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (index == 0) ? "Default" : "");
@@ -943,17 +1003,8 @@ public class InventoryPresetEditor : Editor
         // The item being drawn.
         PageItem item = preset.Pages[pageDirectory.index].Items[index];
 
-        // Update the item to use the correct name if it directs to a Page.
-        if (item.Type == PageItem.ItemType.Page)
-        {
-            if (item.PageReference != null && item.name != item.PageReference.name)
-            {
-                item.name = item.PageReference.name;
-            }
-        }
-
         // Draw the item's name and type.
-        EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), item.name);
+        EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width / 2, rect.height), (item.Type == PageItem.ItemType.Page) ? ((item.PageReference != null) ? item.PageReference.name : "None") : item.name);
         EditorGUI.LabelField(new Rect(rect.x + (rect.width / 2), rect.y, rect.width / 2, rect.height), (item.Type == PageItem.ItemType.Toggle) ? "Toggle" : (item.Type == PageItem.ItemType.Page) ? "Page" : "Submenu");
     }
 

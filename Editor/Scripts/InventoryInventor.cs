@@ -577,15 +577,15 @@ public class InventoryInventor : UnityEngine.Object
                 switch (preset.Pages[i].Items[j].Type)
                 {
                     case PageItem.ItemType.Toggle:
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
                         index++;
                         break;
                     case PageItem.ItemType.Page:
                         int val = preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference);
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[val].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[val].name, icon = preset.Pages[val].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
                         break;
                     case PageItem.ItemType.Submenu:
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].Submenu });
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].Submenu });
                         break;
                 }
             }
