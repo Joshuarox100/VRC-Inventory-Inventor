@@ -12,7 +12,7 @@ Dependencies:
 Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
 
 <p align="center">
-  <img width="80%" height="80%" src="Images/Other/Installation.png">
+  <img width="80%" height="80%" src="Images/Install/Releases.png">
 </p>
 
 ## How to Use
@@ -124,14 +124,14 @@ Here are some things you should keep in mind as you create your Preset.
 The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
 
 <p align="center">
-  <img width="80%" height="80%" src="Images/Preset/Manager/Location.png">
+  <img width="80%" height="80%" src="Images/Manager/Location.png">
 </p>
 
 You can choose which of these operations you wish to perform by selecting it on the toolbar. The settings you're able to configure vary depending on the operation you've chosen.
 
 ### Create
 <p align="center">
-  <img width="80%" height="80%" src="Images/Preset/Manager/Create.png">
+  <img width="80%" height="80%" src="Images/Manager/Create.png">
 </p>
 
 The 'Create' menu is used for creating an Inventory from a given Preset and applying it to an Avatar. If an Inventory already exists on the Avatar when a Preset is being applied, it will be replaced (excluding any parameters).
@@ -148,7 +148,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 
 ### Remove
 <p align="center">
-  <img width="80%" height="80%" src="Images/Preset/Manager/Remove.png">
+  <img width="80%" height="80%" src="Images/Manager/Remove.png">
 </p>
 
 The 'Remove' menu is used for removing an existing Inventory from a provided Animator Controller.
