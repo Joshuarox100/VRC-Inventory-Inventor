@@ -9,7 +9,7 @@ Dependencies:
 
 ## Installation Guide
 Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
-> **Do NOT download and try to use the source code on its own from the main page. It will not compile correctly unless you also download BMB Libraries and you will also be missing other minor files.**
+> **Do NOT download and try to use the source code on its own from the main page. It will not compile correctly unless you download BMB Libraries and you will also be missing other minor files.**
 
 ## How to Use
 Before following these steps, set up your avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
