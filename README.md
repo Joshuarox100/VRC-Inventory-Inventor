@@ -18,7 +18,7 @@ Before following these steps, set up your avatar how you normally would and ensu
 
 2) Then use the manager to apply your Preset as described in [Using the Manager](#using-the-manager).
 
-If you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
+If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there is an example Scene and Preset you can reference in the 'Example' folder. Additionally, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
 ## Creating a Preset
 To add an Inventory to an Avatar, you first need to create a Preset!
@@ -167,8 +167,8 @@ Any layers or parameters that will be removed from the provided Controller durin
 **Can I use the Inventory with other layers beside FX?**
 >Although it isn't natively supported or done automatically, if you copy some layers around and use some empty Toggles as placeholders you can make it work.
 
-**Can use of this tool cause unrepairable damage to my Animator Controllers?**
->As far as I am aware, no. Before any files are modified, their raw data is stored and used to revert all files entirely if an error happens to occur.
+**Can this tool cause unrepairable damage to my Animator Controllers?**
+>As far as I am aware, no. Before any files are modified, their raw data is stored and used to revert all affected files entirely if an error happens to occur.
 
 ## Troubleshooting
 **My Inventory isn't syncing correctly to people joining late.**
