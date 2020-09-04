@@ -16,6 +16,8 @@ Simply download and import the latest **Unity Package** from [**Releases**](http
 </p>
 
 ## How to Use
+Before following these steps, set up your avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
+
 1) To create an Inventory, first create a Preset as described in [Creating a Preset](#creating-a-preset).
 
 2) Then use the manager to apply your Preset as described in [Using the Manager](#using-the-manager).
