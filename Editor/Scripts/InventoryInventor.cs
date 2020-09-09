@@ -238,7 +238,18 @@ public class InventoryInventor : UnityEngine.Object
             for (int i = 0; i < animator.layers.Length; i++)
             {
                 // A layer is an Inventory layer if the State Machine has a InventoryMachine behaviour attached.
-                if (animator.layers[i].stateMachine.behaviours.Length < 1 || animator.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine))
+                // Or it has a "special transition"
+                bool hasSpecialTransition = false;
+                foreach (AnimatorStateTransition transition in animator.layers[i].stateMachine.anyStateTransitions)
+                {
+                    if (transition.name == "InventoryMachineIdentifier" && transition.isExit == false && transition.mute == true && transition.destinationState == null && transition.destinationStateMachine == null)
+                    {
+                        hasSpecialTransition = true;
+                        break;
+                    }
+                }
+
+                if (!hasSpecialTransition && (animator.layers[i].stateMachine.behaviours.Length < 1 || animator.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine)))
                 {
                     EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Cloning Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse(i.ToString()) / animator.layers.Length));
 
@@ -650,10 +661,13 @@ public class InventoryInventor : UnityEngine.Object
          */
 
         // Create a template machine to duplicate.
-        AnimatorStateMachine templateMachine = new AnimatorStateMachine 
+        AnimatorStateMachine templateMachine = new AnimatorStateMachine
         {
-            // This behaviour is added so it will be detected as a Inventory layer.
-            behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() }
+            // For whatever reason, using this behaviour crashes VRChat when switching avatars even though it doesn't get uploaded :/
+            // For now, a special transition is used instead later on.
+
+            //// This behaviour is added so it will be detected as a Inventory layer.
+            //behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() }
         };
         ChildAnimatorState[] states = new ChildAnimatorState[templateMachine.states.Length + 2];
         templateMachine.states.CopyTo(states, 2);
@@ -814,6 +828,17 @@ public class InventoryInventor : UnityEngine.Object
                 transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
             }
 
+            // Inventory machine identifier
+            transitions.Add(new AnimatorStateTransition
+            {
+                name = "InventoryMachineIdentifier",
+                hasExitTime = false,
+                isExit = false,
+                mute = true,
+                destinationState = null,
+                destinationStateMachine = null,
+            });
+
             // Configure the machine and clone it
             templateMachine.name = currentLayer.name;
             templateMachine.anyStateTransitions = transitions.ToArray();
@@ -837,9 +862,12 @@ public class InventoryInventor : UnityEngine.Object
         // Add Master Layer.
         source.AddLayer("Inventory Master");
         AnimatorControllerLayer masterLayer = source.layers[source.layers.Length - 1];
-        
-        // This behaviour is added to identify this layer as an Inventory layer.
-        masterLayer.stateMachine.behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() };
+
+        // For whatever reason, using this behaviour crashes VRChat when switching avatars even though it doesn't get uploaded :/
+        // For now, a special transition is used instead later on.
+
+        //// This behaviour is added to identify this layer as an Inventory layer.
+        //masterLayer.stateMachine.behaviours = new StateMachineBehaviour[] { ScriptableObject.CreateInstance<InventoryMachine>() };
 
         // Get a list of toggles.
         items = new List<PageItem>();
@@ -1287,6 +1315,15 @@ public class InventoryInventor : UnityEngine.Object
             masterLayer.stateMachine.entryTransitions = entryTransitions;
         }
 
+        // Inventory machine identifier.
+        AnimatorStateTransition identifier = masterLayer.stateMachine.AddAnyStateTransition(states[0].state);
+        identifier.name = "InventoryMachineIdentifier";
+        identifier.hasExitTime = false;
+        identifier.isExit = false;
+        identifier.mute = true;
+        identifier.destinationState = null;
+        identifier.destinationStateMachine = null;
+
         // Replace the layer in the Animator Controller.
         AnimatorControllerLayer[] layers = source.layers;
         layers[layers.Length - 1] = masterLayer;
@@ -1376,7 +1413,17 @@ public class InventoryInventor : UnityEngine.Object
         // Store Inventory Layers.
         for (int i = 0; i < controller.layers.Length; i++)
         {
-            if (!(controller.layers[i].stateMachine.behaviours.Length < 1 || controller.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine)))
+            bool hasSpecialTransition = false;
+            foreach (AnimatorStateTransition transition in controller.layers[i].stateMachine.anyStateTransitions)
+            {
+                if (transition.name == "InventoryMachineIdentifier" && transition.isExit == false && transition.mute == true && transition.destinationState == null && transition.destinationStateMachine == null)
+                {
+                    hasSpecialTransition = true;
+                    break;
+                }
+            }
+
+            if (!(!hasSpecialTransition && (controller.layers[i].stateMachine.behaviours.Length < 1 || controller.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine))))
             {
                 layers.Add(controller.layers[i]);
             }
@@ -1451,7 +1498,18 @@ public class InventoryInventor : UnityEngine.Object
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.1f + float.Parse(i.ToString()) / controller.layers.Length * 0.85f);
 
                 // A layer is an Inventory layer if the State Machine has a InventoryMachine behaviour attached.
-                if (controller.layers[i].stateMachine.behaviours.Length < 1 || controller.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine))
+                // Or it has a "special transition"
+                bool hasSpecialTransition = false;
+                foreach (AnimatorStateTransition transition in controller.layers[i].stateMachine.anyStateTransitions)
+                {
+                    if (transition.name == "InventoryMachineIdentifier" && transition.isExit == false && transition.mute == true && transition.destinationState == null && transition.destinationStateMachine == null)
+                    {
+                        hasSpecialTransition = true;
+                        break;
+                    }
+                }
+
+                if (!hasSpecialTransition && (controller.layers[i].stateMachine.behaviours.Length < 1 || controller.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine)))
                 {
                     animator.AddLayer(controller.layers[i].name);
                     AnimatorControllerLayer[] layers = animator.layers;

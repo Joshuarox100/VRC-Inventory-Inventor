@@ -1,6 +1,4 @@
-﻿using Boo.Lang;
-using UnityEditor.Animations;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class InventoryMachine : StateMachineBehaviour
 {
