@@ -174,6 +174,9 @@ Any layers or parameters that will be removed from the provided Controller durin
 **My Inventory isn't syncing correctly to people joining late.**
 >Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time.
 
+**VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
+>This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
+
 **"An exception occured!"**
 >If this happens, ensure you have a clean install of Inventory Inventor, and if the problem persists, [let me know](#contacting-me)!
 
