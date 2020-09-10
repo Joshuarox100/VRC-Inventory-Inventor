@@ -1,10 +1,9 @@
-﻿using Boo.Lang;
-using UnityEditor.Animations;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class InventoryMachine : StateMachineBehaviour
 {
-    // This is just an empty behaviour used for determining whether or not a layer is inventory related.
+    // Currently unused due to a crash caused by its existence. Left in for legacy support and for upgrading.
+    //// This is just an empty behaviour used for determining whether or not a layer is inventory related.
 
     // OnStateEnter is called before OnStateEnter is called on any state inside this state machine
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
