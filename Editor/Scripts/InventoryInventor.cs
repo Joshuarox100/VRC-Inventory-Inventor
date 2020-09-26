@@ -418,6 +418,7 @@ public class InventoryInventor : UnityEngine.Object
                     break;
                 }
             }
+            EditorUtility.SetDirty(avatar.expressionParameters);
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f);
 
             /*
@@ -457,6 +458,7 @@ public class InventoryInventor : UnityEngine.Object
                 if (!exists && menu.controls.ToArray().Length < 8)
                 {
                     menu.controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[0].name, icon = preset.Pages[0].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = inventory });
+                    EditorUtility.SetDirty(menu);
                 }
                 else if (!exists)
                 {
@@ -648,8 +650,37 @@ public class InventoryInventor : UnityEngine.Object
             }
         }
 
+        // Reassign created menus to each other as submenus so the reference persists post restart.
+        foreach (VRCExpressionsMenu page in pages)
+        {
+            VRCExpressionsMenu current = page;
+            if (AssetDatabase.GetAssetPath(current).Length == 0)
+            {
+                if (AssetDatabase.FindAssets(current.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length != 0)
+                {
+                    current = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.FindAssets(current.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0], typeof(VRCExpressionsMenu));
+                }
+            }
+            foreach (VRCExpressionsMenu.Control control in current.controls)
+            {
+                if (control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && control.subMenu != null && AssetDatabase.GetAssetPath(control.subMenu).Length == 0)
+                {
+                    if (AssetDatabase.FindAssets(control.subMenu.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length != 0)
+                    {
+                        control.subMenu = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.FindAssets(control.subMenu.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0], typeof(VRCExpressionsMenu));
+                    }
+                    else // Failed to create menu
+                    {
+                        return 3;
+                    }
+                }
+            }
+            EditorUtility.SetDirty(current);
+        }
+
         // Out the top level menu.
         mainMenu = pages[0];
+      
         return 0;
     }
 
