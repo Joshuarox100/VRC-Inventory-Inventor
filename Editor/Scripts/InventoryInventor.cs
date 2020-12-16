@@ -222,20 +222,15 @@ public class InventoryInventor : UnityEngine.Object
                 backupManager.AddToBackup(new Asset(AssetDatabase.GetAssetPath(animator)));
             }
 
-            // Create a fresh and clean Animator Controller object.
-            AnimatorController newAnimator = new AnimatorController
-            {
-                name = animator.name,
-                parameters = animator.parameters,
-                hideFlags = animator.hideFlags
-            };
-            AssetDatabase.CreateAsset(newAnimator, relativePath + Path.DirectorySeparatorChar + "temp.controller");
+            // Duplicate the source controller.
+            AssetDatabase.CopyAsset(new Asset(AssetDatabase.GetAssetPath(animator)).path, relativePath + Path.DirectorySeparatorChar + "temp.controller");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            AnimatorController newAnimator = (AnimatorController)AssetDatabase.LoadAssetAtPath(relativePath + Path.DirectorySeparatorChar + "temp.controller", typeof(AnimatorController));
             generated.Add(new Asset(AssetDatabase.GetAssetPath(newAnimator)));
 
-            // Clone the provided Animator Controller into the new one, without any Inventory layers.
-            for (int i = 0; i < animator.layers.Length; i++)
+            // Remove Inventory layers.
+            for (int i = animator.layers.Length - 1; i >= 0; i--)
             {
                 // A layer is an Inventory layer if the State Machine has a InventoryMachine behaviour attached.
                 // Or it has a "special transition"
@@ -249,19 +244,13 @@ public class InventoryInventor : UnityEngine.Object
                     }
                 }
 
-                if (!hasSpecialTransition && (animator.layers[i].stateMachine.behaviours.Length < 1 || animator.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine)))
+                if (hasSpecialTransition || (animator.layers[i].stateMachine.behaviours.Length >= 1 && animator.layers[i].stateMachine.behaviours[0].GetType() == typeof(InventoryMachine)))
                 {
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Cloning Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse(i.ToString()) / animator.layers.Length));
+                    EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Removing Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse((animator.layers.Length - i).ToString()) / animator.layers.Length));
 
-                    // Clone the layer.
-                    newAnimator.AddLayer(animator.layers[i].name);
-                    AnimatorControllerLayer[] layers = newAnimator.layers;
-                    AnimatorControllerLayer layer = layers[layers.Length - 1];
-                    layer = animator.layers[i].DeepClone();
-                    layers[layers.Length - 1] = layer;
-                    newAnimator.layers = layers;
+                    newAnimator.RemoveLayer(i);
 
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Cloning Layers: {0}", animator.layers[i].name), 0.05f * ((i + 1f) / animator.layers.Length));
+                    EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Removing Layers: {0}", animator.layers[i].name), 0.05f * (((animator.layers.Length - i) + 1f) / animator.layers.Length));
                 }
             }                    
             newAnimator.SaveController();
@@ -1495,16 +1484,11 @@ public class InventoryInventor : UnityEngine.Object
             // Backup the Animator before modifying it.
             backupManager.AddToBackup(new Asset(AssetDatabase.GetAssetPath(controller)));
 
-            // Create a fresh and clean Animator object.
-            AnimatorController animator = new AnimatorController
-            {
-                name = controller.name,
-                parameters = controller.parameters,
-                hideFlags = controller.hideFlags
-            };
-            AssetDatabase.CreateAsset(animator, relativePath + Path.DirectorySeparatorChar + "temp.controller");
+            // Duplicate the source controller.
+            AssetDatabase.CopyAsset(new Asset(AssetDatabase.GetAssetPath(controller)).path, relativePath + Path.DirectorySeparatorChar + "temp.controller");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            AnimatorController animator = (AnimatorController)AssetDatabase.LoadAssetAtPath(relativePath + Path.DirectorySeparatorChar + "temp.controller", typeof(AnimatorController));
             generated.Add(new Asset(AssetDatabase.GetAssetPath(animator)));
 
             // Remove Inventory parameters if wanted.
@@ -1521,12 +1505,12 @@ public class InventoryInventor : UnityEngine.Object
                         animator.RemoveParameter(parameters[i]);
                     }
                 }
-            }        
+            }
 
-            // Clone the provided Animator Controller into the new object, without any Inventory layers.
-            for (int i = 0; i < controller.layers.Length; i++)
+            // Remove Inventory layers.
+            for (int i = animator.layers.Length - 1; i >= 0; i--)
             {
-                EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.1f + float.Parse(i.ToString()) / controller.layers.Length * 0.85f);
+                EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.1f + float.Parse((controller.layers.Length - i).ToString()) / controller.layers.Length * 0.85f);
 
                 // A layer is an Inventory layer if the State Machine has a InventoryMachine behaviour attached.
                 // Or it has a "special transition"
@@ -1540,14 +1524,9 @@ public class InventoryInventor : UnityEngine.Object
                     }
                 }
 
-                if (!hasSpecialTransition && (controller.layers[i].stateMachine.behaviours.Length < 1 || controller.layers[i].stateMachine.behaviours[0].GetType() != typeof(InventoryMachine)))
+                if (hasSpecialTransition || (controller.layers[i].stateMachine.behaviours.Length >= 1 && controller.layers[i].stateMachine.behaviours[0].GetType() == typeof(InventoryMachine)))
                 {
-                    animator.AddLayer(controller.layers[i].name);
-                    AnimatorControllerLayer[] layers = animator.layers;
-                    AnimatorControllerLayer layer = layers[layers.Length - 1];
-                    layer = controller.layers[i].DeepClone();
-                    layers[layers.Length - 1] = layer;
-                    animator.layers = layers;
+                    animator.RemoveLayer(i);
                 }
             }
             animator.SaveController();
