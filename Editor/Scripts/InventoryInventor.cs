@@ -1011,7 +1011,7 @@ public class InventoryInventor : UnityEngine.Object
                 templateState.position = pos + new Vector3(100, 0);
                 states.Add(templateState.DeepClone());
 
-                if (i > 0)
+                if (i > 0 && syncExists)
                 {
                     // Create transitions to enabled state from the previous pair.
                     ChangeTransition(templateTransition, states[states.Count - 2], (i + 1), true);
