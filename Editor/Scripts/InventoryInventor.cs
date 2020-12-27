@@ -86,7 +86,7 @@ public class InventoryInventor : UnityEngine.Object
                 {
                     break;
                 }
-                switch (param.name) 
+                switch (param.name)
                 {
                     case "Inventory":
                         if (param.valueType == VRCExpressionParameters.ValueType.Int)
@@ -189,7 +189,7 @@ public class InventoryInventor : UnityEngine.Object
             bool humanoid = avatar.baseAnimationLayers.Length == 5;
 
             AnimatorController animator = controller != null ? controller : null;
-            
+
             // Replace the Animator Controller in the descriptor if this Controller was there to begin with.
             bool replaceAnimator = humanoid ? (animator != null && avatar.baseAnimationLayers[4].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController) : (animator != null && avatar.baseAnimationLayers[2].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[2].animatorController);
 
@@ -252,7 +252,7 @@ public class InventoryInventor : UnityEngine.Object
 
                     EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Removing Layers: {0}", animator.layers[i].name), 0.05f * (((animator.layers.Length - i) + 1f) / animator.layers.Length));
                 }
-            }                    
+            }
             newAnimator.SaveController();
 
             // Replace the old Animator Controller.
@@ -283,6 +283,7 @@ public class InventoryInventor : UnityEngine.Object
 
             // Check if the parameters already exist. If one does as the correct type, use it. If one already exists as the wrong type, abort.
             bool[] existing = new bool[totalToggles + 2];
+
             for (int i = 0; i < srcParam.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f + (0.025f * (float.Parse(i.ToString()) / srcParam.Length)));
@@ -358,6 +359,7 @@ public class InventoryInventor : UnityEngine.Object
                     {
                         newAnimator.AddParameter("Inventory " + (i + 1), AnimatorControllerParameterType.Bool);
                     }
+
                 }
                 else if (i == existing.Length - 2)
                 {
@@ -384,6 +386,24 @@ public class InventoryInventor : UnityEngine.Object
 
             CreateMasterLayer(newAnimator, totalToggles, out List<PageItem> items, out List<KeyValuePair<List<int>, List<int>>> activeStates);
             CreateItemLayers(newAnimator, ref items, ref activeStates);
+
+            /*
+                Set default bool states.
+            */
+
+            srcParam = newAnimator.parameters;
+            for (int i = 0; i < items.Count; i++)
+            {
+                for (int j = 0; j < srcParam.Length; j++)
+                {
+                    if (srcParam[i].name == "Inventory " + (i + 1))
+                    {
+                        srcParam[i].defaultBool = items[i].InitialState;
+                        break;
+                    }
+                }
+            }
+            newAnimator.parameters = srcParam;
 
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Saving Controller", 0.9f);
             newAnimator.SaveController();
