@@ -170,7 +170,7 @@ public class InventoryPresetEditor : Editor
                             break;
                         // If the toggle is auto-synced, add the same as manual, plus one for each group used.
                         case PageItem.SyncMode.Auto:
-                            totalUsage += 3;
+                            totalUsage += pageItem.Saved ? 1 : 3;
                             if (pageItem.EnableGroup.Length > 0)
                                 totalUsage++;
                             if (pageItem.DisableGroup.Length > 0)
@@ -373,6 +373,16 @@ public class InventoryPresetEditor : Editor
             pageContents.index = 0;
         }
 
+        // Determine whether or not to display the add or remove buttons this Repaint.
+        pageContents.displayAdd = preset.Pages[pageDirectory.index].Items.Count < 8;
+        pageContents.displayRemove = preset.Pages[pageDirectory.index].Items.Count > 1;
+
+        // Display the pageContents list (without scrollbar).
+        EditorGUILayout.BeginVertical();
+        if (pageContents != null)
+            pageContents.DoLayoutList();
+        EditorGUILayout.EndVertical();
+
         // Draw item control container.
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
 
@@ -480,6 +490,7 @@ public class InventoryPresetEditor : Editor
         AnimationClip itemEnable = currentItem.EnableClip;
         AnimationClip itemDisable = currentItem.DisableClip;
         PageItem.SyncMode itemSync = currentItem.Sync;
+        bool itemSaved = currentItem.Saved;
         Page itemPage = currentItem.PageReference;
         VRCExpressionsMenu itemMenu = currentItem.Submenu;
 
@@ -513,6 +524,13 @@ public class InventoryPresetEditor : Editor
 
                 // Item sync setting.
                 itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
+                if (itemSync == PageItem.SyncMode.Auto)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
+                    itemSaved = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemSaved), new string[] { "Disable", "Enable" }));
+                    EditorGUILayout.EndHorizontal();
+                }
 
                 // Like EditorGUILayout.Space(), but smaller.
                 EditorGUILayout.BeginVertical();
@@ -573,6 +591,7 @@ public class InventoryPresetEditor : Editor
             currentItem.EnableClip = itemEnable;
             currentItem.DisableClip = itemDisable;
             currentItem.Sync = itemSync;
+            currentItem.Saved = itemSaved;
             currentItem.PageReference = itemPage;
             currentItem.Submenu = itemMenu;
 
@@ -581,16 +600,6 @@ public class InventoryPresetEditor : Editor
         }
 
         // End item settings container.
-        EditorGUILayout.EndVertical();
-
-        // Determine whether or not to display the add or remove buttons this Repaint.
-        pageContents.displayAdd = preset.Pages[pageDirectory.index].Items.Count < 8;
-        pageContents.displayRemove = preset.Pages[pageDirectory.index].Items.Count > 1;
-
-        // Display the pageContents list (without scrollbar).
-        EditorGUILayout.BeginVertical();
-        if (pageContents != null)
-            pageContents.DoLayoutList();
         EditorGUILayout.EndVertical();
 
         // End section.

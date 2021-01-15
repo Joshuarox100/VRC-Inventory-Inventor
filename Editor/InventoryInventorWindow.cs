@@ -128,7 +128,7 @@ public class InventoryInventorWindow : EditorWindow
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         // Preset
         manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
-        // Refresh Rate
+        //// Refresh Rate
         manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
         if (manager.refreshRate < 0)
             manager.refreshRate = 0.05f;

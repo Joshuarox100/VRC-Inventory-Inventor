@@ -13,6 +13,10 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private SyncMode m_Sync;
 
+    public bool Saved { get { return m_Saved; } set { m_Saved = value; } }
+    [SerializeField]
+    private bool m_Saved;
+
     public bool InitialState { get { return m_InitialState; } set { m_InitialState = value; } }
     [SerializeField]
     private bool m_InitialState;
@@ -67,6 +71,7 @@ public class PageItem : ScriptableObject
         EnableClip = null;
         DisableClip = null;
         Sync = SyncMode.Auto;
+        Saved = true;
         EnableGroup = new GroupItem[0];
         DisableGroup = new GroupItem[0];
     }
