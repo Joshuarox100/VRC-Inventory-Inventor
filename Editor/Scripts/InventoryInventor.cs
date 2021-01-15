@@ -96,17 +96,14 @@ public class InventoryInventor : UnityEngine.Object
             {
                 if (!autoOverwrite)
                 {
-                    if (EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
-                    {
-                        delParamNames.Add("Inventory");
-                        expParamNames.Add("Inventory");
-                    }
-                    else
+                    if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
                     {
                         Selection.activeObject = avatar.expressionParameters;
                         return;
                     }
                 }
+                delParamNames.Add("Inventory");
+                expParamNames.Add("Inventory");
             }
 
             // Check that no Animations modify a humanoid rig or Transform.
@@ -160,17 +157,14 @@ public class InventoryInventor : UnityEngine.Object
                             {
                                 if (!autoOverwrite)
                                 {
-                                    if (EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"" + "Inventory " + totalToggles + "\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
-                                    {
-                                        delParamNames.Add("Inventory " + totalToggles);
-                                        neededMem--;
-                                    }
-                                    else
+                                    if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"" + "Inventory " + totalToggles + "\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
                                     {
                                         Selection.activeObject = avatar.expressionParameters;
                                         return;
                                     }
                                 }
+                                delParamNames.Add("Inventory " + totalToggles);
+                                neededMem--;
                             }
                             expParamNames.Add("Inventory " + totalToggles);
                             neededMem++;
@@ -179,17 +173,14 @@ public class InventoryInventor : UnityEngine.Object
                         {
                             if (!autoOverwrite)
                             {
-                                if (EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: a conflicting Expression Parameter \"" + "Inventory " + totalToggles + "\" exists!\nDelete?", "Delete", "Cancel"))
-                                {
-                                    delParamNames.Add("Inventory " + totalToggles);
-                                    neededMem--;
-                                }
-                                else
+                                if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: a conflicting Expression Parameter \"" + "Inventory " + totalToggles + "\" exists!\nDelete?", "Delete", "Cancel"))
                                 {
                                     Selection.activeObject = avatar.expressionParameters;
                                     return;
                                 }
                             }
+                            delParamNames.Add("Inventory " + totalToggles);
+                            neededMem--;
                         }
                     }
                 }
@@ -437,9 +428,9 @@ public class InventoryInventor : UnityEngine.Object
             {
                 for (int j = 0; j < srcParam.Length; j++)
                 {
-                    if (srcParam[i].name == "Inventory " + (i + 1))
+                    if (srcParam[j].name == "Inventory " + (i + 1))
                     {
-                        srcParam[i].defaultBool = items[i].Sync != PageItem.SyncMode.Auto && items[i].InitialState;
+                        srcParam[j].defaultBool = (items[i].Sync != PageItem.SyncMode.Auto || !items[i].Saved) && items[i].InitialState;
                         break;
                     }
                 }
@@ -1230,8 +1221,11 @@ public class InventoryInventor : UnityEngine.Object
                     {
                         if (items[i].Saved && items[i].EnableGroup.Length == 0)
                         {
-                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
-                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = 1f;
+                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter()
+                            {
+                                name = "Inventory " + (i + 1),
+                                value = 1f
+                            });
                         }
                         else
                             ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Value[0];
@@ -1352,8 +1346,11 @@ public class InventoryInventor : UnityEngine.Object
                     {
                         if (items[i].Saved && items[i].DisableGroup.Length == 0)
                         {
-                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
-                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = 0f;
+                            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter()
+                            {
+                                name = "Inventory " + (i + 1),
+                                value = 0f
+                            });
                         }
                         else
                             ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters[0].value = activeStates[i].Key[0];
