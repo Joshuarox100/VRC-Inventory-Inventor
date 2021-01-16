@@ -311,7 +311,7 @@ public class InventoryInventor : UnityEngine.Object
             */
 
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f);
-
+            
             AnimatorControllerParameter[] srcParam = newAnimator.parameters;
 
             // Check if the parameters already exist. If one does as the correct type, use it. If one already exists as the wrong type, abort.
@@ -476,7 +476,6 @@ public class InventoryInventor : UnityEngine.Object
                         name = expName,
                         valueType = VRCExpressionParameters.ValueType.Bool,
                         defaultValue = items[int.Parse(expName.Substring(expName.IndexOf(" ") + 1)) - 1].InitialState ? 1 : 0,
-                        saved = items[int.Parse(expName.Substring(expName.IndexOf(" ") + 1)) - 1].Saved
                     };
                     parameters.Add(param);
                 }
@@ -1638,7 +1637,7 @@ public class InventoryInventor : UnityEngine.Object
 
                 for (int i = expParameters.Count - 1; i >= 0; i--)
                 {
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.05f + ((expParameters.Count - i) / expParameters.Count * 0.05f));
+                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.05f + (float.Parse((expParameters.Count - i).ToString()) / expParameters.Count * 0.05f));
                     if (nameFilter.IsMatch(expParameters[i].name))
                     {
                         expParameters.RemoveAt(i);
