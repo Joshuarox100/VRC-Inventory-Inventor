@@ -40,7 +40,7 @@ From here, it gets a lot more open ended. If you would like to jump to a particu
 1. [Pages](#pages)
 2. [Items](#items)
 3. [Groups](#groups)
-4. [Hints](#hints)
+4. [Tips](#tips)
 
 ### Pages
 <p align="center">
@@ -79,6 +79,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Enable | The Animation to play when the Toggle is activated. |
 | Disable | The Animation to play when the Toggle is deactivated. |
 | Sync | How the Toggle is synced with others.<br>**Off**: Local only; remote clients will only see the default state of the Toggle.<br>**Manual**: Syncs when triggered; late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; any Toggles marked Auto will be synced while the Inventory is left idle. |
+| Saved | Whether or not to retain the item's active state when switching avatars or worlds.<br>**Only available with Auto Sync enabled.**<br>*Each item with this setting enabled will take up one bit of memory in the avatar's Expression Parameters list.* |
 
 #### Page
 <p align="center">
@@ -103,7 +104,7 @@ Groups are used for toggling multiple objects at once. Each Group can have as ma
 
 Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled [Item](#items) will be triggered, any other Groups within its members will be ignored.
 
-### Hints
+### Tips
 Here are some things you should keep in mind as you create your Preset.
 
 1. The Animations you use for Toggles must be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar.
@@ -112,11 +113,11 @@ Here are some things you should keep in mind as you create your Preset.
 
 3. If you want to trigger something else with a Toggle that isn't part of the Preset, you can have an empty Toggle and use its layer's values elsewhere.
 
-4. Because the Inventory only uses a single Integer for syncing, you need to be mindful of how much data you're using. If your Preset exceeds the data cap (256), you won't be able to apply it to an Avatar. The way that data is used can be seen below.
+4. Because the Inventory only uses a single Integer for manipulating and syncing data, you need to be mindful of how much data you're using. If your Preset exceeds the data cap (256), you won't be able to apply it to an Avatar. The way that data is used can be seen below.
 	- One value will always be used for when the system is idle regardless of any Toggles that may exist (1).
 	- Toggles with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).
 	- Toggles with syncing set to Manual will always use three values no matter what (3).
-	- Toggles with syncing set to Auto will always use at least three values and another one for each Group it uses (3 - 5).
+	- Toggles with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).
 
 ## Using the Manager
 The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
