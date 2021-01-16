@@ -151,7 +151,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 </p>
 
 The 'Remove' menu is used for removing an existing Inventory from a provided Animator Controller.
->This will **NOT** remove or delete any Menus or Expression Parameters from an Avatar.
+>This will **NOT** remove or delete any Menus or Expression Parameters from an Avatar by default.
 
 Any layers or parameters that will be removed from the provided Controller during the operation will be shown under 'Will Be Removed'.
 
