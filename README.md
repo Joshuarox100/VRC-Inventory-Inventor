@@ -5,7 +5,7 @@ Description: Make inventories fast with Inventory Inventor! With it, you can cre
 
 Dependencies: 
 - [BMB Libraries](https://github.com/Joshuarox100/BMB-Libraries) (Included)
-- VRCSDK3-AVATAR (Not Included)
+- [VRCSDK3-AVATAR](https://vrchat.com/home/download) (Not Included)
 
 ## Installation Guide
 Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
@@ -79,7 +79,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Enable | The Animation to play when the Toggle is activated. |
 | Disable | The Animation to play when the Toggle is deactivated. |
 | Sync | How the Toggle is synced with others.<br>**Off**: Local only; remote clients will only see the default state of the Toggle.<br>**Manual**: Syncs when triggered; late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; any Toggles marked Auto will be synced while the Inventory is left idle. |
-| Saved | Whether or not to retain the item's active state when switching avatars or worlds.<br>**Only available with Auto Sync enabled.**<br>*Each item with this setting enabled will take up one bit of memory in the avatar's Expression Parameters list.* |
+| Saved | ***Only available with Auto Sync enabled.***<br>Whether or not to retain the item's active state when switching avatars or worlds.<br>*Each item with this setting enabled will take up one bit of memory in the avatar's Expression Parameters list.* |
 
 #### Page
 <p align="center">
@@ -143,7 +143,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 | Preset | The Preset you want to apply to the Avatar. |
 | Refresh Rate | How long each synced toggle is given to synchronize with late joiners (seconds per item). |
 | Destination | The folder where generated files will be saved to. |
-| Overwrite All | Automatically overwrite existing files if needed. |
+| Overwrite All | Automatically overwrite existing files and parameters if needed. |
 
 ### Remove
 <p align="center">
@@ -159,7 +159,7 @@ Any layers or parameters that will be removed from the provided Controller durin
 | :----: | ------ |
 | Active Avatar | The Avatar you want to manage an Inventory for. |
 | Animator Controller | The Animator Controller to modify. |
-| Remove Parameters | Remove all parameters involved with the Inventory<br>(If you have other parameters named "Inventory ###", they will also be removed). |
+| Remove Parameters | Remove all parameters (including Expression Parameters) involved with the Inventory<br>(If you have other parameters named "Inventory ###", they will also be removed). |
 
 ## Common Questions
 **Can I have multiple Inventories on a single avatar?**
@@ -173,7 +173,7 @@ Any layers or parameters that will be removed from the provided Controller durin
 
 ## Troubleshooting
 **My Inventory isn't syncing correctly to people joining late.**
->Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time.
+>Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time. Also make sure that your Toggles are set to Auto Sync instead of Manual Sync.
 
 **VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
 >This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
