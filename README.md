@@ -1,7 +1,7 @@
 # Inventory Inventor
 Author: Joshuarox100
 
-Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all contained within a single Expression Parameter!
+Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all managed by a single Expression Parameter! *(Disclamer: You can choose to use more parameters if you want to save the state of items in the Inventory.)*
 
 Dependencies: 
 - [BMB Libraries](https://github.com/Joshuarox100/BMB-Libraries) (Included)
