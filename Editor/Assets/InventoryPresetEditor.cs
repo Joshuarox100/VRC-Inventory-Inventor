@@ -186,7 +186,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.HelpBox("This preset uses more synced data than an Integer can hold.\n(Max: 256 | Used: " + totalUsage + ")", MessageType.Warning);
             EditorGUILayout.EndVertical();
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 3 + (1 for each Toggle Group used)", MessageType.Info);
+            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 1 + (2 if the Toggle isn't saved) + (1 for each Toggle Group used)", MessageType.Info);
             EditorGUILayout.EndVertical();
         }
 
