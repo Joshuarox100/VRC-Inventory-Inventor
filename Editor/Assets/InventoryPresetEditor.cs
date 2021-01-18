@@ -27,11 +27,19 @@ public class InventoryPresetEditor : Editor
     private Vector2 disableScroll;
 
     private bool usageFoldout = false;
+    private Texture2D[] barColors;
 
     // Get the targeted object and initialize ReorderableLists.
     public void OnEnable()
     {
         preset = (InventoryPreset)target;
+
+        // Setup bar colors.
+        barColors = new Texture2D[2] { new Texture2D(1, 1), new Texture2D(1, 1) };
+        barColors[0].SetPixel(0, 0, Color.yellow * new Color(1, 1, 1, 0.9f));
+        barColors[0].Apply();
+        barColors[1].SetPixel(0, 0, Color.red * new Color(1, 1, 1, 0.9f));
+        barColors[1].Apply();
 
         // Wait until the Asset has been fully created if it hasn't already.
         string _hasPath = AssetDatabase.GetAssetPath(preset.GetInstanceID());
@@ -187,7 +195,26 @@ public class InventoryPresetEditor : Editor
         Rect barPos = EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUILayout.BeginHorizontal();
         float percentage = Mathf.Clamp((totalUsage - 1) / 255f, 0f, 1f);
-        EditorGUI.ProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), percentage, "Data: " + (totalUsage - 1) + " of 255");
+        GUIStyle barBackStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBack") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBack"));
+        GUIStyle barFrontStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
+        GUIStyle barTextColor = new GUIStyle(EditorStyles.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            richText = true
+        };
+        string barText = "Data: " + (totalUsage - 1) + " of 255";
+        if (percentage >= 0.85f)
+        {
+            barFrontStyle.normal.background = barColors[1];
+            barTextColor.normal.textColor = Color.white;
+            barText = "<b>Data: " + (totalUsage - 1) + " of 255</b>";
+        }
+        else if (percentage >= 0.7f)
+        {
+            barFrontStyle.normal.background = barColors[0];
+        }
+        DoCustomProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), percentage, barBackStyle, barFrontStyle);
+        EditorGUI.LabelField(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), barText, barTextColor);
         EditorGUILayout.EndHorizontal();
         GUILayout.Space(18);
         if (totalUsage > 256)
@@ -1386,4 +1413,42 @@ public class InventoryPresetEditor : Editor
                 list.index -= 1;
         }
     }
+
+    /*
+        Custom Progress Bar
+     */
+
+    private void DoCustomProgressBar(Rect position, float value, GUIStyle progressBarBackgroundStyle, GUIStyle progressBarStyle)
+    {
+        bool mouseHover = position.Contains(Event.current.mousePosition);
+        int id = GUIUtility.GetControlID("s_ProgressBarHash".GetHashCode(), FocusType.Keyboard, position);
+        Event evt = Event.current;
+        switch (evt.GetTypeForControl(id))
+        {
+            case EventType.Repaint:
+                progressBarBackgroundStyle.Draw(position, mouseHover, false, false, false);
+                if (value > 0.0f)
+                {
+                    value = Mathf.Clamp01(value);
+                    var barRect = new Rect(position);
+                    barRect.width *= value;
+                    if (barRect.width >= 1f)
+                        progressBarStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
+                }
+                else if (value == -1.0f)
+                {
+                    float barWidth = position.width * 0.2f;
+                    float halfBarWidth = barWidth / 2.0f;
+                    float cos = Mathf.Cos((float)EditorApplication.timeSinceStartup * 2f);
+                    float rb = position.x + halfBarWidth;
+                    float re = position.xMax - halfBarWidth;
+                    float scale = (re - rb) / 2f;
+                    float cursor = scale * cos;
+                    var barRect = new Rect(position.x + cursor + scale, position.y, barWidth, position.height);
+                    progressBarStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
+                }
+                break;
+        }
+    }
+
 }
