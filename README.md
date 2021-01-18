@@ -113,8 +113,7 @@ Here are some things you should keep in mind as you create your Preset.
 
 3. If you want to trigger something else with a Toggle that isn't part of the Preset, you can have an empty Toggle and use its layer's values elsewhere.
 
-4. Because the Inventory only uses a single Integer for manipulating and syncing data, you need to be mindful of how much data you're using. If your Preset exceeds the data cap (256), you won't be able to apply it to an Avatar. The way that data is used can be seen below.
-	- One value will always be used for when the system is idle regardless of any Toggles that may exist (1).
+4. Because the Inventory only uses a single Integer for manipulating and syncing data, you need to be mindful of how much data you're using. If your Preset exceeds the data cap (255), you won't be able to apply it to an Avatar. The way that data is used can be seen below.
 	- Toggles with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).
 	- Toggles with syncing set to Manual will always use three values no matter what (3).
 	- Toggles with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).

@@ -26,6 +26,8 @@ public class InventoryPresetEditor : Editor
     private Vector2 enableScroll;
     private Vector2 disableScroll;
 
+    private bool usageFoldout = false;
+
     // Get the targeted object and initialize ReorderableLists.
     public void OnEnable()
     {
@@ -180,15 +182,31 @@ public class InventoryPresetEditor : Editor
                 }
             }
         }
+
+        // Usage bar
+        Rect barPos = EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUILayout.BeginHorizontal();
+        float percentage = Mathf.Clamp((totalUsage - 1) / 255f, 0f, 1f);
+        EditorGUI.ProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), percentage, "Data: " + (totalUsage - 1) + " of 255");
+        EditorGUILayout.EndHorizontal();
+        GUILayout.Space(18);
         if (totalUsage > 256)
         {
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-            EditorGUILayout.HelpBox("This preset uses more synced data than an Integer can hold.\n(Max: 256 | Used: " + totalUsage + ")", MessageType.Warning);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 1 + (2 if the Toggle isn't saved) + (1 for each Toggle Group used)", MessageType.Info);
-            EditorGUILayout.EndVertical();
+            EditorGUILayout.HelpBox("This preset exceeds the maximum amount of data usable.", MessageType.Warning);
         }
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUI.indentLevel++;
+        if (usageFoldout = EditorGUILayout.Foldout(usageFoldout, "How Data is Measured", true))
+        {
+            EditorGUI.indentLevel--;
+            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 1 + (2 if the Toggle isn't saved) + (1 for each Toggle Group used)", MessageType.None);
+            EditorGUI.indentLevel++;
+        }
+        EditorGUI.indentLevel--;
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space();
+        DrawLine();
 
         // Begin Asset modification.
         serializedObject.Update();

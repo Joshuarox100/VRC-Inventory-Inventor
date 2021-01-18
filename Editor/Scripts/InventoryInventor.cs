@@ -199,7 +199,7 @@ public class InventoryInventor : UnityEngine.Object
 
             if (totalUsage > 256)
             {
-                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Preset uses too much data for syncing! (Limit: 256; Used: " + totalUsage + ")", "Close");
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Preset uses too much data for syncing! (Limit: 255; Used: " + (totalUsage - 1) + ")", "Close");
                 Selection.activeObject = preset;
                 return;
             }
