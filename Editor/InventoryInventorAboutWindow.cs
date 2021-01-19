@@ -64,7 +64,7 @@ public class InventoryInventorAboutWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all contained within a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+        GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can quickly create inventories with plenty of toggles, all managed by a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
