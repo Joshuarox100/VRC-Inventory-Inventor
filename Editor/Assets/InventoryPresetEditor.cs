@@ -26,8 +26,11 @@ public class InventoryPresetEditor : Editor
     private Vector2 enableScroll;
     private Vector2 disableScroll;
 
-    private bool usageFoldout = false;
+    // Pixel colors for various GUIStyles.
     private Texture2D[] barColors;
+
+    // Foldout booleans.
+    private bool usageFoldout = false;
 
     // Get the targeted object and initialize ReorderableLists.
     public void OnEnable()
