@@ -1797,7 +1797,7 @@ public class InventoryInventor : UnityEngine.Object
     }
 
     // Compares the VERSION file present to the one on GitHub to see if a newer version is available.
-    public static void CheckForUpdates()
+    public static void CheckForUpdates(bool auto = false)
     {
         // Read VERSION file.
         string installedVersion = GetVersion();
@@ -1808,17 +1808,17 @@ public class InventoryInventor : UnityEngine.Object
         // Run a coroutine to retrieve the GitHub data.
         netMan.AddComponent<NetworkManager>().StartCoroutine(GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
             // Network Error.
-            if (latestVersion == "")
+            if (latestVersion == "" && !auto)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "Failed to fetch the latest version.\n(Check console for details.)", "Close");
             }
             // VERSION file missing.
-            else if (installedVersion == "")
+            else if (installedVersion == "" && !auto)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "Failed to identify installed version.\n(VERSION file was not found.)", "Close");
             }
             // Project has been archived.
-            else if (latestVersion == "RIP")
+            else if (latestVersion == "RIP" && !auto)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "Project has been put on hold indefinitely.", "Close");
             }
@@ -1827,11 +1827,11 @@ public class InventoryInventor : UnityEngine.Object
             {
                 if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nOpen the Releases page?", "Yes", "No"))
                 {
-                    Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
+                    Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases/latest");
                 }
             }
             // Using latest version.
-            else
+            else if (!auto)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
             }
