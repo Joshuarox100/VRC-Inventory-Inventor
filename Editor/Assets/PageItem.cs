@@ -21,6 +21,14 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private bool m_InitialState;
 
+    public string ObjectReference { get { return m_ObjectReference; } set { m_ObjectReference = value; } }
+    [SerializeField]
+    private string m_ObjectReference;
+
+    public bool UseAnimations { get { return m_UseAnimations; } set { m_UseAnimations = value; } }
+    [SerializeField]
+    private bool m_UseAnimations;
+
     public AnimationClip EnableClip { get { return m_EnableClip; } set { m_EnableClip = value; } }
     [SerializeField]
     private AnimationClip m_EnableClip;
@@ -68,6 +76,8 @@ public class PageItem : ScriptableObject
     {
         Type = ItemType.Toggle;
         InitialState = false;
+        ObjectReference = "";
+        UseAnimations = EnableClip != null || DisableClip != null;
         EnableClip = null;
         DisableClip = null;
         Sync = SyncMode.Auto;

@@ -98,6 +98,7 @@ public class InventoryInventor : UnityEngine.Object
                 {
                     if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
                     {
+                        EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
                         Selection.activeObject = avatar.expressionParameters;
                         return;
                     }
@@ -114,7 +115,7 @@ public class InventoryInventor : UnityEngine.Object
             {
                 foreach (PageItem item in page.Items)
                 {
-                    if (item.Type == PageItem.ItemType.Toggle)
+                    if (item.Type == PageItem.ItemType.Toggle && item.UseAnimations)
                     {
                         if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
                         {
@@ -150,7 +151,6 @@ public class InventoryInventor : UnityEngine.Object
                                     totalUsage++;
                                 break;
                         }
-                        totalToggles++;
                         if (item.Sync == PageItem.SyncMode.Auto && item.Saved)
                         {
                             if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
@@ -183,6 +183,8 @@ public class InventoryInventor : UnityEngine.Object
                             neededMem--;
                         }
                     }
+                    if (item.Type == PageItem.ItemType.Toggle)
+                        totalToggles++;
                 }
             }
 
@@ -216,7 +218,7 @@ public class InventoryInventor : UnityEngine.Object
 
             /*
                 Get FX Animator.
-             */
+                */
 
             // An avatar is humanoid if the descriptor has the Gesture and Additive layers available.
             bool humanoid = avatar.baseAnimationLayers.Length == 5;
@@ -305,6 +307,56 @@ public class InventoryInventor : UnityEngine.Object
                     avatar.baseAnimationLayers[2].animatorController = newAnimator;
             }
             controller = newAnimator;
+
+            /*
+                Generate Clips for Game Objects.
+             */
+
+            bool missingItems = false;
+            foreach (Page page in preset.Pages)
+            {
+                foreach (PageItem item in page.Items)
+                {
+                    if (item.Type == PageItem.ItemType.Toggle && !item.UseAnimations)
+                    {
+                        if (!item.ObjectReference.Equals("") && avatar.transform.Find(item.ObjectReference) != null)
+                        {
+                            switch (GenerateToggleClip(avatar.transform.Find(item.ObjectReference).gameObject, true))
+                            {
+                                case 1:
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
+                                    RevertChanges();
+                                    return;
+                                case 2:
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Failed to create one or more files!", "Close");
+                                    RevertChanges();
+                                    return;
+                            }
+
+                            switch (GenerateToggleClip(avatar.transform.Find(item.ObjectReference).gameObject, false))
+                            {
+                                case 1:
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
+                                    RevertChanges();
+                                    return;
+                                case 2:
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Failed to create one or more files!", "Close");
+                                    RevertChanges();
+                                    return;
+                            }
+                        }
+                        else if (avatar.transform.Find(item.ObjectReference) == null)
+                            missingItems = true;
+                    }
+                }
+            }
+            if (missingItems && !EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: One or more objects used by this Preset is not present on the Avatar. Continue?\n(Their respective States will be left empty.)", "Continue", "Cancel"))
+            {
+                EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
+                RevertChanges();
+                Selection.activeObject = preset;
+                return;
+            }
 
             /*
                 Create parameters.
@@ -881,7 +933,7 @@ public class InventoryInventor : UnityEngine.Object
             List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
 
             // Disabled state.
-            ChangeState(templateMachine.states[0].state, items[i].DisableClip);
+            ChangeState(templateMachine.states[0].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].DisableClip);
             ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
             ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].value = 0;
 
@@ -908,7 +960,7 @@ public class InventoryInventor : UnityEngine.Object
             }
 
             // Enabled state.
-            ChangeState(templateMachine.states[1].state, items[i].EnableClip);
+            ChangeState(templateMachine.states[1].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].EnableClip);
             ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
             ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].value = 1;
 
@@ -935,7 +987,7 @@ public class InventoryInventor : UnityEngine.Object
             }
 
             // Idle state.
-            ChangeState(templateMachine.states[2].state, items[i].InitialState ? items[i].EnableClip : items[i].DisableClip);
+            ChangeState(templateMachine.states[2].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (items[i].InitialState ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip))) : null) : (items[i].InitialState ? items[i].EnableClip : items[i].DisableClip));
             templateMachine.states[2].state.transitions = new AnimatorStateTransition[0];
             AnimatorStateTransition idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[0].state, false);
             idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory " + (i + 1));
@@ -1049,7 +1101,7 @@ public class InventoryInventor : UnityEngine.Object
                     }
                     break;
             }
-        } 
+        }
 
         // Create an array states to be created.
         List<ChildAnimatorState> states = new List<ChildAnimatorState>();
@@ -1476,6 +1528,56 @@ public class InventoryInventor : UnityEngine.Object
         return;
     }
 
+    // Helper methods for generating animations.
+
+    private int GenerateToggleClip(GameObject obj, bool state)
+    {
+        if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Clips"))
+            AssetDatabase.CreateFolder(outputPath, "Clips");
+        string outFile = obj.name + (state ? "_On" : "_Off");
+
+        // Create the Animation Clip
+        AnimationClip clip = new AnimationClip();
+        string path = GetGameObjectPath(obj.transform);
+        path = path.Substring(path.IndexOf(avatar.transform.name) + avatar.transform.name.Length + 1);
+        clip.SetCurve(path, typeof(GameObject), "m_IsActive", new AnimationCurve(new Keyframe[2] { new Keyframe() { value = state ? 1 : 0, time = 0}, new Keyframe() { value = state ? 1 : 0, time = 0.016666668f } }));
+
+        // Save the file
+        bool existed = true;
+        if (File.Exists(outputPath + Path.DirectorySeparatorChar + "Clips" + Path.DirectorySeparatorChar + outFile + ".anim"))
+        {
+            if (!autoOverwrite && !EditorUtility.DisplayDialog("Inventory Inventor", outFile + ".anim" + " already exists!\nOverwrite the file?", "Overwrite", "Cancel"))
+                return 1;
+            backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Clips" + Path.DirectorySeparatorChar + outFile + ".anim"));
+            AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Clips" + Path.DirectorySeparatorChar + outFile + ".anim");
+            AssetDatabase.Refresh();
+        }
+        else
+        {
+            existed = false;
+        }
+
+        AssetDatabase.CreateAsset(clip, outputPath + Path.DirectorySeparatorChar + "Clips" + Path.DirectorySeparatorChar + outFile + ".anim");
+        AssetDatabase.Refresh();
+        if (!existed)
+            generated.Add(new Asset(AssetDatabase.GetAssetPath(clip)));
+            
+        return 0;
+    }
+
+    public static string GetGameObjectPath(Transform transform)
+    {
+        if (transform == null)
+            return "";
+        string path = transform.name;
+        while (transform.parent != null)
+        {
+            transform = transform.parent;
+            path = transform.name + "/" + path;
+        }
+        return path;
+    }
+
     // Helper methods for modifying transitions.
     public static void ChangeTransition(AnimatorStateTransition transition, int value, AnimatorState state)
     {
@@ -1732,6 +1834,9 @@ public class InventoryInventor : UnityEngine.Object
                 Debug.LogError("[Inventory Inventor] Failed to revert all changes.");
         if (AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus") && AssetDatabase.FindAssets("", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
             if (!AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Menus"))
+                Debug.LogError("[Inventory Inventor] Failed to revert all changes.");
+        if (AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Clips") && AssetDatabase.FindAssets("", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }).Length == 0)
+            if (!AssetDatabase.DeleteAsset(outputPath + Path.DirectorySeparatorChar + "Clips"))
                 Debug.LogError("[Inventory Inventor] Failed to revert all changes.");
 
         // Final asset save.
