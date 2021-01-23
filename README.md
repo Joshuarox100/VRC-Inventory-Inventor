@@ -51,11 +51,15 @@ From here, it gets a lot more open ended. If you would like to jump to a particu
 All Presets have a dynamic limit to how many [Items](#items) they can contain. This limit changes depending on the settings used for each [Item](#items). There are two limits you need to be aware of: the data limit (top bar), and the memory limit (bottom bar).
 
 #### Data Limit
-The Inventory only uses a single Integer for syncing changes and the current state of the Inventory. This means that the Inventory can only use up to 255 unique values to control everything. If your Preset needs more values than this, you won't be able to apply it to an Avatar. The way that data is used can be seen below.  
-	- Toggles with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).  
-	- Toggles with syncing set to Manual will always use three values no matter what (3).  
-	- Toggles with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).  
-	- Buttons will always use a single value (1).  
+The Inventory only uses a single Integer for syncing changes and the current state of the Inventory. This means that the Inventory can only use up to 255 unique values to control everything. If your Preset needs more values than this, you won't be able to apply it to an Avatar. The way that data is used can be seen below.
+	
+- Toggles with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).
+	
+- Toggles with syncing set to Manual will always use three values no matter what (3).
+	
+- Toggles with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).
+	
+- Buttons will always use a single value (1).
 
 #### Memory Limit
 With the introduction of Parameter Persistence to VRChat, the restriction on the number of Expression Parameters was removed in favor of a limit on bits. Since an Inventory always requires at least one Integer, at least 8 bits will always be used. However, for Parameter Persistence to work with an Inventory, more bits must be used.
