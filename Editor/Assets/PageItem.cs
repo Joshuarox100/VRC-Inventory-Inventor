@@ -64,7 +64,7 @@ public class PageItem : ScriptableObject
     public enum ItemType
     {
         Toggle = 0,
-        Page = 1,
+        Subpage = 1,
         Control = 2,
         Button = 3,
     };

@@ -51,7 +51,7 @@ public class InventoryPresetEditor : Editor
     private bool groupFoldout = false;
 
     // Static values
-    private static readonly GUIContent[] typePopupName = new GUIContent[4] { new GUIContent("Toggle"), new GUIContent("Button"), new GUIContent("Page"), new GUIContent("Control") };
+    private static readonly GUIContent[] typePopupName = new GUIContent[4] { new GUIContent("Toggle"), new GUIContent("Button"), new GUIContent("Subpage"), new GUIContent("Control") };
     private static readonly int[] typePopupVal = new int[4] { 0, 3, 1, 2 };
     private static readonly GUIContent[] reactPopupName = new GUIContent[2] { new GUIContent("Enable"), new GUIContent("Disable") };
     private static readonly int[] reactPopupVal = new int[2] { 1, 0 };
@@ -167,8 +167,8 @@ public class InventoryPresetEditor : Editor
                             case PageItem.ItemType.Toggle:
                                 typeString = "Toggle";
                                 break;
-                            case PageItem.ItemType.Page:
-                                typeString = "Page";
+                            case PageItem.ItemType.Subpage:
+                                typeString = "Subpage";
                                 break;
                             case PageItem.ItemType.Control:
                                 typeString = "Control";
@@ -1313,7 +1313,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.EndHorizontal();
 
             // Item icon (only if the item is not of type Page).
-            if (itemType != PageItem.ItemType.Page)
+            if (itemType != PageItem.ItemType.Subpage)
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(new GUIContent("Icon", "The icon to use for the control."));
@@ -1412,7 +1412,7 @@ public class InventoryPresetEditor : Editor
                     EditorGUILayout.BeginVertical();
                     EditorGUILayout.EndVertical();
                     break;
-                case PageItem.ItemType.Page:
+                case PageItem.ItemType.Subpage:
                     // Check if another page besides the current one exists.
                     if (preset.Pages.Count - 1 > 0)
                     {
@@ -1471,7 +1471,7 @@ public class InventoryPresetEditor : Editor
                 currentItem.DisableClip = itemDisable;
                 currentItem.Sync = itemSync;
                 currentItem.Saved = itemSaved;
-                if (currentItem.Type == PageItem.ItemType.Page && itemPage != null && currentItem.PageReference != itemPage)
+                if (currentItem.Type == PageItem.ItemType.Subpage && itemPage != null && currentItem.PageReference != itemPage)
                     currentItem.name = itemPage.name;
                 currentItem.PageReference = itemPage;
                 if (currentItem.Type == PageItem.ItemType.Control)
@@ -1739,7 +1739,7 @@ public class InventoryPresetEditor : Editor
                                     if (item.EnableClip != null || item.DisableClip != null)
                                         item.UseAnimations = true;
                                     break;
-                                case PageItem.ItemType.Page:
+                                case PageItem.ItemType.Subpage:
                                     // Set the name of the item to the name of the Page.
                                     item.name = item.PageReference.name;
                                     break;

@@ -85,7 +85,7 @@ The first Page in the list will always become the Default. The Default Page func
   <img width="80%" height="80%" src="Images/Preset/Items/Overview.png">
 </p>
 
-An Item represents a control contained within a [Page](#pages). An Item can be one of four types: a [Toggle](#toggle), a [Button](#button), a [Page](#page), or a [Control](#control). Each type of Item functions differently.
+An Item represents a control contained within a [Page](#pages). An Item can be one of four types: a [Toggle](#toggle), a [Button](#button), a [Subpage](#subpage), or a [Control](#control). Each type of Item functions differently.
 
 #### Toggle
 <p align="center">
@@ -112,12 +112,12 @@ Toggles can be used to toggle between two Animations and can be configured in se
 
 Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using Toggle Groups. Buttons will set the state of items every time it is activated.
 
-#### Page
+#### Subpage
 <p align="center">
-  <img width="80%" height="80%" src="Images/Preset/Items/Page.png">
+  <img width="80%" height="80%" src="Images/Preset/Items/Subpage.png">
 </p>
 
-Page Items can be used to access any other [Pages](#pages) in the Preset (excluding the one it's contained within). An Item using this type will automatically use the icon of the [Page](#pages) it directs to.
+Subpages can be used to access any other [Pages](#pages) in the Preset (excluding the one it's contained within). An Item using this type will automatically use the icon of the [Page](#pages) it directs to.
 
 #### Control
 <p align="center">

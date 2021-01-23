@@ -195,9 +195,9 @@ public class InventoryInventor : UnityEngine.Object
                         case PageItem.ItemType.Button:
                             totalUsage++;
                             break;
-                        case PageItem.ItemType.Page:
+                        case PageItem.ItemType.Subpage:
                             if (item.PageReference == null || Array.IndexOf(preset.Pages.ToArray(), item.PageReference) == -1)
-                                if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: The page '" + item.name + "' refers to is missing.\nContinue? (The menu will not lead anywhere.)", "Continue", "Cancel"))
+                                if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: The Subpage '" + item.name + "' refers to is missing.\nContinue? (The menu will not lead anywhere.)", "Continue", "Cancel"))
                                 {
                                     EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
                                     Selection.activeObject = preset;
@@ -731,7 +731,7 @@ public class InventoryInventor : UnityEngine.Object
                         pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
                         index++;
                         break;
-                    case PageItem.ItemType.Page:
+                    case PageItem.ItemType.Subpage:
                         int val = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference) : 0;
                         pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages[val].Icon : null, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? pages[val] : null});
                         break;
