@@ -5,21 +5,27 @@ using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDK3.Avatars.Components;
+using System.Reflection;
 
 [CustomEditor(typeof(InventoryPreset))]
 public class InventoryPresetEditor : Editor 
 {
+    // Version tracker used for upgrading old presets.
+    public static readonly int currentVersion = 1;
+
     // The Asset being edited.
     private InventoryPreset preset;
 
     // The Avatar being configured.
     private VRCAvatarDescriptor avatar;
+    private ControlDrawer controlDrawer;
 
     // Reorderable Lists to be displayed.
     private readonly Dictionary<string, ReorderableList> pageContentsDict = new Dictionary<string, ReorderableList>();
     private ReorderableList pageDirectory;
     private ReorderableList enableGroupContents;
     private ReorderableList disableGroupContents;
+    private ReorderableList buttonGroupContents;
 
     // Tracked values for indexing
     private int focusedItemPage = 0;
@@ -44,18 +50,16 @@ public class InventoryPresetEditor : Editor
     private readonly List<bool> pagesFoldout = new List<bool>();
     private bool groupFoldout = false;
 
+    // Static values
+    private static readonly GUIContent[] typePopupName = new GUIContent[4] { new GUIContent("Toggle"), new GUIContent("Button"), new GUIContent("Page"), new GUIContent("Control") };
+    private static readonly int[] typePopupVal = new int[4] { 0, 3, 1, 2 };
+    private static readonly GUIContent[] reactPopupName = new GUIContent[2] { new GUIContent("Enable"), new GUIContent("Disable") };
+    private static readonly int[] reactPopupVal = new int[2] { 1, 0 };
+
     // Get the targeted object and initialize ReorderableLists.
     public void OnEnable()
     {
         preset = (InventoryPreset)target;
-        pagesFoldout.AddRange(new bool[preset.Pages.Count]);
-
-        // Setup bar colors.
-        barColors = new Texture2D[2] { new Texture2D(1, 1), new Texture2D(1, 1) };
-        barColors[0].SetPixel(0, 0, Color.yellow * new Color(1, 1, 1, 0.9f));
-        barColors[0].Apply();
-        barColors[1].SetPixel(0, 0, Color.red * new Color(1, 1, 1, 0.9f));
-        barColors[1].Apply();
 
         // Wait until the Asset has been fully created if it hasn't already.
         string _hasPath = AssetDatabase.GetAssetPath(preset.GetInstanceID());
@@ -63,6 +67,27 @@ public class InventoryPresetEditor : Editor
         {
             return;
         }
+
+        // Upgrade the Preset if an older version was detected.
+        if (preset.Pages.Count == 0)
+            preset.Version = currentVersion;
+        else if (preset.Version < currentVersion)
+            UpgradePreset(preset);
+
+        // Setup some GUI variables.
+        pagesFoldout.AddRange(new bool[preset.Pages.Count]);
+
+        // Setup bar colors.
+        barColors = new Texture2D[3] { new Texture2D(1, 1), new Texture2D(1, 1), new Texture2D(1, 1) };
+        barColors[0].SetPixel(0, 0, Color.yellow * new Color(1, 1, 1, 0.9f));
+        barColors[0].Apply();
+        barColors[1].SetPixel(0, 0, Color.red * new Color(1, 1, 1, 0.9f));
+        barColors[1].Apply();
+        barColors[2].SetPixel(0, 0, Color.green * new Color(1, 1, 1, 0.9f));
+        barColors[2].Apply();
+
+        // Initialize Control Drawer.
+        controlDrawer = new ControlDrawer();
 
         pageDirectory = new ReorderableList(preset.Pages, typeof(Page), true, false, false, false)
         {
@@ -106,6 +131,10 @@ public class InventoryPresetEditor : Editor
                 {
                     // fetch the reorderable list in dict
                     innerList = pageContentsDict[listKey];
+
+                    // Reassign the list if it doesn't match for some reason.
+                    if (innerList.list != preset.Pages[index].Items)
+                        innerList.list = preset.Pages[index].Items;
                 }
                 else
                 {
@@ -131,8 +160,24 @@ public class InventoryPresetEditor : Editor
 
                         // Draw the item's name and type.
                         EditorGUI.indentLevel--;
-                        EditorGUI.LabelField(new Rect(rect2.x, rect2.y, rect2.width / 2, rect2.height), (item2.Type == PageItem.ItemType.Page) ? ((item2.PageReference != null) ? item2.PageReference.name : "None") : item2.name);
-                        EditorGUI.LabelField(new Rect(rect2.x + (rect2.width / 2), rect2.y, rect2.width / 2, rect2.height), "Type: " + ((item2.Type == PageItem.ItemType.Toggle) ? "Toggle" : (item2.Type == PageItem.ItemType.Page) ? "Page" : "Submenu"));
+                        EditorGUI.LabelField(new Rect(rect2.x, rect2.y, rect2.width / 2, rect2.height), item2.name);
+                        string typeString = "";
+                        switch (item2.Type)
+                        {
+                            case PageItem.ItemType.Toggle:
+                                typeString = "Toggle";
+                                break;
+                            case PageItem.ItemType.Page:
+                                typeString = "Page";
+                                break;
+                            case PageItem.ItemType.Control:
+                                typeString = "Control";
+                                break;
+                            case PageItem.ItemType.Button:
+                                typeString = "Button";
+                                break;
+                        }
+                        EditorGUI.LabelField(new Rect(rect2.x + (rect2.width / 2), rect2.y, rect2.width / 2, rect2.height), "Type: " + typeString);
                         Handles.color = Color.gray;
                         Handles.DrawLine(new Vector2(rect2.x + ((rect2.width - 15f) / 2), rect2.y), new Vector2(rect2.x + ((rect2.width - 15f) / 2), rect2.y + rect2.height));
                         if (index2 != 0)
@@ -239,6 +284,16 @@ public class InventoryPresetEditor : Editor
             page.name = "Page " + (pageDirectory.list.Count + 1);
             AssetDatabase.AddObjectToAsset(page, _path);
 
+            // Create an intial item to add on the page to avoid errors.
+            PageItem item = CreateInstance<PageItem>();
+            Undo.RegisterCreatedObjectUndo(item, "Add Page");
+
+            // Configure the new item and add it to the Asset.
+            item.hideFlags = HideFlags.HideInHierarchy;
+            item.name = "Slot 1";
+            AssetDatabase.AddObjectToAsset(item, _path);
+            page.Items.Add(item);
+
             // Record the current state of the preset and add the new page.
             Undo.RecordObject(preset, "Add Page");
             preset.Pages.Add(page);
@@ -257,6 +312,7 @@ public class InventoryPresetEditor : Editor
                 // Mark the preset as dirty and record the preset before the page's deletion. 
                 EditorUtility.SetDirty(preset);
                 Undo.RecordObject(preset, "Remove Page");
+                string pageName = preset.Pages[list.index].name;
                 preset.Pages.RemoveAt(list.index);
                 pagesFoldout.RemoveAt(list.index);
 
@@ -350,11 +406,11 @@ public class InventoryPresetEditor : Editor
             Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
             if (index != 0)
-                Handles.DrawLine(new Vector2(rect.x - 15, rect.y), new Vector2(rect.x + rect.width, rect.y));
+                Handles.DrawLine(new Vector2(rect.x - 15, rect.y - 1f), new Vector2(rect.x + rect.width, rect.y - 1f));
 
             // Display a dropdown selector to change how the item's toggle is affected when this group is fired.
             EditorGUI.BeginChangeCheck();
-            GroupItem.GroupType itemType = (GroupItem.GroupType)EditorGUI.EnumPopup(new Rect(rect.x + (rect.width / 2), rect.y + (rect.height - 18f) / 2, rect.width / 2, rect.height), item.Reaction);
+            GroupItem.GroupType itemType = (GroupItem.GroupType)EditorGUI.IntPopup(new Rect(rect.x + (rect.width / 2), rect.y + (rect.height - 18f) / 2, rect.width / 2, rect.height), (int)item.Reaction, reactPopupName, reactPopupVal);
             if (EditorGUI.EndChangeCheck())
             {
                 // Mark the preset as dirty, record the item, and update it.
@@ -542,11 +598,11 @@ public class InventoryPresetEditor : Editor
             Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
             if (index != 0)
-                Handles.DrawLine(new Vector2(rect.x - 15, rect.y), new Vector2(rect.x + rect.width, rect.y));
+                Handles.DrawLine(new Vector2(rect.x - 15, rect.y - 1f), new Vector2(rect.x + rect.width, rect.y - 1f));
 
             // Display a dropdown selector to change how the item's toggle is affected when this group is fired.
             EditorGUI.BeginChangeCheck();
-            GroupItem.GroupType itemType = (GroupItem.GroupType)EditorGUI.EnumPopup(new Rect(rect.x + (rect.width / 2), rect.y + (rect.height - 18f) / 2, rect.width / 2, rect.height), item.Reaction);
+            GroupItem.GroupType itemType = (GroupItem.GroupType)EditorGUI.IntPopup(new Rect(rect.x + (rect.width / 2), rect.y + (rect.height - 18f) / 2, rect.width / 2, rect.height), (int)item.Reaction, reactPopupName, reactPopupVal);
             if (EditorGUI.EndChangeCheck())
             {
                 // Mark the preset as dirty, record the item, and update it.
@@ -663,6 +719,197 @@ public class InventoryPresetEditor : Editor
             }
         };
 
+        buttonGroupContents = new ReorderableList(null, typeof(GroupItem), true, false, false, false)
+        {
+            elementHeight = 20f,
+            headerHeight = 0,
+            footerHeight = 0,
+        };
+        buttonGroupContents.drawHeaderCallback += (Rect rect) =>
+        {
+            GUI.Label(rect, new GUIContent("When Activated...", "Modifies listed toggles when this button is used."));
+        };
+        buttonGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
+        {
+            EditorGUI.indentLevel--;
+            // Accessor string
+            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+
+            // The item being drawn.
+            GroupItem item = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup[index];
+
+            // Create a list of all toggles, toggles not currently in the group, and the names of those later toggles.
+            List<PageItem> allToggles = new List<PageItem>();
+            List<PageItem> remainingToggles = new List<PageItem>();
+            List<string> toggleNames = new List<string>();
+            foreach (Page page in preset.Pages)
+            {
+                foreach (PageItem pageItem in page.Items)
+                {
+                    if (pageItem.Type == PageItem.ItemType.Toggle)
+                    {
+                        allToggles.Add(pageItem);
+
+                        // Only add the toggle as a selectable one if it is one not currently in the group.
+                        if (pageItem != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetButtonGroupItems(), pageItem) == -1))
+                        {
+                            remainingToggles.Add(pageItem);
+                            toggleNames.Add(page.name + ": " + pageItem.name);
+                        }
+                    }
+                }
+            }
+
+            if (remainingToggles.Count > 0)
+            {
+                // Set the item to use the first remaining toggle if it has none assigned.
+                if (item.Item == null)
+                {
+                    item.Item = remainingToggles[0];
+                }
+
+                // Display a dropdown selector for which toggle the item affects.
+                EditorGUI.BeginChangeCheck();
+                PageItem selected = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
+                if (EditorGUI.EndChangeCheck())
+                {
+                    // Mark the preset as dirty, record the item, and update it.
+                    EditorUtility.SetDirty(preset);
+                    Undo.RecordObject(item, "Group Modified");
+                    item.Item = selected;
+                }
+            }
+            else
+            {
+                // Display a placeholder dropdown selector.
+                EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), 0, new string[] { "None" });
+            }
+
+            // Separator
+            Handles.color = Color.gray;
+            Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
+            if (index != 0)
+                Handles.DrawLine(new Vector2(rect.x - 15, rect.y - 1f), new Vector2(rect.x + rect.width, rect.y - 1f));
+
+            // Display a dropdown selector to change how the item's toggle is affected when this group is fired.
+            EditorGUI.BeginChangeCheck();
+            GroupItem.GroupType itemType = (GroupItem.GroupType)EditorGUI.IntPopup(new Rect(rect.x + (rect.width / 2), rect.y + (rect.height - 18f) / 2, rect.width / 2, rect.height), (int)item.Reaction, reactPopupName, reactPopupVal);
+            if (EditorGUI.EndChangeCheck())
+            {
+                // Mark the preset as dirty, record the item, and update it.
+                EditorUtility.SetDirty(preset);
+                Undo.RecordObject(item, "Group Modified");
+                item.Reaction = itemType;
+            }
+            EditorGUI.indentLevel++;
+        };
+        buttonGroupContents.onAddCallback += (ReorderableList list) =>
+        {
+            // Accessor string
+            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+
+            // If no elements are present.
+            if (list.count == 0)
+            {
+                EditorUtility.SetDirty(preset);
+                Undo.IncrementCurrentGroup();
+                int group2 = Undo.GetCurrentGroup();
+                GroupItem item2 = CreateInstance<GroupItem>();
+                Undo.RegisterCreatedObjectUndo(item2, "Add Group Item");
+
+                item2.name = "Group Item";
+                item2.hideFlags = HideFlags.HideInHierarchy;
+                item2.Reaction = GroupItem.GroupType.Disable;
+                string _path2 = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+                AssetDatabase.AddObjectToAsset(item2, _path2);
+                GroupItem[] newArray2 = new GroupItem[preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.Length + 1];
+                preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.CopyTo(newArray2, 0);
+                newArray2[newArray2.GetUpperBound(0)] = item2;
+
+                Undo.RecordObject(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index], "Add Group Item");
+                preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup = newArray2;
+                Undo.CollapseUndoOperations(group2);
+                return;
+            }
+
+            // Obtain the number of toggles contained within the preset.
+            int totalUsage = 0;
+            foreach (Page page in preset.Pages)
+            {
+                foreach (PageItem pageItem in page.Items)
+                {
+                    if (pageItem.Type == PageItem.ItemType.Toggle)
+                    {
+                        totalUsage += 1;
+                    }
+                }
+            }
+
+            // Don't continue if there are no other toggles.
+            if (totalUsage - 1 == list.list.Count)
+            {
+                return;
+            }
+
+            // Mark the preset as dirty and record the creation of the new item.
+            EditorUtility.SetDirty(preset);
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            GroupItem item = CreateInstance<GroupItem>();
+            Undo.RegisterCreatedObjectUndo(item, "Add Group Item");
+
+            // Configure the new item, add it to the Asset, and append it to the group.
+            string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+            item.name = "Group Item";
+            item.hideFlags = HideFlags.HideInHierarchy;
+            item.Reaction = GroupItem.GroupType.Disable;
+            AssetDatabase.AddObjectToAsset(item, _path);
+            GroupItem[] newArray = new GroupItem[preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.Length + 1];
+            preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.CopyTo(newArray, 0);
+            newArray[newArray.GetUpperBound(0)] = item;
+
+            // Record the selected page item and add the new item to the group.
+            Undo.RecordObject(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index], "Add Group Item");
+            preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup = newArray;
+            Undo.CollapseUndoOperations(group);
+
+            // Focus the list on the new item.
+            list.index = list.list.Count;
+            enableScroll.y = float.MaxValue;
+        };
+        buttonGroupContents.onRemoveCallback += (ReorderableList list) =>
+        {
+            // Only continue if the list contains an element.
+            if (list.list.Count > 0)
+            {
+                // Accessor string
+                string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+
+                // Mark the preset as dirty, record the current page item, and set the item to null.
+                EditorUtility.SetDirty(preset);
+                Undo.RecordObject(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index], "Remove Group Item");
+                preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup[list.index] = null;
+
+                // Copy the group into an array shortened by one element.
+                GroupItem[] newArray = new GroupItem[preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.GetUpperBound(0)];
+                int index = 0;
+                for (int i = 0; i < preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup.Length; i++)
+                {
+                    // Only copy the group item if it isn't null.
+                    if (preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup[i] != null)
+                    {
+                        newArray[index] = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup[i];
+                        index++;
+                    }
+                }
+                preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup = newArray;
+
+                // Focus the list on the prior item.
+                if (list.index > 0)
+                    list.index -= 1;
+            }
+        };
+
         EditorApplication.wantsToQuit += WantsToQuit;
     }
 
@@ -707,7 +954,16 @@ public class InventoryPresetEditor : Editor
             disableGroupContents.onRemoveCallback -= disableGroupContents.onRemoveCallback;
         }
 
-        SaveChanges();
+        if (buttonGroupContents != null)
+        {
+            buttonGroupContents.drawHeaderCallback -= buttonGroupContents.drawHeaderCallback;
+            buttonGroupContents.drawElementCallback -= buttonGroupContents.drawElementCallback;
+            buttonGroupContents.onAddCallback -= buttonGroupContents.onAddCallback;
+            buttonGroupContents.onRemoveCallback -= buttonGroupContents.onRemoveCallback;
+        }
+
+        if (IsDirtyUtility.IsDirty(preset.GetInstanceID()))
+            SaveChanges(preset);
         EditorApplication.wantsToQuit -= WantsToQuit;
     }
 
@@ -747,6 +1003,11 @@ public class InventoryPresetEditor : Editor
 
         // Check if toggle limit exceeded.
         int totalUsage = 1; // 0 is reserved.
+        int savedUsage = 0;
+
+        // Check if memory is available.
+        int totalToggles = 0;
+        int totalMemory = (avatar != null && avatar.expressionParameters.FindParameter("Inventory") == null) ? 8 : 0;
 
         // Check if an object is missing.
         List<string> objectsMissing = new List<string>();
@@ -759,6 +1020,7 @@ public class InventoryPresetEditor : Editor
             {
                 if (pageItem.Type == PageItem.ItemType.Toggle)
                 {
+                    totalToggles++;
                     switch (pageItem.Sync)
                     {
                         // If the toggle is local, add one for the menu and one for each group used.
@@ -780,6 +1042,16 @@ public class InventoryPresetEditor : Editor
                                 totalUsage++;
                             if (pageItem.DisableGroup.Length > 0)
                                 totalUsage++;
+                            if (pageItem.Saved)
+                            {
+                                savedUsage++;
+                                if (avatar != null)
+                                {
+                                    if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                                        totalMemory--;
+                                    totalMemory++;
+                                }
+                            }
                             break;
                     }
                     // Check for missing items.
@@ -789,6 +1061,8 @@ public class InventoryPresetEditor : Editor
                         objectsMissingPath.Add(page.name + ": " + pageItem.name);
                     }
                 }
+                else if (pageItem.Type == PageItem.ItemType.Button)
+                    totalUsage++;
             }
         }
 
@@ -821,58 +1095,81 @@ public class InventoryPresetEditor : Editor
 
                 for (int i = 0; i < objectsMissing.Count; i++)
                 {
-                    
+
                     rect = EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField("");
                     EditorGUI.LabelField(new Rect(rect.x, rect.y, (rect.x + ((rect.width - 15f) / 2)) - rect.x, rect.height), new GUIContent(objectsMissingPath[i], objectsMissingPath[i]));
                     Handles.color = Color.gray;
                     Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
-                    EditorGUI.LabelField(new Rect(rect.x + ((rect.width - 30f) / 2), rect.y, rect.xMax - (rect.x + ((rect.width - 30f) / 2)), rect.height), new GUIContent(objectsMissing[i].IndexOf("/") != 0 ? objectsMissing[i].Substring(objectsMissing[i].LastIndexOf("/") + 1): objectsMissing[i], objectsMissing[i]));
+                    EditorGUI.LabelField(new Rect(rect.x + ((rect.width - 30f) / 2), rect.y, rect.xMax - (rect.x + ((rect.width - 30f) / 2)), rect.height), new GUIContent(objectsMissing[i].IndexOf("/") != 0 ? objectsMissing[i].Substring(objectsMissing[i].LastIndexOf("/") + 1) : objectsMissing[i], objectsMissing[i]));
                     EditorGUILayout.EndHorizontal();
-                } 
+                }
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndVertical();
+        EditorGUILayout.Space();
         DrawLine();
 
         // Usage bar
         Rect barPos = EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUILayout.BeginHorizontal();
-        float percentage = Mathf.Clamp((totalUsage - 1) / 255f, 0f, 1f);
+        float togglePercentage = Mathf.Clamp((totalUsage - 1) / 255f, 0f, 1f);
+        float savedPercentage = Mathf.Clamp(savedUsage / 120f, 0f, 1f);
         GUIStyle barBackStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBack") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBack"));
         GUIStyle barFrontStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
+        GUIStyle barUnderStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
+        if (savedUsage > 120)
+            barUnderStyle.normal.background = barColors[1];
+        else if (avatar != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+            barUnderStyle.normal.background = barColors[0];
+        else
+            barUnderStyle.normal.background = barColors[2];
         GUIStyle barTextColor = new GUIStyle(EditorStyles.label)
         {
             alignment = TextAnchor.MiddleCenter,
             richText = true
         };
         string barText = "Data: " + (totalUsage - 1) + " of 255";
-        if (percentage >= 0.85f)
+        if (togglePercentage >= 0.85f)
         {
             barFrontStyle.normal.background = barColors[1];
             barTextColor.normal.textColor = Color.white;
             barText = "<b>Data: " + (totalUsage - 1) + " of 255</b>";
         }
-        else if (percentage >= 0.7f)
+        else if (togglePercentage >= 0.7f)
         {
             barFrontStyle.normal.background = barColors[0];
         }
-        DoCustomProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), percentage, barBackStyle, barFrontStyle);
+        DoCustomProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), togglePercentage, savedPercentage, barBackStyle, barFrontStyle, barUnderStyle);
         EditorGUI.LabelField(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), barText, barTextColor);
         EditorGUILayout.EndHorizontal();
-        GUILayout.Space(18);
+        GUILayout.Space(24);
         if (totalUsage > 256)
-        {
-            EditorGUILayout.HelpBox("This preset exceeds the maximum amount of data usable.", MessageType.Warning);
-        }
+            EditorGUILayout.HelpBox("This preset exceeds the maximum amount of data usable.", MessageType.Error);
+        if (savedUsage + 8 > VRCExpressionParameters.MAX_PARAMETER_COST)
+            EditorGUILayout.HelpBox("This preset uses more memory than the amount possible available on an Avatar (" + (savedUsage + 8) + "/" + 128 + " bits).", MessageType.Error);
+        else if (avatar != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+            EditorGUILayout.HelpBox("This preset uses more memory than is available on the Active Avatar (" + totalMemory + "/" + (VRCExpressionParameters.MAX_PARAMETER_COST - avatar.expressionParameters.CalcTotalCost()) + " bits).", MessageType.Warning);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUI.indentLevel++;
-        if (usageFoldout = EditorGUILayout.Foldout(usageFoldout, "How Data is Measured", true))
+        if (usageFoldout = EditorGUILayout.Foldout(usageFoldout, "What Uses Data and Memory?", true))
         {
             EditorGUI.indentLevel--;
-            EditorGUILayout.HelpBox("Data usage depends on both sync mode and group usage:\n\nOff = 1 + (1 for each Toggle Group used)\nManual = 3\nAuto = 1 + (2 if the Toggle isn't saved) + (1 for each Toggle Group used)", MessageType.None);
+            EditorGUILayout.HelpBox(
+                "The usage of Data (d) and Memory (m) is listed below:\n" +
+                "\n" +
+                "Toggle:\n" +
+                "       Sync: OFF\t= 1d\n" +
+                "\tGroup\t= (# of Groups)d\n" +
+                "       Sync: MANUAL\t= 3d\n" +
+                "       Sync: AUTO\t= 3d\n" +
+                "\tGroup\t= (# of Groups)d\n" +
+                "\tSaved\t= -2d & 1m\n" +
+                "\n" +
+                "Button = 1d",
+                MessageType.None);
             EditorGUI.indentLevel++;
         }
         EditorGUI.indentLevel--;
@@ -896,11 +1193,17 @@ public class InventoryPresetEditor : Editor
         // Make sure at least one page exists.
         if (pageDirectory.list.Count == 0)
         {
+            EditorUtility.SetDirty(preset);
             Page page = CreateInstance<Page>();
             page.name = "Page " + (pageDirectory.list.Count + 1);
             page.hideFlags = HideFlags.HideInHierarchy;
             string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
             AssetDatabase.AddObjectToAsset(page, _path);
+            PageItem item = CreateInstance<PageItem>();
+            item.hideFlags = HideFlags.HideInHierarchy;
+            item.name = "Slot 1";
+            AssetDatabase.AddObjectToAsset(item, _path);
+            page.Items.Add(item);
             preset.Pages.Add(page);
             pagesFoldout.Add(false);
         }       
@@ -925,6 +1228,12 @@ public class InventoryPresetEditor : Editor
         DrawLine();
 
         // Item Settings
+
+        // Make sure that the main indexer is within its bounds.
+        if (focusedItemPage < 0)
+            focusedItemPage = 0;
+        else if (focusedItemPage >= preset.Pages.Count)
+            focusedItemPage = preset.Pages.Count - 1;
 
         if (pageDirectory.HasKeyboardControl())
         {
@@ -981,36 +1290,37 @@ public class InventoryPresetEditor : Editor
             PageItem.SyncMode itemSync = currentItem.Sync;
             bool itemSaved = currentItem.Saved;
             Page itemPage = currentItem.PageReference;
-            VRCExpressionsMenu itemMenu = currentItem.Submenu;          
+            VRCExpressionsMenu.Control itemControl = currentItem.Control;
 
             // Item type.
-            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft }, GUILayout.Height(24f));
-            itemType = (PageItem.ItemType)EditorGUILayout.EnumPopup(new GUIContent("Type", "The type of item."), itemType);
+            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) }, GUILayout.Height(24f));
+            itemType = (PageItem.ItemType)EditorGUILayout.IntPopup(new GUIContent("Type", "The type of item."), (int)itemType, typePopupName, typePopupVal);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+            EditorGUILayout.EndHorizontal();
+
+            // Separator
+            rect = EditorGUILayout.BeginHorizontal();
+            Handles.color = Color.gray;
+            Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 15, rect.y + 1));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+
+            // Draw item renamer.
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
+            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
 
             // Item icon (only if the item is not of type Page).
             if (itemType != PageItem.ItemType.Page)
             {
-                // Separator
-                rect = EditorGUILayout.BeginHorizontal();
-                Handles.color = Color.gray;
-                Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 15, rect.y + 1));
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.Space();
-
-                // Draw item renamer.
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-                itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
-                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(new GUIContent("Icon", "The icon to use for the control."));
                 itemIcon = (Texture2D)EditorGUILayout.ObjectField(itemIcon, typeof(Texture2D), false);
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.Space();
             }
+            EditorGUILayout.Space();
 
             // Separator
             rect = EditorGUILayout.BeginHorizontal();
@@ -1077,7 +1387,7 @@ public class InventoryPresetEditor : Editor
                     // Item starting state.
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.PrefixLabel(new GUIContent("Start", "What state the toggle starts in."));
-                    itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disable", "Enable" }));
+                    itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disabled", "Enabled" }));
                     EditorGUILayout.EndHorizontal();
 
                     // Separator
@@ -1122,7 +1432,7 @@ public class InventoryPresetEditor : Editor
                         }
 
                         // Item page reference.
-                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null ? Array.IndexOf(pages, itemPage) : 0, names)])];
+                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null && Array.IndexOf(pages, itemPage) != -1 ? Array.IndexOf(pages, itemPage) : 0, names)])];
                     }
                     else
                     {
@@ -1130,9 +1440,9 @@ public class InventoryPresetEditor : Editor
                         EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), 0, new string[] { "None" });
                     }
                     break;
-                case PageItem.ItemType.Submenu:
-                    // Item submenu.
-                    itemMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Submenu", "The menu to use."), itemMenu, typeof(VRCExpressionsMenu), false);
+                case PageItem.ItemType.Control:
+                    // Item control.
+                    controlDrawer.DrawControl(avatar, itemControl);
                     break;
             }
             EditorGUILayout.EndVertical();
@@ -1161,13 +1471,21 @@ public class InventoryPresetEditor : Editor
                 currentItem.DisableClip = itemDisable;
                 currentItem.Sync = itemSync;
                 currentItem.Saved = itemSaved;
+                if (currentItem.Type == PageItem.ItemType.Page && itemPage != null && currentItem.PageReference != itemPage)
+                    currentItem.name = itemPage.name;
                 currentItem.PageReference = itemPage;
-                currentItem.Submenu = itemMenu;
+                if (currentItem.Type == PageItem.ItemType.Control)
+                {
+                    itemControl.name = currentItem.name;
+                    itemControl.icon = currentItem.Icon;
+                }
+                currentItem.Control = itemControl;
 
                 // Reassign the item to the list (might be redundant, haven't checked).
                 preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] = currentItem;
             }
-            EditorGUILayout.Space();
+            if (itemType != PageItem.ItemType.Button)
+                EditorGUILayout.Space();
 
             // Item Groups
             if (itemType == PageItem.ItemType.Toggle)
@@ -1188,7 +1506,7 @@ public class InventoryPresetEditor : Editor
                         enableGroupContents.list = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].EnableGroup;
                     }
 
-                    // If the group is empty, display a button for creating it. Otherwise, display the contents.
+                    // Display the contents.
                     DrawCustomHeader(enableGroupContents);
                     if (enableGroupContents.list.Count != 0)
                     {
@@ -1219,6 +1537,31 @@ public class InventoryPresetEditor : Editor
                     EditorGUILayout.Space();
                 }
                 EditorGUI.indentLevel--;
+            }
+            else if (itemType == PageItem.ItemType.Button)
+            {
+                EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+                EditorGUILayout.EndHorizontal();
+
+                // Update buttonGroupContents if it is using the wrong list or it has been modified.
+                if (buttonGroupContents.list != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup)
+                {
+                    buttonGroupContents.list = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup;
+                }
+
+                // Display the contents.
+                DrawCustomHeader(buttonGroupContents);
+                if (buttonGroupContents.list.Count != 0)
+                {
+                    // Display the buttonGroupContents list (with scrollbar).
+                    enableScroll = EditorGUILayout.BeginScrollView(enableScroll, GUILayout.Height(Mathf.Clamp(buttonGroupContents.GetHeight(), 0, buttonGroupContents.elementHeight * 10 + 10)));
+                    EditorGUI.indentLevel++;
+                    buttonGroupContents.DoLayoutList();
+                    EditorGUI.indentLevel--;
+                    EditorGUILayout.EndScrollView();
+                }
+                DrawButtons(buttonGroupContents, true, true, "Create Member", "Remove Member", Rect.zero);
+                EditorGUILayout.Space();
             }
 
             // End item settings container.
@@ -1294,17 +1637,18 @@ public class InventoryPresetEditor : Editor
         serializedObject.ApplyModifiedProperties();
 
         // Save Changes before entering Play Mode
-        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying)
+        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying && IsDirtyUtility.IsDirty(preset.GetInstanceID()))
         {
-            SaveChanges();
+            SaveChanges(preset);
         }
     }
 
     // Removes unused Sub-Assets from the file and saves any changes made to the remaining Assets.
-    private void SaveChanges()
+    public static void SaveChanges(InventoryPreset preset)
     {
         // Save any changes made to Assets within the file.
         AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
 
         // Retrieve all Assets contained within the file.
         UnityEngine.Object[] objects = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(preset.GetInstanceID()));
@@ -1353,7 +1697,7 @@ public class InventoryPresetEditor : Editor
                 {
                     foreach (PageItem item in page.Items)
                     {
-                        if (Array.IndexOf(item.EnableGroup, (GroupItem)objects[i]) != -1 || Array.IndexOf(item.DisableGroup, (GroupItem)objects[i]) != -1)
+                        if (Array.IndexOf(item.EnableGroup, (GroupItem)objects[i]) != -1 || Array.IndexOf(item.DisableGroup, (GroupItem)objects[i]) != -1 || Array.IndexOf(item.ButtonGroup, (GroupItem)objects[i]) != -1)
                         {
                             used[i] = true;
                             break;
@@ -1372,6 +1716,50 @@ public class InventoryPresetEditor : Editor
 
         // Save changes.
         AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+    }
+
+    // Upgrades older Assets while retaining their settings.
+    public static void UpgradePreset(InventoryPreset preset)
+    {
+        EditorUtility.SetDirty(preset);
+        while (preset.Version < currentVersion)
+        {
+            switch (preset.Version)
+            {
+                case 0:
+                    bool subMenuExists = false;
+                    foreach (Page page in preset.Pages)
+                        foreach (PageItem item in page.Items)
+                        {
+                            switch (item.Type)
+                            {
+                                case PageItem.ItemType.Toggle:
+                                    // Turn on Animations for all existing Toggles that had any.
+                                    if (item.EnableClip != null || item.DisableClip != null)
+                                        item.UseAnimations = true;
+                                    break;
+                                case PageItem.ItemType.Page:
+                                    // Set the name of the item to the name of the Page.
+                                    item.name = item.PageReference.name;
+                                    break;
+                                case PageItem.ItemType.Control:
+                                    // Submenu data is no longer stored, so inform the user to readd them manually afterwards.
+                                    subMenuExists = true;
+                                    item.Control.type = VRCExpressionsMenu.Control.ControlType.SubMenu;
+                                    break;
+                            }
+                        }
+                    if (subMenuExists)
+                        EditorUtility.DisplayDialog("Inventory Inventor", "One or more Submenu Items were discovered on this Preset while upgrading. These have automatically turned into Control Items and will need to be reassigned their Expressions Menus manually.", "Close");
+                    break;
+                case 1:
+                    //Future Upgrade Placeholder.
+                    break;
+            }
+            preset.Version++;
+        }
+        SaveChanges(preset);
     }
 
     // Draws a line across the GUI
@@ -1491,7 +1879,7 @@ public class InventoryPresetEditor : Editor
     // Custom Progress Bar
     */
 
-    private void DoCustomProgressBar(Rect position, float value, GUIStyle progressBarBackgroundStyle, GUIStyle progressBarStyle)
+    private void DoCustomProgressBar(Rect position, float value, float value2, GUIStyle progressBarBackgroundStyle, GUIStyle progressBarStyle, GUIStyle progressBarUnderStyle)
     {
         bool mouseHover = position.Contains(Event.current.mousePosition);
         int id = GUIUtility.GetControlID("s_ProgressBarHash".GetHashCode(), FocusType.Keyboard, position);
@@ -1520,13 +1908,44 @@ public class InventoryPresetEditor : Editor
                     var barRect = new Rect(position.x + cursor + scale, position.y, barWidth, position.height);
                     progressBarStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
                 }
+                Rect memBar = new Rect(position.x, position.y + position.height + 2, position.width, 6);
+                progressBarBackgroundStyle.Draw(memBar, mouseHover, false, false, false);
+                if (value2 > 0.0f)
+                {
+                    value2 = Mathf.Clamp01(value2);
+                    var barRect = new Rect(position)
+                    {
+                        height = 1,
+                        y = position.y + position.height + 4
+                    };
+                    barRect.width *= value2;
+                    if (barRect.width >= 1f)
+                        progressBarUnderStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
+                }
+                else if (value2 == -1.0f)
+                {
+                    float barWidth = position.width * 0.2f;
+                    float halfBarWidth = barWidth / 2.0f;
+                    float cos = Mathf.Cos((float)EditorApplication.timeSinceStartup * 2f);
+                    float rb = position.x + halfBarWidth;
+                    float re = position.xMax - halfBarWidth;
+                    float scale = (re - rb) / 2f;
+                    float cursor = scale * cos;
+                    var barRect = new Rect(position.x + cursor + scale, position.y, barWidth, position.height);
+                    progressBarUnderStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
+                }
+                //for (int i = 1; i < 120; i++)
+                //{
+                //    Handles.color = Color.black;
+                //    Handles.DrawLine(new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y), new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y + memBar.height));
+                //}
                 break;
         }
     }
 
     /*
-     * These next two functions are literally just code from the Expression Menu for selecting the avatar.
-     */
+    // These next two functions are literally just code from the Expression Menu for selecting the avatar.
+    */
 
     void SelectAvatarDescriptor()
     {
@@ -1557,4 +1976,303 @@ public class InventoryPresetEditor : Editor
         avatar = desc;
     }
 
+    /*
+    // Draw a Expression Menu Control 
+    */
+
+    // Coder's note: I'd like to formally apologize to VRChat for butchering their code to work with my setup.
+    private class ControlDrawer
+    {
+        VRCAvatarDescriptor activeDescriptor = null;
+        string[] parameterNames;
+
+        public void DrawControl(VRCAvatarDescriptor avatar, VRCExpressionsMenu.Control control)
+        {
+            activeDescriptor = avatar;
+
+            // Wait until the control is ready.
+            if (control == null)
+                return;
+
+            //Init stage parameters
+            int paramCount = activeDescriptor.GetExpressionParameterCount();
+            parameterNames = new string[paramCount + 1];
+            parameterNames[0] = "[None]";
+            for (int i = 0; i < paramCount; i++)
+            {
+                var param = activeDescriptor.GetExpressionParameter(i);
+                string name2 = "[None]";
+                if (param != null && !string.IsNullOrEmpty(param.name))
+                    name2 = string.Format("{0}, {1}", param.name, param.valueType.ToString(), i + 1);
+                parameterNames[i + 1] = name2;
+            }
+
+            //Generic params
+            control.type = (VRCExpressionsMenu.Control.ControlType)EditorGUILayout.EnumPopup("Type", control.type);
+
+            //Type Info
+            var controlType = control.type;
+            switch (controlType)
+            {
+                case VRCExpressionsMenu.Control.ControlType.Button:
+                    EditorGUILayout.HelpBox("Click or hold to activate. The button remains active for a minimum 0.2s.\nWhile active the (Parameter) is set to (Value).\nWhen inactive the (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.Toggle:
+                    EditorGUILayout.HelpBox("Click to toggle on or off.\nWhen turned on the (Parameter) is set to (Value).\nWhen turned off the (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.SubMenu:
+                    EditorGUILayout.HelpBox("Opens another expression menu.\nWhen opened the (Parameter) is set to (Value).\nWhen closed (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet:
+                    EditorGUILayout.HelpBox("Puppet menu that maps the joystick to two parameters (-1 to +1).\nWhen opened the (Parameter) is set to (Value).\nWhen closed (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet:
+                    EditorGUILayout.HelpBox("Puppet menu that maps the joystick to four parameters (0 to 1).\nWhen opened the (Parameter) is set to (Value).\nWhen closed (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.RadialPuppet:
+                    EditorGUILayout.HelpBox("Puppet menu that sets a value based on joystick rotation. (0 to 1)\nWhen opened the (Parameter) is set to (Value).\nWhen closed (Parameter) is reset to zero.", MessageType.Info);
+                    break;
+            }
+
+            //Param
+            switch (controlType)
+            {
+                case VRCExpressionsMenu.Control.ControlType.Button:
+                case VRCExpressionsMenu.Control.ControlType.Toggle:
+                case VRCExpressionsMenu.Control.ControlType.SubMenu:
+                case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet:
+                case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet:
+                case VRCExpressionsMenu.Control.ControlType.RadialPuppet:
+                    DrawParameterDropDown(ref control.parameter, "Parameter");
+                    DrawParameterValue(control.parameter, ref control.value);
+                    break;
+            }
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+            //Style
+            /*if (controlType == ExpressionsControl.ControlType.Toggle)
+            {
+                style.intValue = EditorGUILayout.Popup("Visual Style", style.intValue, ToggleStyles);
+            }*/
+
+            //Sub menu
+            if (controlType == VRCExpressionsMenu.Control.ControlType.SubMenu)
+            {
+                control.subMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField("Submenu", control.subMenu, typeof(VRCExpressionsMenu), false);
+            }
+
+            //Puppet Parameter Set
+            switch (controlType)
+            {
+                case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet:
+                    if (control.subParameters.Length != 2)
+                        control.subParameters = new VRCExpressionsMenu.Control.Parameter[2];
+                    if (control.labels.Length != 4)
+                        control.labels = new VRCExpressionsMenu.Control.Label[4];
+
+                    DrawParameterDropDown(ref control.subParameters[0], "Parameter Horizontal", false);
+                    DrawParameterDropDown(ref control.subParameters[1], "Parameter Vertical", false);
+
+                    DrawLabel(ref control.labels[0], "Label Up");
+                    DrawLabel(ref control.labels[1], "Label Right");
+                    DrawLabel(ref control.labels[2], "Label Down");
+                    DrawLabel(ref control.labels[3], "Label Left");
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet:
+                    if (control.subParameters.Length != 4)
+                        control.subParameters = new VRCExpressionsMenu.Control.Parameter[4];
+                    if (control.labels.Length != 4)
+                        control.labels = new VRCExpressionsMenu.Control.Label[4];
+
+                    DrawParameterDropDown(ref control.subParameters[0], "Parameter Up", false);
+                    DrawParameterDropDown(ref control.subParameters[1], "Parameter Right", false);
+                    DrawParameterDropDown(ref control.subParameters[2], "Parameter Down", false);
+                    DrawParameterDropDown(ref control.subParameters[3], "Parameter Left", false);
+
+                    DrawLabel(ref control.labels[0], "Label Up");
+                    DrawLabel(ref control.labels[1], "Label Right");
+                    DrawLabel(ref control.labels[2], "Label Down");
+                    DrawLabel(ref control.labels[3], "Label Left");
+                    break;
+                case VRCExpressionsMenu.Control.ControlType.RadialPuppet:
+                    if (control.subParameters.Length != 1)
+                        control.subParameters = new VRCExpressionsMenu.Control.Parameter[1];
+                    if (control.labels.Length != 0)
+                        control.labels = new VRCExpressionsMenu.Control.Label[0];
+
+                    DrawParameterDropDown(ref control.subParameters[0], "Paramater Rotation", false);
+                    break;
+                default:
+                    if (control.subParameters == null || control.subParameters.Length != 0)
+                        control.subParameters = new VRCExpressionsMenu.Control.Parameter[0];
+                    if (control.labels == null || control.labels.Length != 0)
+                        control.labels = new VRCExpressionsMenu.Control.Label[0];
+                    break;
+            }
+        }
+        void DrawParameterDropDown(ref VRCExpressionsMenu.Control.Parameter parameter, string name, bool allowBool = true)
+        {
+            VRCExpressionParameters.Parameter param = null;
+            string value = parameter != null ? parameter.name : "";
+
+            bool parameterFound = false;
+            EditorGUILayout.BeginHorizontal();
+            {
+                if (activeDescriptor != null)
+                {
+                    //Dropdown
+                    int currentIndex;
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        currentIndex = -1;
+                        parameterFound = true;
+                    }
+                    else
+                    {
+                        currentIndex = -2;
+                        for (int i = 0; i < GetExpressionParametersCount(); i++)
+                        {
+                            var item = activeDescriptor.GetExpressionParameter(i);
+                            if (item.name == value)
+                            {
+                                param = item;
+                                parameterFound = true;
+                                currentIndex = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    //Dropdown
+                    EditorGUI.BeginChangeCheck();
+                    currentIndex = EditorGUILayout.Popup(name, currentIndex + 1, parameterNames);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (currentIndex == 0)
+                            parameter.name = "";
+                        else
+                            parameter.name = GetExpressionParameter(currentIndex - 1).name;
+                    }
+                }
+                else
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.Popup(0, new string[0]);
+                    EditorGUI.EndDisabledGroup();
+                }
+
+                //Text field
+                if (parameter != null)
+                    parameter.name = EditorGUILayout.TextField(parameter.name, GUILayout.MaxWidth(200));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (!parameterFound)
+            {
+                EditorGUILayout.HelpBox("Parameter not found on the active avatar descriptor.", MessageType.Warning);
+            }
+
+            if (!allowBool && param != null && param.valueType == VRCExpressionParameters.ValueType.Bool)
+            {
+                EditorGUILayout.HelpBox("Bool parameters not valid for this choice.", MessageType.Error);
+            }
+        }
+        void DrawParameterValue(VRCExpressionsMenu.Control.Parameter parameter, ref float value)
+        {
+            string paramName = parameter != null ? parameter.name : "";
+            if (!string.IsNullOrEmpty(paramName))
+            {
+                var paramDef = FindExpressionParameterDef(paramName);
+                if (paramDef != null)
+                {
+                    if (paramDef.valueType == VRCExpressionParameters.ValueType.Int)
+                    {
+                        value = EditorGUILayout.IntField("Value", Mathf.Clamp((int)value, 0, 255));
+                    }
+                    else if (paramDef.valueType == VRCExpressionParameters.ValueType.Float)
+                    {
+                        value = EditorGUILayout.FloatField("Value", Mathf.Clamp(value, -1f, 1f));
+                    }
+                    else if (paramDef.valueType == VRCExpressionParameters.ValueType.Bool)
+                    {
+                        value = 1f;
+                    }
+                }
+                else
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    value = EditorGUILayout.FloatField("Value", value);
+                    EditorGUI.EndDisabledGroup();
+                }
+            }
+        }
+        VRCExpressionParameters.Parameter FindExpressionParameterDef(string name)
+        {
+            if (activeDescriptor == null || string.IsNullOrEmpty(name))
+                return null;
+
+            //Find
+            int length = GetExpressionParametersCount();
+            for (int i = 0; i < length; i++)
+            {
+                var item = GetExpressionParameter(i);
+                if (item != null && item.name == name)
+                    return item;
+            }
+            return null;
+        }
+        int GetExpressionParametersCount()
+        {
+            if (activeDescriptor != null && activeDescriptor.expressionParameters != null && activeDescriptor.expressionParameters.parameters != null)
+                return activeDescriptor.expressionParameters.parameters.Length;
+            return 0;
+        }
+        VRCExpressionParameters.Parameter GetExpressionParameter(int i)
+        {
+            if (activeDescriptor != null)
+                return activeDescriptor.GetExpressionParameter(i);
+            return null;
+        }
+        void DrawLabel(ref VRCExpressionsMenu.Control.Label subControl, string name)
+        {
+            EditorGUILayout.LabelField(name);
+            EditorGUI.indentLevel += 2;
+            subControl.name = EditorGUILayout.TextField("Name", subControl.name);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Icon");
+            EditorGUI.indentLevel -= 2;
+            subControl.icon = (Texture2D)EditorGUILayout.ObjectField(subControl.icon, typeof(Texture2D), false);
+            EditorGUILayout.EndHorizontal();
+        }
+    }
+
+    /*
+    // Check if an item is dirty
+    */
+
+    private class IsDirtyUtility
+    {
+        //Cached Value
+        private static Func<int, bool> _isDirtyCallback;
+
+        private static Func<int, bool> IsDirtyCallback
+        {
+            get
+            {
+                if (_isDirtyCallback == null)
+                {
+                    //Reflection
+                    MethodInfo isDirtyMethod = typeof(EditorUtility).GetMethod("IsDirty", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(int) }, null);
+                    _isDirtyCallback = (Func<int, bool>)Delegate.CreateDelegate(typeof(Func<int, bool>), null, isDirtyMethod);
+                }
+
+                return _isDirtyCallback;
+            }
+        }
+
+        public static bool IsDirty(int instanceID)
+        {
+            return IsDirtyCallback(instanceID);
+        }
+    }
 }

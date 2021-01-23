@@ -25,6 +25,7 @@ public class InventoryInventor : UnityEngine.Object
     public InventoryPreset preset;
     public float refreshRate = 0.05f;
     public bool removeParameters = false;
+    public bool removeExpParams = false;
 
     // Path related.
     public string relativePath;
@@ -71,6 +72,10 @@ public class InventoryInventor : UnityEngine.Object
                 return;
             }
 
+            // Upgrade the Preset if neccessary.
+            if (preset.Version < InventoryPresetEditor.currentVersion)
+                InventoryPresetEditor.UpgradePreset(preset);
+
             /*
                 Check for space in parameters list & check for incompatible Animations.
             */
@@ -115,49 +120,69 @@ public class InventoryInventor : UnityEngine.Object
             {
                 foreach (PageItem item in page.Items)
                 {
-                    if (item.Type == PageItem.ItemType.Toggle && item.UseAnimations)
+                    switch (item.Type)
                     {
-                        if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                            Selection.activeObject = item.EnableClip;
-                            return;
-                        }
-                        if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                            Selection.activeObject = item.DisableClip;
-                            return;
-                        }
-
-                        // Simulatenously, increment the known number of toggles and parameter usage.
-                        switch (item.Sync)
-                        {
-                            case PageItem.SyncMode.Off:
-                                totalUsage += 1;
-                                if (item.EnableGroup.Length > 0)
-                                    totalUsage++;
-                                if (item.DisableGroup.Length > 0)
-                                    totalUsage++;
-                                break;
-                            case PageItem.SyncMode.Manual:
-                                totalUsage += 3;
-                                break;
-                            case PageItem.SyncMode.Auto:
-                                totalUsage += item.Saved ? 1 : 3;
-                                if (item.EnableGroup.Length > 0)
-                                    totalUsage++;
-                                if (item.DisableGroup.Length > 0)
-                                    totalUsage++;
-                                break;
-                        }
-                        if (item.Sync == PageItem.SyncMode.Auto && item.Saved)
-                        {
-                            if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                        case PageItem.ItemType.Toggle:
+                            if (item.UseAnimations)
+                            {
+                                if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
+                                {
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                    Selection.activeObject = item.EnableClip;
+                                    return;
+                                }
+                                if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
+                                {
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                    Selection.activeObject = item.DisableClip;
+                                    return;
+                                }
+                            }
+                            // Simulatenously, increment the known number of toggles and parameter usage.
+                            switch (item.Sync)
+                            {
+                                case PageItem.SyncMode.Off:
+                                    totalUsage += 1;
+                                    if (item.EnableGroup.Length > 0)
+                                        totalUsage++;
+                                    if (item.DisableGroup.Length > 0)
+                                        totalUsage++;
+                                    break;
+                                case PageItem.SyncMode.Manual:
+                                    totalUsage += 3;
+                                    break;
+                                case PageItem.SyncMode.Auto:
+                                    totalUsage += item.Saved ? 1 : 3;
+                                    if (item.EnableGroup.Length > 0)
+                                        totalUsage++;
+                                    if (item.DisableGroup.Length > 0)
+                                        totalUsage++;
+                                    break;
+                            }
+                            totalToggles++;
+                            if (item.Sync == PageItem.SyncMode.Auto && item.Saved)
+                            {
+                                if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                                {
+                                    if (!autoOverwrite)
+                                    {
+                                        if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"" + "Inventory " + totalToggles + "\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
+                                        {
+                                            Selection.activeObject = avatar.expressionParameters;
+                                            return;
+                                        }
+                                    }
+                                    delParamNames.Add("Inventory " + totalToggles);
+                                    neededMem--;
+                                }
+                                expParamNames.Add("Inventory " + totalToggles);
+                                neededMem++;
+                            }
+                            else if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
                             {
                                 if (!autoOverwrite)
                                 {
-                                    if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"" + "Inventory " + totalToggles + "\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
+                                    if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: a conflicting Expression Parameter \"" + "Inventory " + totalToggles + "\" exists!\nDelete?", "Delete", "Cancel"))
                                     {
                                         Selection.activeObject = avatar.expressionParameters;
                                         return;
@@ -166,25 +191,20 @@ public class InventoryInventor : UnityEngine.Object
                                 delParamNames.Add("Inventory " + totalToggles);
                                 neededMem--;
                             }
-                            expParamNames.Add("Inventory " + totalToggles);
-                            neededMem++;
-                        }
-                        else if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
-                        {
-                            if (!autoOverwrite)
-                            {
-                                if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: a conflicting Expression Parameter \"" + "Inventory " + totalToggles + "\" exists!\nDelete?", "Delete", "Cancel"))
+                            break;
+                        case PageItem.ItemType.Button:
+                            totalUsage++;
+                            break;
+                        case PageItem.ItemType.Page:
+                            if (item.PageReference == null || Array.IndexOf(preset.Pages.ToArray(), item.PageReference) == -1)
+                                if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: The page '" + item.name + "' refers to is missing.\nContinue? (The menu will not lead anywhere.)", "Continue", "Cancel"))
                                 {
-                                    Selection.activeObject = avatar.expressionParameters;
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
+                                    Selection.activeObject = preset;
                                     return;
                                 }
-                            }
-                            delParamNames.Add("Inventory " + totalToggles);
-                            neededMem--;
-                        }
+                            break;
                     }
-                    if (item.Type == PageItem.ItemType.Toggle)
-                        totalToggles++;
                 }
             }
 
@@ -508,6 +528,7 @@ public class InventoryInventor : UnityEngine.Object
                     parameters.RemoveAt(i);
                 }
             }
+            int index = 0;
             foreach (string expName in expParamNames)
             {
                 if (expName.Equals("Inventory"))
@@ -531,16 +552,17 @@ public class InventoryInventor : UnityEngine.Object
                     };
                     parameters.Add(param);
                 }
+                index++;
+                EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.9f + index * 1f / expParamNames.Count * 0.05f);
             }
             avatar.expressionParameters.parameters = parameters.ToArray();
             EditorUtility.SetDirty(avatar.expressionParameters);
-            EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f);
 
             /*
                 Create Expressions menu for toggles.
             */
 
-            switch (CreateMenus(out VRCExpressionsMenu inventory))
+            switch (CreateMenus(out VRCExpressionsMenu inventory, items.Count))
             {
                 case 1:
                     EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
@@ -590,8 +612,8 @@ public class InventoryInventor : UnityEngine.Object
             AssetDatabase.SaveAssets();
             EditorUtility.DisplayDialog("Inventory Inventory", "Success!", "Close");
 
-            // Focus the Editor on the modified menu or the Inventory menu.
-            Selection.activeObject = menu != null ? menu : inventory;
+            // Focus the Editor on the Inventory menu.
+            Selection.activeObject = inventory;
             return;
         }
         catch (Exception err)
@@ -682,7 +704,7 @@ public class InventoryInventor : UnityEngine.Object
     }
 
     // Creates all the menus needed for the generated Inventory.
-    private int CreateMenus(out VRCExpressionsMenu mainMenu)
+    private int CreateMenus(out VRCExpressionsMenu mainMenu, int totalItems)
     {
         mainMenu = null;
 
@@ -698,6 +720,7 @@ public class InventoryInventor : UnityEngine.Object
 
         // Loop through each page, adding controls as the preset specifies.
         int index = 0;
+        int index2 = 0;
         for (int i = 0; i < preset.Pages.Count; i++)
         {
             for (int j = 0; j < preset.Pages[i].Items.Count; j++)
@@ -709,21 +732,38 @@ public class InventoryInventor : UnityEngine.Object
                         index++;
                         break;
                     case PageItem.ItemType.Page:
-                        int val = preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference);
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[val].name, icon = preset.Pages[val].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = pages[val] });
+                        int val = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference) : 0;
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages[val].Icon : null, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? pages[val] : null});
                         break;
-                    case PageItem.ItemType.Submenu:
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].Submenu });
+                    case PageItem.ItemType.Control:
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() 
+                        { 
+                            name = preset.Pages[i].Items[j].Control.name,
+                            icon = preset.Pages[i].Items[j].Control.icon,
+                            type = preset.Pages[i].Items[j].Control.type,
+                            parameter = preset.Pages[i].Items[j].Control.parameter,
+                            value = preset.Pages[i].Items[j].Control.value,
+                            style = preset.Pages[i].Items[j].Control.style,
+                            labels = preset.Pages[i].Items[j].Control.labels,
+                            subMenu = preset.Pages[i].Items[j].Control.subMenu,
+                            subParameters = preset.Pages[i].Items[j].Control.subParameters
+                        });
+                        break;
+                    case PageItem.ItemType.Button:
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = totalItems + index2 + 1 });
+                        index2++;
                         break;
                 }
             }
-        }
+            EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f + i * 1f / preset.Pages.Count * 0.025f);
+        }                 
 
         // Create output directory if not present.
         if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Menus"))
             AssetDatabase.CreateFolder(outputPath, "Menus");
 
         // Create / overwrite each menu asset to the directory.
+        index = 0;
         foreach (VRCExpressionsMenu page in pages)
         {
             bool exists = true;
@@ -763,6 +803,8 @@ public class InventoryInventor : UnityEngine.Object
                 if (!exists)
                     generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"));
             }
+            EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.975f + index * 1f / pages.Count * 0.025f);
+            index++;
         }
 
         // Reassign created menus to each other as submenus so the reference persists post restart.
@@ -848,7 +890,7 @@ public class InventoryInventor : UnityEngine.Object
         templateState.position = pos + new Vector3(-25, 145);
         templateState.state.behaviours = new StateMachineBehaviour[0];
         states[2] = templateState.DeepClone();
-        
+
         // Add the states to the template machine.
         templateMachine.states = states;
 
@@ -1039,6 +1081,7 @@ public class InventoryInventor : UnityEngine.Object
 
         // Get a list of toggles.
         items = new List<PageItem>();
+        List<PageItem> buttons = new List<PageItem>();
         foreach (Page page in preset.Pages)
         {
             foreach (PageItem item in page.Items)
@@ -1046,6 +1089,10 @@ public class InventoryInventor : UnityEngine.Object
                 if (item.Type == PageItem.ItemType.Toggle)
                 {
                     items.Add(item);
+                }    
+                else if (item.Type == PageItem.ItemType.Button)
+                {
+                    buttons.Add(item);
                 }
             }
         }
@@ -1054,7 +1101,7 @@ public class InventoryInventor : UnityEngine.Object
         activeStates = new List<KeyValuePair<List<int>, List<int>>>();
 
         // Fill the list with initial values.
-        int value = itemTotal + 1;
+        int value = itemTotal + buttons.Count + 1;
         for (int i = 0; i < itemTotal; i++)
         {
             switch (items[i].Sync)
@@ -1347,14 +1394,15 @@ public class InventoryInventor : UnityEngine.Object
             // Clone the template state.
             states.Add(templateToggle.DeepClone());
 
+            // Clone and configure exit transitions.
+            AnimatorStateTransition[] exitTransitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
+            states[states.Count - 1].state.transitions = exitTransitions;
+
             // Remove the parameters.
             while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
             {
                 ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
             }
-
-            // Clone an exit transition.
-            states[states.Count - 1].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
 
             // Configure the AnyState transition template.
             templateTransition.destinationState = states[states.Count - 1].state;
@@ -1472,14 +1520,15 @@ public class InventoryInventor : UnityEngine.Object
             // Clone the template state.
             states.Add(templateToggle.DeepClone());
 
+            // Clone and configure exit transitions.
+            exitTransitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
+            states[states.Count - 1].state.transitions = exitTransitions;
+
             // Remove the parameters.
             while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
             {
                 ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
             }
-
-            // Clone an exit transition.
-            states[states.Count - 1].state.transitions = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
 
             // Configure the AnyState transition template.
             templateTransition.destinationState = states[states.Count - 1].state;
@@ -1494,6 +1543,64 @@ public class InventoryInventor : UnityEngine.Object
             // Move down a row.
             pos += new Vector3(0, 75);
         }
+
+        // Adjust parameter settings.
+        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).localOnly = true;
+        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+
+        // Configure the template state.
+        templateToggle.state.name = ("Pressing Buttons");
+        templateToggle.position = pos - new Vector3(25, 0);
+
+        // Clone the template state.
+        states.Add(templateToggle.DeepClone());
+
+        // Clone and configure exit transitions.
+        AnimatorStateTransition[] exitTransitions2 = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
+        states[states.Count - 1].state.transitions = exitTransitions2;
+
+        // Remove the parameters.
+        while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
+        {
+            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
+        }
+
+        // Reset other settings.
+        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).localOnly = false;
+
+        // Configure the AnyState transition template.
+        templateTransition.destinationState = states[states.Count - 1].state;
+        templateTransition.conditions = new AnimatorCondition[0];
+        templateTransition.canTransitionToSelf = true;
+        templateTransition.AddCondition(AnimatorConditionMode.Greater, itemTotal, "Inventory");
+        templateTransition.AddCondition(AnimatorConditionMode.Less, itemTotal + buttons.Count + 1, "Inventory");
+        templateTransition.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+
+        // Clone the transition.
+        anyTransitions.Add((AnimatorStateTransition)templateTransition.DeepClone(states[states.Count - 1]));
+
+        // Buttons
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            // Add group settings.
+            for (int j = 0; j < buttons[i].ButtonGroup.Length; j++)
+            {
+                // If the group item refers to an actual toggle.
+                if (buttons[i].ButtonGroup[j] != null && buttons[i].ButtonGroup[j].Item != null)
+                    switch (buttons[i].ButtonGroup[j].Reaction)
+                    {
+                        // Add this button's value to the list of disabled states for the group item.
+                        case GroupItem.GroupType.Disable:
+                            activeStates[items.IndexOf(buttons[i].ButtonGroup[j].Item)].Key.Add(itemTotal + i + 1);
+                            break;
+                        // Add this button's value to the list of enabled states for the group item.
+                        case GroupItem.GroupType.Enable:
+                            activeStates[items.IndexOf(buttons[i].ButtonGroup[j].Item)].Value.Add(itemTotal + i + 1);
+                            break;
+                    }
+            }
+        }
+        pos += new Vector3(0, 75);
 
         // Assign the states and transitions to the master layer.
         masterLayer.stateMachine.anyStatePosition = pos;
@@ -1733,20 +1840,22 @@ public class InventoryInventor : UnityEngine.Object
                         animator.RemoveParameter(parameters[i]);
                     }
                 }
-
-                List<VRCExpressionParameters.Parameter> expParameters = new List<VRCExpressionParameters.Parameter>();
-                expParameters.AddRange(avatar.expressionParameters.parameters);
-
-                for (int i = expParameters.Count - 1; i >= 0; i--)
+                if (removeExpParams)
                 {
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.05f + (float.Parse((expParameters.Count - i).ToString()) / expParameters.Count * 0.05f));
-                    if (nameFilter.IsMatch(expParameters[i].name))
+                    List<VRCExpressionParameters.Parameter> expParameters = new List<VRCExpressionParameters.Parameter>();
+                    expParameters.AddRange(avatar.expressionParameters.parameters);
+
+                    for (int i = expParameters.Count - 1; i >= 0; i--)
                     {
-                        expParameters.RemoveAt(i);
+                        EditorUtility.DisplayProgressBar("Inventory Inventor", "Removing...", 0.05f + (float.Parse((expParameters.Count - i).ToString()) / expParameters.Count * 0.05f));
+                        if (nameFilter.IsMatch(expParameters[i].name))
+                        {
+                            expParameters.RemoveAt(i);
+                        }
                     }
+                    avatar.expressionParameters.parameters = expParameters.ToArray();
+                    EditorUtility.SetDirty(avatar.expressionParameters);
                 }
-                avatar.expressionParameters.parameters = expParameters.ToArray();
-                EditorUtility.SetDirty(avatar.expressionParameters);
             }
 
             // Remove Inventory layers.
@@ -1867,10 +1976,10 @@ public class InventoryInventor : UnityEngine.Object
             if (outputPath == "")
                 outputPath = "Assets";
             return;
-        }            
-        else if (outputPath == null || !AssetDatabase.IsValidFolder(outputPath))
+        }
+        else if (!AssetDatabase.IsValidFolder(outputPath))
         {
-            outputPath = relativePath + Path.DirectorySeparatorChar + "Output";
+            outputPath = relativePath + Path.DirectorySeparatorChar + "Output" + (avatar != null ? Path.DirectorySeparatorChar + avatar.name : "");
         }
     }
 

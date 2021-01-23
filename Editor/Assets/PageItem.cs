@@ -49,9 +49,13 @@ public class PageItem : ScriptableObject
     [SerializeField]
     private GroupItem[] m_DisableGroup;
 
-    public VRCExpressionsMenu Submenu { get { return m_Submenu; } set { m_Submenu = value; } }
+    public GroupItem[] ButtonGroup { get { return m_ButtonGroup; } set { m_ButtonGroup = value; } }
     [SerializeField]
-    private VRCExpressionsMenu m_Submenu;
+    private GroupItem[] m_ButtonGroup;
+
+    public VRCExpressionsMenu.Control Control { get { return m_Control; } set { m_Control = value; } }
+    [SerializeField]
+    private VRCExpressionsMenu.Control m_Control;
 
     public Texture2D Icon { get { return m_Icon; } set { m_Icon = value; } }
     [SerializeField]
@@ -61,7 +65,8 @@ public class PageItem : ScriptableObject
     {
         Toggle = 0,
         Page = 1,
-        Submenu = 2
+        Control = 2,
+        Button = 3,
     };
 
     public enum SyncMode
@@ -77,13 +82,15 @@ public class PageItem : ScriptableObject
         Type = ItemType.Toggle;
         InitialState = false;
         ObjectReference = "";
-        UseAnimations = EnableClip != null || DisableClip != null;
+        UseAnimations = false;
         EnableClip = null;
         DisableClip = null;
         Sync = SyncMode.Auto;
         Saved = true;
         EnableGroup = new GroupItem[0];
         DisableGroup = new GroupItem[0];
+        ButtonGroup = new GroupItem[0];
+        Control = new VRCExpressionsMenu.Control();
     }
 
     public PageItem[] GetEnableGroupItems()
@@ -101,6 +108,15 @@ public class PageItem : ScriptableObject
         for (int i = 0; i < items.Length; i++)
         {
             items[i] = DisableGroup[i].Item;
+        }
+        return items;
+    }
+    public PageItem[] GetButtonGroupItems()
+    {
+        PageItem[] items = new PageItem[ButtonGroup.Length];
+        for (int i = 0; i < items.Length; i++)
+        {
+            items[i] = ButtonGroup[i].Item;
         }
         return items;
     }
