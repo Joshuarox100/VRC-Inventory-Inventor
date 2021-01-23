@@ -53,13 +53,13 @@ All Presets have a dynamic limit to how many [Items](#items) they can contain. T
 #### Data Limit
 The Inventory only uses a single Integer for syncing changes and the current state of the Inventory. This means that the Inventory can only use up to 255 unique values to control everything. If your Preset needs more values than this, you won't be able to apply it to an Avatar. The way that data is used can be seen below.
 	
-- Toggles with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).
+- [Toggles](#toggle) with syncing set to Off will always use at least one value and another one for each Group it uses (1 - 3).
 	
-- Toggles with syncing set to Manual will always use three values no matter what (3).
+- [Toggles](#toggle) with syncing set to Manual will always use three values no matter what (3).
 	
-- Toggles with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).
+- [Toggles](#toggle) with syncing set to Auto will always use at least one value, another two if the value isn't set to save, and another one for each Group it uses (1 - 5).
 	
-- Buttons will always use a single value (1).
+- [Buttons](#button) will always use a single value (1).
 
 #### Memory Limit
 With the introduction of Parameter Persistence to VRChat, the restriction on the number of Expression Parameters was removed in favor of a limit on bits. Since an Inventory always requires at least one Integer, at least 8 bits will always be used. However, for Parameter Persistence to work with an Inventory, more bits must be used.
@@ -110,7 +110,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
   <img width="80%" height="80%" src="Images/Preset/Items/Button.png">
 </p>
 
-Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using Toggle Groups. Buttons will set the state of items every time they are activated.
+Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using [Groups](#groups) on [Toggles](#toggle). Buttons will set the state of items every time they are activated.
 
 #### Subpage
 <p align="center">
@@ -131,20 +131,20 @@ Control Items are regular controls that you would use in an actual Expressions M
   <img width="80%" height="80%" src="Images/Preset/Groups/Overview.png">
 </p>
 
-Groups are used for toggling multiple objects at once. Each Group can have as many members as there are Toggles in the Preset. Groups can only be used with Toggles, and each Toggle can trigger a different Group depending on if it is being enabled or disabled.
+Groups are used for toggling multiple objects at once. Each Group can have as many members as there are [Toggles](#toggle) in the Preset. Groups can only be used with [Toggles](#toggle), and each [Toggle](#toggle) can trigger a different Group depending on if it is being enabled or disabled.
 
 Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled [Item](#items) will be triggered, any other Groups within its members will be ignored.
 
 ### Tips
 Here are some things you should keep in mind as you create your Preset.
 
-1. The Animations you use for Toggles must be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar.
+1. The Animations you use for [Toggles](#toggle) must be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar.
 
-2. Any Pages that exist in the Preset but don't have a way to be accessed will still be created when the Preset is applied to an Avatar. You can then take the Menus for these Pages and put them elsewhere on your Avatar if you wish.
+2. Any [Pages](#pages) that exist in the Preset but don't have a way to be accessed will still be created when the Preset is applied to an Avatar. You can then take the menus for these [Pages](#pages) and put them elsewhere on your Avatar if you wish.
 
-3. If you want to trigger something else with a Toggle that isn't part of the Preset, you can have an empty Toggle and use its layer's values elsewhere.
+3. If you want to trigger something else with a [Toggle](#toggle) that isn't part of the Preset, you can have an empty [Toggle](#toggle) and use its layer's values elsewhere.
 
-4. Because of how ScripatbleObjects in Unity work, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a Toggle was using from your right hand to your left, you will need to reassign that object to the Toggle.
+4. Because of how ScripatbleObjects in Unity work, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a [Toggle](#toggle) was using from your right hand to your left, you will need to reassign that object to the [Toggle](#toggle).
 
 ## Using the Manager
 The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
@@ -194,14 +194,17 @@ Any layers or parameters that will be removed from the provided Controller durin
 >Not at the moment. I don't really plan or see the need for this feature, but if I see demand for it I will supply.
 
 **Can I use the Inventory with other layers beside FX?**
->Although it isn't natively supported or done automatically, if you copy some layers around and use some empty Toggles as placeholders you can make it work.
+>Although it isn't natively supported or done automatically, if you copy some layers around and use some empty [Toggles](#toggle) as placeholders you can make it work.
 
 **Can this tool cause unrepairable damage to my Animator Controllers?**
 >As far as I am aware, no. Before any files are modified, their raw data is stored and used to revert all affected files entirely if an error happens to occur.
 
 ## Troubleshooting
 **My Inventory isn't syncing correctly to people joining late.**
->Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time. Also make sure that your Toggles are set to Auto Sync instead of Manual Sync.
+>Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time. Also make sure that your [Toggles](#toggle) are set to Auto Sync instead of Manual Sync.
+
+**Items aren't being saved when I test the Inventory.**
+>Parameters don't save for Avatars created with Build & Test. They must be uploaded in order to use it.
 
 **VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
 >This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
