@@ -74,6 +74,7 @@ public class InventoryPresetEditor : Editor
         else if (preset.Version < currentVersion)
             UpgradePreset(preset);
 
+
         // Setup some GUI variables.
         pagesFoldout.AddRange(new bool[preset.Pages.Count]);
 
@@ -1990,22 +1991,35 @@ public class InventoryPresetEditor : Editor
         {
             activeDescriptor = avatar;
 
+            // Disable everything if the Avatar is missing.
+            if (activeDescriptor == null)
+                EditorGUILayout.HelpBox("No active avatar descriptor found in scene.", MessageType.Error);
+            EditorGUILayout.Space();
+
             // Wait until the control is ready.
             if (control == null)
                 return;
 
+            // Disable everything if the Avatar is missing.
+            EditorGUI.BeginDisabledGroup(activeDescriptor == null);
+
             //Init stage parameters
-            int paramCount = activeDescriptor.GetExpressionParameterCount();
-            parameterNames = new string[paramCount + 1];
-            parameterNames[0] = "[None]";
-            for (int i = 0; i < paramCount; i++)
+            if (activeDescriptor != null)
             {
-                var param = activeDescriptor.GetExpressionParameter(i);
-                string name2 = "[None]";
-                if (param != null && !string.IsNullOrEmpty(param.name))
-                    name2 = string.Format("{0}, {1}", param.name, param.valueType.ToString(), i + 1);
-                parameterNames[i + 1] = name2;
+                int paramCount = activeDescriptor.GetExpressionParameterCount();
+                parameterNames = new string[paramCount + 1];
+                parameterNames[0] = "[None]";
+                for (int i = 0; i < paramCount; i++)
+                {
+                    var param = activeDescriptor.GetExpressionParameter(i);
+                    string name2 = "[None]";
+                    if (param != null && !string.IsNullOrEmpty(param.name))
+                        name2 = string.Format("{0}, {1}", param.name, param.valueType.ToString(), i + 1);
+                    parameterNames[i + 1] = name2;
+                }
             }
+            else
+                parameterNames = new string[0];
 
             //Generic params
             control.type = (VRCExpressionsMenu.Control.ControlType)EditorGUILayout.EnumPopup("Type", control.type);
@@ -2109,6 +2123,7 @@ public class InventoryPresetEditor : Editor
                         control.labels = new VRCExpressionsMenu.Control.Label[0];
                     break;
             }
+            EditorGUI.EndDisabledGroup();
         }
         void DrawParameterDropDown(ref VRCExpressionsMenu.Control.Parameter parameter, string name, bool allowBool = true)
         {
