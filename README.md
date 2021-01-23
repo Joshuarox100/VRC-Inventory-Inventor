@@ -110,14 +110,14 @@ Toggles can be used to toggle between two Animations and can be configured in se
   <img width="80%" height="80%" src="Images/Preset/Items/Button.png">
 </p>
 
-Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using Toggle Groups. Buttons will set the state of items every time it is activated.
+Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using Toggle Groups. Buttons will set the state of items every time they are activated.
 
 #### Subpage
 <p align="center">
   <img width="80%" height="80%" src="Images/Preset/Items/Subpage.png">
 </p>
 
-Subpages can be used to access any other [Pages](#pages) in the Preset (excluding the one it's contained within). An Item using this type will automatically use the icon of the [Page](#pages) it directs to.
+Subpages can be used to access any other [Page](#pages) in the Preset (excluding the one it's contained within). An Item using this type will automatically use the icon of the [Page](#pages) it directs to.
 
 #### Control
 <p align="center">
@@ -143,6 +143,8 @@ Here are some things you should keep in mind as you create your Preset.
 2. Any Pages that exist in the Preset but don't have a way to be accessed will still be created when the Preset is applied to an Avatar. You can then take the Menus for these Pages and put them elsewhere on your Avatar if you wish.
 
 3. If you want to trigger something else with a Toggle that isn't part of the Preset, you can have an empty Toggle and use its layer's values elsewhere.
+
+4. Because of how ScripatbleObjects in Unity work, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a Toggle was using from your right hand to your left, you will need to reassign that object to the Toggle.
 
 ## Using the Manager
 The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
