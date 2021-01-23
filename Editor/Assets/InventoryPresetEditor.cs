@@ -121,7 +121,16 @@ public class InventoryPresetEditor : Editor
             }
 
             // Draw the page name and type. If the element is first in the list, display "Default" as the type.
-            pagesFoldout[index] = EditorGUI.Foldout(new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, rect.width, 18f), pagesFoldout[index], item.name + ((index == 0) ? " (Default)" : ""));
+            string displayedName = item.name;
+            Vector2 nameSize = new GUIStyle().CalcSize(new GUIContent(displayedName + ((index == 0) ? " (Default)" : "")));
+            int width = displayedName.Length;
+            while (nameSize.x > rect.width - 15 && width > 1)
+            {
+                displayedName = displayedName.Substring(0, width) + "...";
+                nameSize = new GUIStyle().CalcSize(new GUIContent(displayedName + ((index == 0) ? " (Default)" : "")));
+                width--;
+            }
+            pagesFoldout[index] = EditorGUI.Foldout(new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, rect.width, 18f), pagesFoldout[index], displayedName + ((index == 0) ? " (Default)" : ""));
 
             if (pagesFoldout[index] && !draggingPage)
             {
@@ -161,7 +170,16 @@ public class InventoryPresetEditor : Editor
 
                         // Draw the item's name and type.
                         EditorGUI.indentLevel--;
-                        EditorGUI.LabelField(new Rect(rect2.x, rect2.y, rect2.width / 2, rect2.height), item2.name);
+                        string displayedName2 = item2.name;
+                        Vector2 nameSize2 = new GUIStyle().CalcSize(new GUIContent(displayedName2));
+                        int width2 = displayedName2.Length;
+                        while (nameSize2.x > rect2.width / 2 - 15 && width2 > 1)
+                        {
+                            displayedName2 = displayedName2.Substring(0, width2) + "...";
+                            nameSize2 = new GUIStyle().CalcSize(new GUIContent(displayedName2));
+                            width2--;
+                        }
+                        EditorGUI.LabelField(new Rect(rect2.x, rect2.y, rect2.width / 2, rect2.height), displayedName2);
                         string typeString = "";
                         switch (item2.Type)
                         {
@@ -1310,7 +1328,7 @@ public class InventoryPresetEditor : Editor
             // Draw item renamer.
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
 
             // Item icon (only if the item is not of type Page).
@@ -1577,7 +1595,7 @@ public class InventoryPresetEditor : Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
             if (EditorGUI.EndChangeCheck())
             {
