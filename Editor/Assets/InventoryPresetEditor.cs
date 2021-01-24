@@ -135,7 +135,7 @@ public class InventoryPresetEditor : Editor
             if (pagesFoldout[index] && !draggingPage)
             {
                 EditorGUI.indentLevel++;
-                string listKey = AssetDatabase.GetAssetPath(item) + "/" + item.name;
+                string listKey = item.GetInstanceID().ToString();
                 ReorderableList innerList;
                 if (pageContentsDict.ContainsKey(listKey))
                 {
@@ -270,6 +270,8 @@ public class InventoryPresetEditor : Editor
 
                 EditorGUI.indentLevel--;
             }
+            else if (pageContentsDict.ContainsKey(item.GetInstanceID().ToString()))
+                pageContentsDict.Remove(item.GetInstanceID().ToString());
 
             // Draw a separator line;
             Handles.color = Color.gray;
@@ -369,7 +371,7 @@ public class InventoryPresetEditor : Editor
         {
             EditorGUI.indentLevel--;
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // The item being drawn.
             GroupItem item = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].EnableGroup[index];
@@ -561,7 +563,7 @@ public class InventoryPresetEditor : Editor
         {
             EditorGUI.indentLevel--;
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // The item being drawn.
             GroupItem item = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].DisableGroup[index];
@@ -752,7 +754,7 @@ public class InventoryPresetEditor : Editor
         {
             EditorGUI.indentLevel--;
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // The item being drawn.
             GroupItem item = preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].ButtonGroup[index];
@@ -1253,7 +1255,7 @@ public class InventoryPresetEditor : Editor
             focusedItemPage = 0;
         else if (focusedItemPage >= preset.Pages.Count)
             focusedItemPage = preset.Pages.Count - 1;
-
+        
         if (pageDirectory.HasKeyboardControl())
         {
             focusedOnItem = false;
@@ -1262,19 +1264,19 @@ public class InventoryPresetEditor : Editor
         }
         else
         {
-            if (pageContentsDict.ContainsKey(AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name) && pageContentsDict[AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name].HasKeyboardControl())
+            if (pageContentsDict.ContainsKey(preset.Pages[focusedItemPage].GetInstanceID().ToString()) && pageContentsDict[preset.Pages[focusedItemPage].GetInstanceID().ToString()].HasKeyboardControl())
             {
                 focusedOnItem = true;
                 pageDirectory.index = -1;
                 foreach (ReorderableList list in pageContentsDict.Values)
-                    if (list != pageContentsDict[AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name])
+                    if (list != pageContentsDict[preset.Pages[focusedItemPage].GetInstanceID().ToString()])
                         list.index = -1;
             }
         }
         // Check that the selected list is available, otherwise wait until it is.
-        if (pageContentsDict.ContainsKey(AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name) && !draggingPage && focusedOnItem)
+        if (pageContentsDict.ContainsKey(preset.Pages[focusedItemPage].GetInstanceID().ToString()) && !draggingPage && focusedOnItem)
         {
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // Correct index if it has left the list bounds.
             if (pageContentsDict[listKey].index >= pageContentsDict[listKey].list.Count)
