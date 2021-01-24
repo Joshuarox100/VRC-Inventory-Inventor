@@ -13,35 +13,71 @@ MonoBehaviour:
   m_Name: Example Parameters
   m_EditorClassIdentifier: 
   parameters:
-  - name: VRCEmote
+  - name: Inventory
     valueType: 0
-  - name: VRCFaceBlendH
-    valueType: 1
-  - name: VRCFaceBlendV
-    valueType: 1
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
-  - name: 
-    valueType: 0
+    saved: 0
+    defaultValue: 0
+  - name: Inventory 1
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 2
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 3
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 4
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 5
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 6
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 7
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 8
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 9
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 10
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 11
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 12
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 13
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 14
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 15
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 16
+    valueType: 2
+    saved: 1
+    defaultValue: 0
