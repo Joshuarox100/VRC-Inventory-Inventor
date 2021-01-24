@@ -12,7 +12,7 @@ Simply download and import the latest **Unity Package** from [**Releases**](http
 > **Do NOT download and try to use the source code on its own from the main page. It will not compile correctly unless you download BMB Libraries and you will also be missing other minor files.**
 
 ## How to Use
-Before following these steps, set up your avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
+Before following these steps, set up your Avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
 
 1) To create an Inventory, first create a Preset as described in [Creating a Preset](#creating-a-preset).
 
@@ -75,10 +75,10 @@ Pages are a Preset's equivalent of a Submenu (quite literally). All Pages can be
 
 If two Pages are given the same name, the most recently modified Page will be given an extension depending on its instance. For example: "Name", "Name 0", & "Name" would become "Name", "Name 0", & "Name 1" and so on.
 
-All Pages can contain up to 8 different [Items](#items) used for toggling objects, accessing other Pages, or for accessing external Menus.
+All Pages can contain up to 8 different [Items](#items) used for toggling objects, accessing other Pages, or for accessing external menus.
 
 #### Default
-The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the Menu that the Inventory initially starts in when added to the Avatar. If a Menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
+The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
 ### Items
 <p align="center">
@@ -103,7 +103,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Enable | (When using Animation Clips,) the Animation to play when the Toggle is activated. |
 | Disable | (When using Animation Clips,) the Animation to play when the Toggle is deactivated. |
 | Sync | How the Toggle is synced with others.<br>**Off**: Local only; remote clients will only see the default state of the Toggle.<br>**Manual**: Syncs when triggered; late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; any Toggles marked Auto will be synced while the Inventory is left idle. |
-| Saved | ***Only available with Auto Sync enabled.***<br>Whether or not to retain the item's active state when switching avatars or worlds.<br>*Each item with this setting enabled will take up one bit of memory in the avatar's Expression Parameters list.* |
+| Saved | ***Only available with Auto Sync enabled.***<br>Whether or not to retain the item's active state when switching Avatars or worlds.<br>*Each item with this setting enabled will take up one bit of memory in the Avatar's Expression Parameters list.* |
 
 #### Button
 <p align="center">
@@ -165,7 +165,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 | Setting | Description |
 | :----: | ------ |
 | Active Avatar | The Avatar you want to manage an Inventory for. |
-| Expressions Menu | The Expressions Menu you want to access the Inventory from. Leave this empty if you don't want any Menus to be affected.<br>(Will be added as a Submenu.) |
+| Expressions Menu | The Expressions Menu you want to access the Inventory from. Leave this empty if you don't want any menus to be affected.<br>(Will be added as a Submenu.) |
 | Animator Controller | The Animator Controller to modify.<br>(If left empty, a new Animator Controller will be created and used.) |
 | Preset | The Preset you want to apply to the Avatar. |
 | Refresh Rate | How long each synced toggle is given to synchronize with late joiners (seconds per item). |
@@ -178,7 +178,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 </p>
 
 The 'Remove' menu is used for removing an existing Inventory from a provided Animator Controller.
->This will **NOT** remove or delete any Menus or Expression Parameters from an Avatar by default.
+>This will **NOT** remove or delete any menus or Expression Parameters from an Avatar by default.
 
 Any layers or parameters that will be removed from the provided Controller during the operation will be shown under 'Will Be Removed'.
 
@@ -190,7 +190,7 @@ Any layers or parameters that will be removed from the provided Controller durin
 | Expression Parameters? | (When using Remove Parameters,) also remove Expression Parameters related to the removed parameters if they exist. |
 
 ## Common Questions
-**Can I have multiple Inventories on a single avatar?**
+**Can I have multiple Inventories on a single Avatar?**
 >Not at the moment. I don't really plan or see the need for this feature, but if I see demand for it I will supply.
 
 **Can I use the Inventory with other layers beside FX?**
