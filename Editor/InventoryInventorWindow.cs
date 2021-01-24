@@ -129,9 +129,7 @@ public class InventoryInventorWindow : EditorWindow
         // Preset
         manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
         // Refresh Rate
-        manager.refreshRate = EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate);
-        if (manager.refreshRate < 0)
-            manager.refreshRate = 0.05f;
+        manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         DrawLine();
@@ -210,15 +208,37 @@ public class InventoryInventorWindow : EditorWindow
         // List optional settings.
         EditorGUILayout.LabelField("Optional Settings", EditorStyles.boldLabel);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+        EditorGUILayout.EndHorizontal();
         EditorGUI.BeginChangeCheck();
         // Animator Controller.
         manager.controller = (AnimatorController)EditorGUILayout.ObjectField(new GUIContent("Animator Controller", "The Animator Controller to modify."), manager.controller, typeof(AnimatorController), false);
         EditorGUILayout.BeginHorizontal();
         // Remove Parameters.
-        EditorGUILayout.PrefixLabel(new GUIContent("Remove Parameters"));
+        EditorGUILayout.PrefixLabel(new GUIContent("Remove Parameters", "Remove generated parameters from the Animator Controller."));
         manager.removeParameters = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.removeParameters), new string[] { "No", "Yes" }));
         EditorGUILayout.EndHorizontal();
-        if (EditorGUI.EndChangeCheck())
+        EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+        EditorGUILayout.EndHorizontal();
+        // Remove Expressions
+        if (manager.removeParameters)
+        {
+            // Separator
+            var rect = EditorGUILayout.BeginHorizontal();
+            Handles.color = Color.gray;
+            Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 5f, rect.y + 1));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Include Expression", "Also remove any related Expression Parameters."));
+            manager.removeExpParams = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.removeExpParams), new string[] { "No", "Yes" }));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
+            EditorGUILayout.EndHorizontal();
+        }
+        if (EditorGUI.EndChangeCheck() || layers == null || parameters == null)
         {
             manager.PreviewRemoval(out layers, out parameters);
         }
@@ -238,18 +258,34 @@ public class InventoryInventorWindow : EditorWindow
             EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel, GUILayout.Width(155f));
             foreach (AnimatorControllerLayer layer in layers)
             {
+                // Separator
+                var rect = EditorGUILayout.BeginHorizontal();
+                Handles.color = Color.gray;
+                Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                EditorGUILayout.EndHorizontal();
+
                 EditorGUILayout.LabelField(layer.name, GUILayout.Width(155f));
             }
             EditorGUILayout.Space();
         }
         EditorGUILayout.EndVertical();
 
-        EditorGUILayout.BeginVertical(GUILayout.Width(155f));
+        // Separator
+        var midRect = EditorGUILayout.BeginVertical(GUILayout.Width(155f));
+        Handles.color = Color.gray;
+        Handles.DrawLine(new Vector2(midRect.x, midRect.y), new Vector2(midRect.x, midRect.y + midRect.height));
+
         if (parameters.Count > 0)
         {
             EditorGUILayout.LabelField("Parameters", EditorStyles.boldLabel, GUILayout.Width(155f));
             foreach (AnimatorControllerParameter parameter in parameters)
             {
+                // Separator
+                var rect = EditorGUILayout.BeginHorizontal();
+                Handles.color = Color.gray;
+                Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                EditorGUILayout.EndHorizontal();
+
                 EditorGUILayout.LabelField(parameter.name, GUILayout.Width(155f));
             }
         }

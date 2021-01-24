@@ -12,4 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: -340790334, guid: 67cc4cb7839cd3741b63733d5adf0442, type: 3}
   m_Name: Example Menu
   m_EditorClassIdentifier: 
-  controls: []
+  controls:
+  - name: Cubes
+    icon: {fileID: 0}
+    type: 103
+    parameter:
+      name: 
+    value: 1
+    style: 0
+    subMenu: {fileID: 11400000, guid: 4044129b70db79d4ca7d4997bb70fd37, type: 2}
+    subParameters: []
+    labels: []
