@@ -444,7 +444,7 @@ public class InventoryPresetEditor : Editor
         enableGroupContents.onAddCallback += (ReorderableList list) =>
         {
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // If no elements are present.
             if (list.count == 0)
@@ -522,7 +522,7 @@ public class InventoryPresetEditor : Editor
             if (list.list.Count > 0)
             {
                 // Accessor string
-                string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
                 // Mark the preset as dirty, record the current page item, and set the item to null.
                 EditorUtility.SetDirty(preset);
@@ -636,7 +636,7 @@ public class InventoryPresetEditor : Editor
         disableGroupContents.onAddCallback += (ReorderableList list) =>
         {
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // If no elements are present.
             if (list.count == 0)
@@ -713,7 +713,7 @@ public class InventoryPresetEditor : Editor
             if (list.list.Count > 0)
             {
                 // Accessor string
-                string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
                 // Mark the preset as dirty, record the current page item, and set the item to null.
                 EditorUtility.SetDirty(preset);
@@ -827,7 +827,7 @@ public class InventoryPresetEditor : Editor
         buttonGroupContents.onAddCallback += (ReorderableList list) =>
         {
             // Accessor string
-            string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+            string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
             // If no elements are present.
             if (list.count == 0)
@@ -904,7 +904,7 @@ public class InventoryPresetEditor : Editor
             if (list.list.Count > 0)
             {
                 // Accessor string
-                string listKey = AssetDatabase.GetAssetPath(preset.Pages[focusedItemPage]) + "/" + preset.Pages[focusedItemPage].name;
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
 
                 // Mark the preset as dirty, record the current page item, and set the item to null.
                 EditorUtility.SetDirty(preset);
