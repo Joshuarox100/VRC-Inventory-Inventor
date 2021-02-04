@@ -561,6 +561,11 @@ public class InventoryInventor : UnityEngine.Object
             /*
                 Create Expressions menu for toggles.
             */
+            bool menuExists = false;
+            if (menu != null)
+            {
+                menuExists = true;
+            }
 
             switch (CreateMenus(out VRCExpressionsMenu inventory, items.Count))
             {
@@ -575,7 +580,7 @@ public class InventoryInventor : UnityEngine.Object
             }
 
             // Assign the Inventory menu to given menu if possible and provided.
-            if (menu != null)
+            if (menuExists && menu != null)
             {
                 bool exists = false;
 
@@ -601,6 +606,12 @@ public class InventoryInventor : UnityEngine.Object
                 {
                     EditorUtility.DisplayDialog("Inventory Inventory", "WARNING: Inventory controls were not added to the provided menu.\n(No space is available.)", "Close");
                 }
+            }
+            else if (menuExists)
+            {
+                avatar.expressionsMenu = inventory;
+                EditorUtility.SetDirty(avatar);
+                menu = inventory;
             }
             
             EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 1f);
@@ -1330,10 +1341,16 @@ public class InventoryInventor : UnityEngine.Object
                     }
                     break;
             }
-            
             // Add group settings.
             for (int j = 0; j < items[i].EnableGroup.Length; j++)
             {
+                // Catch faulty data
+                if (items.IndexOf(items[i].EnableGroup[j].Item) == -1) 
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + "\'s Enable Group has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
+                    Selection.activeObject = preset;
+                    throw new Exception("Inventory Inventor: Corrupt member data found in " + items[i].name + "/Enable Group/Slot " + (j + 1) + ".");
+                }
                 // If the group item refers to an actual toggle.
                 if (items[i].EnableGroup[j].Item != null)
                     switch (items[i].EnableGroup[j].Reaction)
@@ -1460,6 +1477,13 @@ public class InventoryInventor : UnityEngine.Object
             // Add group settings.
             for (int j = 0; j < items[i].DisableGroup.Length; j++)
             {
+                // Catch faulty data
+                if (items.IndexOf(items[i].DisableGroup[j].Item) == -1)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + "\'s Disable Group has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
+                    Selection.activeObject = preset;
+                    throw new Exception("Inventory Inventor: Corrupt member data found in " + items[i].name + "/Disable Group/Slot " + (j + 1) + ".");
+                }
                 // If the group item refers to an actual toggle.
                 if (items[i].DisableGroup[j].Item != null)
                     switch (items[i].DisableGroup[j].Reaction)
@@ -1585,6 +1609,13 @@ public class InventoryInventor : UnityEngine.Object
             // Add group settings.
             for (int j = 0; j < buttons[i].ButtonGroup.Length; j++)
             {
+                // Catch faulty data
+                if (items.IndexOf(buttons[i].ButtonGroup[j].Item) == -1)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
+                    Selection.activeObject = preset;
+                    throw new Exception("Inventory Inventor: Corrupt member data found in " + items[i].name + "/Slot " + (j + 1) + ".");
+                }
                 // If the group item refers to an actual toggle.
                 if (buttons[i].ButtonGroup[j] != null && buttons[i].ButtonGroup[j].Item != null)
                     switch (buttons[i].ButtonGroup[j].Reaction)

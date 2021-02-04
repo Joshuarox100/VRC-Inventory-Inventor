@@ -401,7 +401,7 @@ public class InventoryPresetEditor : Editor
             if (remainingToggles.Count > 0)
             {
                 // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null)
+                if (item.Item == null || !allToggles.Contains(item.Item))
                 {
                     item.Item = remainingToggles[0];
                 }
@@ -593,7 +593,7 @@ public class InventoryPresetEditor : Editor
             if (remainingToggles.Count > 0)
             {
                 // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null)
+                if (item.Item == null || !allToggles.Contains(item.Item))
                 {
                     item.Item = remainingToggles[0];
                 }
@@ -784,7 +784,7 @@ public class InventoryPresetEditor : Editor
             if (remainingToggles.Count > 0)
             {
                 // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null)
+                if (item.Item == null || !allToggles.Contains(item.Item))
                 {
                     item.Item = remainingToggles[0];
                 }
@@ -867,7 +867,7 @@ public class InventoryPresetEditor : Editor
             }
 
             // Don't continue if there are no other toggles.
-            if (totalUsage - 1 == list.list.Count)
+            if (totalUsage == list.list.Count)
             {
                 return;
             }
