@@ -12,7 +12,7 @@ public class InventoryInventorWindow : EditorWindow
     private readonly InventoryInventor manager = new InventoryInventor();
 
     // Window Size.
-    private Rect windowSize = new Rect(0, 0, 375f, 345f);
+    private Rect windowSize = new Rect(0, 0, 375f, 365f);
 
     // Various Trackers.
     private int windowTab;
@@ -27,7 +27,7 @@ public class InventoryInventorWindow : EditorWindow
     public static void ManageInventory()
     {
         InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
-        window.minSize = new Vector2(375f, 350f);
+        window.minSize = new Vector2(375f, 370f);
         window.wantsMouseMove = true;
         window.Show();
     }
