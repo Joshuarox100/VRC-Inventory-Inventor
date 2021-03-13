@@ -26,6 +26,7 @@ public class InventoryInventor : UnityEngine.Object
     public float refreshRate = 0.05f;
     public bool removeParameters = false;
     public bool removeExpParams = false;
+    public bool allowTransforms = false;
 
     // Path related.
     public string relativePath;
@@ -123,17 +124,17 @@ public class InventoryInventor : UnityEngine.Object
                     switch (item.Type)
                     {
                         case PageItem.ItemType.Toggle:
-                            if (item.UseAnimations)
+                            if (item.UseAnimations && !allowTransforms)
                             {
                                 if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
                                 {
-                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Transforms\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
                                     Selection.activeObject = item.EnableClip;
                                     return;
                                 }
                                 if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
                                 {
-                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\n\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Transforms\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
                                     Selection.activeObject = item.DisableClip;
                                     return;
                                 }
@@ -761,7 +762,7 @@ public class InventoryInventor : UnityEngine.Object
                         });
                         break;
                     case PageItem.ItemType.Button:
-                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = totalItems + index2 + 1 });
+                        pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Button, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = totalItems + index2 + 1 });
                         index2++;
                         break;
                 }
@@ -1568,12 +1569,11 @@ public class InventoryInventor : UnityEngine.Object
             pos += new Vector3(0, 75);
         }
 
-        // Adjust parameter settings.
-        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).localOnly = true;
-        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter { name = "Inventory", value = 0 });
+        // Buttons
 
         // Configure the template state.
         templateToggle.state.name = ("Pressing Buttons");
+        templateToggle.state.behaviours = new StateMachineBehaviour[0];
         templateToggle.position = pos - new Vector3(25, 0);
 
         // Clone the template state.
@@ -1582,15 +1582,6 @@ public class InventoryInventor : UnityEngine.Object
         // Clone and configure exit transitions.
         AnimatorStateTransition[] exitTransitions2 = new AnimatorStateTransition[] { (AnimatorStateTransition)toggleTransition.DeepClone() };
         states[states.Count - 1].state.transitions = exitTransitions2;
-
-        // Remove the parameters.
-        while (((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.Count > 0)
-        {
-            ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).parameters.RemoveAt(0);
-        }
-
-        // Reset other settings.
-        ((VRCAvatarParameterDriver)templateToggle.state.behaviours[0]).localOnly = false;
 
         // Configure the AnyState transition template.
         templateTransition.destinationState = states[states.Count - 1].state;
@@ -1603,10 +1594,9 @@ public class InventoryInventor : UnityEngine.Object
         // Clone the transition.
         anyTransitions.Add((AnimatorStateTransition)templateTransition.DeepClone(states[states.Count - 1]));
 
-        // Buttons
+        // Add group settings.
         for (int i = 0; i < buttons.Count; i++)
         {
-            // Add group settings.
             for (int j = 0; j < buttons[i].ButtonGroup.Length; j++)
             {
                 // Catch faulty data
