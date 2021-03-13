@@ -129,10 +129,10 @@ public class InventoryInventorWindow : EditorWindow
         // Preset
         manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
         // Allow Transforms.
-        //EditorGUILayout.BeginHorizontal();
-        //EditorGUILayout.PrefixLabel(new GUIContent("Allow Transforms", "Skips the check for invalid Animation properties.\n(Can result in unintended behavior)"));
-        //manager.allowTransforms = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.allowTransforms), new string[] { "No", "Yes" }));
-        //EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel(new GUIContent("Allow Transforms", "Skips the check for invalid Animation properties.\n(Can result in unintended behavior)"));
+        manager.allowTransforms = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.allowTransforms), new string[] { "No", "Yes" }));
+        EditorGUILayout.EndHorizontal();
         // Refresh Rate
         manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
         EditorGUILayout.EndVertical();
