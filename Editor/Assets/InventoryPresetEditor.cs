@@ -1849,7 +1849,7 @@ public class InventoryPresetEditor : Editor
 
         // Button contents.
         //GUIContent iconToolbarPlus = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add to list");
-        //GUIContent iconToolbarPlusMore = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Choose to add to list");
+        GUIContent iconToolbarPlusMore = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Other Options");
         //GUIContent iconToolbarMinus = EditorGUIUtility.TrIconContent("Toolbar Minus", "Remove selection from list");
 
         GUIStyle preButton = "RL FooterButton";
@@ -1883,8 +1883,10 @@ public class InventoryPresetEditor : Editor
         using (new EditorGUI.DisabledScope(!displayAdd ||
             (list.onCanAddCallback != null && !list.onCanAddCallback(list))))
         {
+            Rect mainAddRect = new Rect(addRect.position, new Vector2(addRect.width - 25f, addRect.height));
+            Rect plusAddRect = new Rect(new Vector2(addRect.width - 5f, addRect.position.y), new Vector2(15f, addRect.height));
             // Invoke the onAddCallback when the button is clicked followed by onChangedCallback.
-            if (SpecialButton(addRect, new GUIContent(addText), out int button, new GUIStyle(newButton)))
+            if (SpecialButton(mainAddRect, new GUIContent(addText), out int button, new GUIStyle(newButton)))
             {
                 // Left click
                 if (button == 0)
@@ -1898,7 +1900,11 @@ public class InventoryPresetEditor : Editor
 
                     // If neither callback was provided, nothing will happen when the button is clicked.
                 }
-                else if (button == 1) // Right click
+            }
+            if (SpecialButton(plusAddRect, iconToolbarPlusMore, out button, new GUIStyle(newButton)))
+            {
+                // Left click
+                if (button == 0)
                 {
                     // Create the menu and add items to it
                     GenericMenu menu = new GenericMenu();
@@ -1906,7 +1912,7 @@ public class InventoryPresetEditor : Editor
                     // Display the menu
                     menu.ShowAsContext();
                 }
-            }
+            }  
         }
 
         // Exact same as above, just with the other button and removal callbacks.
