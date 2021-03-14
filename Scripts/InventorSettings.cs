@@ -69,7 +69,7 @@ static class InventorSettingsIMGUIRegister
     {
         // First parameter is the path in the Settings window.
         // Second parameter is the scope of this setting: it only appears in the Project Settings window.
-        var provider = new SettingsProvider(InventorSettings.GetSettingsPath(), SettingsScope.Project)
+        var provider = new SettingsProvider("Project/Inventory Inventor", SettingsScope.Project)
         {
             // By default the last token of the path is used as display name if no label is provided.
             label = "Inventory Inventor",
@@ -77,9 +77,9 @@ static class InventorSettingsIMGUIRegister
             guiHandler = (searchContext) =>
             {
                 var settings = InventorSettings.GetSerializedSettings();
-                EditorGUILayout.PropertyField(settings.FindProperty("m_AutoUpdate"), new GUIContent("Check for Updates on Startup"));
+                EditorGUILayout.PropertyField(settings.FindProperty("m_AutoUpdate"), new GUIContent("Startup Update Prompts"));
                 EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(settings.FindProperty("m_DefaultPath"), new GUIContent("Default Output Location"));
+                EditorGUILayout.PropertyField(settings.FindProperty("m_DefaultPath"), new GUIContent("Default File Destination"));
                 if (EditorGUI.EndChangeCheck() && !settings.FindProperty("m_DefaultPath").stringValue.StartsWith("Assets"))
                 {
                     settings.FindProperty("m_DefaultPath").stringValue = InventorSettings.GetSettingsPath().Substring(0, InventorSettings.GetSettingsPath().LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
@@ -88,7 +88,7 @@ static class InventorSettingsIMGUIRegister
             },
 
             // Populate the search keywords to enable smart search filtering and label highlighting:
-            keywords = new HashSet<string>(new[] { "Check for Updates on Startup", "Default Output Location" })
+            keywords = new HashSet<string>(new[] { "Startup Update Prompts", "Default File Destination" })
         };
 
         return provider;
