@@ -12,6 +12,11 @@ namespace InventoryInventor.Preset
         {
             get { return Instance != null; }
         }
+        public static bool IsSelecting
+        {
+            get { return Instance.Selecting; }
+        }
+        private bool Selecting = false;
 
         // Preset being modified
         private InventoryPreset preset;
@@ -39,7 +44,12 @@ namespace InventoryInventor.Preset
             GUILayout.FlexibleSpace();
 
             // Preset to Append
+            EditorGUI.BeginChangeCheck();
             appendPreset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset to Append", "The Preset to append."), appendPreset, typeof(InventoryPreset), true);
+            if (EditorGUI.EndChangeCheck())
+                Selecting = true;
+            else
+                Selecting = false;
 
             // Confirm Button
             GUILayout.FlexibleSpace();

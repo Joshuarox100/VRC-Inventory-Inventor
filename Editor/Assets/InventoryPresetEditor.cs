@@ -944,11 +944,11 @@ public class InventoryPresetEditor : Editor
             DestroyImmediate(ImportExternalWindow.Instance);
         }
 
-        //if (AppendPresetWindow.IsOpen)
-        //{
-        //    AppendPresetWindow.Instance.Close();
-        //    DestroyImmediate(AppendPresetWindow.Instance);
-        //}
+        if (AppendPresetWindow.IsOpen && !AppendPresetWindow.IsSelecting)
+        {
+            AppendPresetWindow.Instance.Close();
+            DestroyImmediate(AppendPresetWindow.Instance);
+        }
 
         if (pageDirectory != null)
         {
