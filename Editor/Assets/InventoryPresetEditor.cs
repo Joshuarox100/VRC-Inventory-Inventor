@@ -76,7 +76,6 @@ public class InventoryPresetEditor : Editor
         else if (preset.Version < currentVersion)
             UpgradePreset(preset);
 
-
         // Setup some GUI variables.
         pagesFoldout.AddRange(new bool[preset.Pages.Count]);
 
@@ -939,6 +938,12 @@ public class InventoryPresetEditor : Editor
     // Remove callbacks to prevent memory leak.
     public void OnDisable()
     {
+        if (ImportExternalWindow.IsOpen)
+        {
+            ImportExternalWindow.Instance.Close();
+            DestroyImmediate(ImportExternalWindow.Instance);
+        }
+
         if (pageDirectory != null)
         {
             pageDirectory.drawHeaderCallback -= pageDirectory.drawHeaderCallback;
@@ -993,6 +998,12 @@ public class InventoryPresetEditor : Editor
     //Emergency save if the Editor is closing while a preset is being inspected.
     static bool WantsToQuit()
     {
+        if (ImportExternalWindow.IsOpen)
+        {
+            ImportExternalWindow.Instance.Close();
+            DestroyImmediate(ImportExternalWindow.Instance);
+        }
+
         AssetDatabase.SaveAssets();
         return true;
     }
@@ -1088,6 +1099,10 @@ public class InventoryPresetEditor : Editor
                     totalUsage++;
             }
         }
+
+        // Correct lists if menus have been imported
+        if (pagesFoldout.Count != preset.Pages.Count)
+            pagesFoldout.AddRange(new bool[preset.Pages.Count - pagesFoldout.Count]);
 
         // Display missing references.
         if (objectsMissing.Count > 0)
@@ -1869,16 +1884,28 @@ public class InventoryPresetEditor : Editor
             (list.onCanAddCallback != null && !list.onCanAddCallback(list))))
         {
             // Invoke the onAddCallback when the button is clicked followed by onChangedCallback.
-            if (GUI.Button(addRect, addText, new GUIStyle(newButton)))
+            if (SpecialButton(addRect, new GUIContent(addText), out int button, new GUIStyle(newButton)))
             {
-                if (list.onAddDropdownCallback != null)
-                    list.onAddDropdownCallback(addRect, list);
-                else
-                    list.onAddCallback?.Invoke(list);
+                // Left click
+                if (button == 0)
+                {
+                    if (list.onAddDropdownCallback != null)
+                        list.onAddDropdownCallback(addRect, list);
+                    else
+                        list.onAddCallback?.Invoke(list);
 
-                list.onChangedCallback?.Invoke(list);
+                    list.onChangedCallback?.Invoke(list);
 
-                // If neither callback was provided, nothing will happen when the button is clicked.
+                    // If neither callback was provided, nothing will happen when the button is clicked.
+                }
+                else if (button == 1) // Right click
+                {
+                    // Create the menu and add items to it
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Import External Menus"), false, OnImportExternalMenus);
+                    // Display the menu
+                    menu.ShowAsContext();
+                }
             }
         }
 
@@ -1887,15 +1914,232 @@ public class InventoryPresetEditor : Editor
             list.index < 0 || list.index >= list.count || !displayRemove ||
             (list.onCanRemoveCallback != null && !list.onCanRemoveCallback(list))))
         {
-            if (GUI.Button(removeRect, removeText, newButton))
+            if (SpecialButton(removeRect, new GUIContent(removeText), out int button, newButton))
             {
-                list.onRemoveCallback?.Invoke(list);
+                // Left Click
+                if (button == 0)
+                {
+                    list.onRemoveCallback?.Invoke(list);
 
-                list.onChangedCallback?.Invoke(list);
+                    list.onChangedCallback?.Invoke(list);
 
-                // If neither callback was provided, nothing will happen when the button is clicked.
+                    // If neither callback was provided, nothing will happen when the button is clicked.
+                }
             }
         }
+    }
+
+    private void OnImportExternalMenus()
+    {
+        ImportExternalWindow.ImportExternalWindowInit(preset);
+    }
+
+    private class ImportExternalWindow : EditorWindow
+    {
+        // Tracker data
+        public static ImportExternalWindow Instance { get; private set; }
+        public static bool IsOpen
+        {
+            get { return Instance != null; }
+        }
+
+        // Preset being modified
+        private InventoryPreset preset;
+
+        // Menu to Import
+        private VRCExpressionsMenu importMenu;
+
+        // Import Submenus
+        private bool enableRecursion = false;
+
+        public static void ImportExternalWindowInit(InventoryPreset preset)
+        {
+            Instance = (ImportExternalWindow)GetWindow(typeof(ImportExternalWindow), false, "Inventory Inventor");
+            Instance.minSize = new Vector2(375f, 100f);
+            Instance.maxSize = new Vector2(375f, 100f);
+            Instance.preset = preset;
+            Instance.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.BeginVertical();
+
+            // Header
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Import Settings", EditorStyles.boldLabel);
+            DrawLine(false);
+            GUILayout.FlexibleSpace();
+            
+            // Menu to Import
+            importMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(new GUIContent("Expressions Menu", "The Expressions Menu to add to the Preset."), importMenu, typeof(VRCExpressionsMenu), true);
+
+            // Import Submenus
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Import Submenus", "Add any Submenus found as well."));
+            enableRecursion = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(enableRecursion), new string[] { "No", "Yes" }));
+            EditorGUILayout.EndHorizontal();
+
+            // Confirm Button
+            GUILayout.FlexibleSpace();
+            DrawLine(false);
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Import"))
+                ImportMenus();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+        }
+
+        // Converts and imports the menus.
+        private void ImportMenus()
+        {
+            // Null checks
+            if (importMenu == null)
+            {
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No menu selected.", "Close");
+                return;
+            }
+            else if (preset == null)
+            {
+                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No preset selected.", "Close");
+                return;
+            }
+
+            // Identify menus
+            List<VRCExpressionsMenu> allMenus = new List<VRCExpressionsMenu>();
+            if (enableRecursion)
+                FindMenus(importMenu, ref allMenus);
+            else
+                allMenus.Add(importMenu);
+
+            // Convert menus
+            List<Page> newPages = new List<Page>();
+            foreach (VRCExpressionsMenu menu in allMenus)
+                newPages.Add(ConvertMenu(menu));
+
+            // Update Page references (if needed)
+            if (enableRecursion)
+                foreach (Page page in newPages)
+                    foreach (PageItem item in page.Items)
+                        if (item.Control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && item.Control.subMenu != null)
+                        {
+                            item.Type = PageItem.ItemType.Subpage;
+                            item.PageReference = newPages[allMenus.IndexOf(item.Control.subMenu)];
+                        }
+
+            // Append to Preset
+            string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
+            foreach (Page page in newPages)
+            {
+                page.hideFlags = HideFlags.HideInHierarchy;
+                AssetDatabase.AddObjectToAsset(page, _path);
+                foreach (PageItem item in page.Items)
+                {
+                    item.hideFlags = HideFlags.HideInHierarchy;
+                    AssetDatabase.AddObjectToAsset(item, _path);
+                }
+            }
+            preset.Pages.AddRange(newPages);
+
+            // Save changes
+            SaveChanges(preset);
+            Close();
+            EditorUtility.DisplayDialog("Inventory Inventor", "All menus imported successfully.", "Close");
+        }
+
+        // Indexes through a given page and returns all associated pages inside a referenced list
+        private void FindMenus(VRCExpressionsMenu menu, ref List<VRCExpressionsMenu> menuList)
+        {
+            menuList.Add(menu);
+            foreach (VRCExpressionsMenu.Control control in menu.controls)
+                if (control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && control.subMenu != null && !menuList.Contains(control.subMenu))
+                    FindMenus(control.subMenu, ref menuList);
+        }
+
+        // Converts a menu into a page
+        private Page ConvertMenu(VRCExpressionsMenu menu)
+        {
+            // Create Page
+            Page page = CreateInstance<Page>();
+            page.name = menu.name;
+
+            // Convert Controls to Items
+            foreach (VRCExpressionsMenu.Control control in menu.controls)
+            {
+                PageItem item = CreateInstance<PageItem>();
+                item.name = control.name;
+                item.Type = PageItem.ItemType.Control;
+                item.Control = control;
+                page.Items.Add(item);
+            }
+
+            // Return Conversion
+            return page;
+        }
+
+        // Draws a line across the GUI.
+        private void DrawLine(bool addSpace = true)
+        {
+            var rect = EditorGUILayout.BeginHorizontal();
+            Handles.color = Color.gray;
+            Handles.DrawLine(new Vector2(rect.x - 15, rect.y), new Vector2(rect.width + 15, rect.y));
+            EditorGUILayout.EndHorizontal();
+            if (addSpace)
+            {
+                EditorGUILayout.Space();
+            }
+        }
+    }
+
+    /*
+    // Special Buttons
+    */
+
+    protected bool SpecialButton(Rect rect, GUIContent content, out int button, GUIStyle style = null)
+    {
+        if (style == null) style = GUI.skin != null ? GUI.skin.button : "Button";
+
+        Event evt = Event.current;
+        int controlId = EditorGUIUtility.GetControlID(FocusType.Passive);
+        button = evt.button;
+        switch (evt.type)
+        {
+            case EventType.MouseDown:
+                {
+                    if (GUIUtility.hotControl == 0 && rect.Contains(evt.mousePosition))
+                    {
+                        GUIUtility.hotControl = controlId;
+                        evt.Use();
+                    }
+                    break;
+                }
+            case EventType.MouseDrag:
+                {
+                    if (GUIUtility.hotControl == controlId)
+                    {
+                        evt.Use();
+                    }
+                    break;
+                }
+            case EventType.MouseUp:
+                {
+                    if (GUIUtility.hotControl == controlId && rect.Contains(evt.mousePosition))
+                    {
+                        GUIUtility.hotControl = 0;
+                        evt.Use();
+                        return true;
+                    }
+                    break;
+                }
+            case EventType.Repaint:
+                {
+                    style.Draw(rect, content, controlId);
+                    break;
+                }
+        }
+
+        return false;
     }
 
     /*
