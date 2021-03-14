@@ -1,27 +1,30 @@
 ﻿using System;
 using UnityEngine;
 
-[Serializable]
-public class GroupItem : ScriptableObject
+namespace InventoryInventor.Preset
 {
-    public PageItem Item { get { return m_Item; } set { m_Item = value; } }
-    [SerializeField]
-    private PageItem m_Item;
-
-    public GroupType Reaction { get { return m_Reaction; } set { m_Reaction = value; } }
-    [SerializeField]
-    private GroupType m_Reaction;
-
-    public enum GroupType
+    [Serializable]
+    public class GroupItem : ScriptableObject
     {
-        Disable = 0,
-        Enable = 1
-    };
+        public PageItem Item { get { return m_Item; } set { m_Item = value; } }
+        [SerializeField]
+        private PageItem m_Item;
 
-    //Constructors
-    public GroupItem()
-    {
-        Item = null;
-        Reaction = GroupType.Enable;
+        public GroupType Reaction { get { return m_Reaction; } set { m_Reaction = value; } }
+        [SerializeField]
+        private GroupType m_Reaction;
+
+        public enum GroupType
+        {
+            Disable = 0,
+            Enable = 1
+        };
+
+        //Constructors
+        public GroupItem()
+        {
+            Item = null;
+            Reaction = GroupType.Enable;
+        }
     }
 }

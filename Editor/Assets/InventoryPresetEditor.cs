@@ -4,11 +4,13 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
-using VRC.SDK3.Avatars.Components;
+using VRC.SDK3.Avatars.Components; 
 using System.Reflection;
+using InventoryInventor.Preset;
+using InventoryInventor;
 
 [CustomEditor(typeof(InventoryPreset))]
-public class InventoryPresetEditor : Editor 
+public class InventoryPresetEditor : Editor
 {
     // Version tracker used for upgrading old presets.
     public static readonly int currentVersion = 1;
@@ -1209,7 +1211,7 @@ public class InventoryPresetEditor : Editor
         if (pageDirectory.list != preset.Pages)
         {
             pageDirectory.list = preset.Pages;
-        }  
+        }
 
         // Make sure at least one page exists.
         if (pageDirectory.list.Count == 0)
@@ -1227,7 +1229,7 @@ public class InventoryPresetEditor : Editor
             page.Items.Add(item);
             preset.Pages.Add(page);
             pagesFoldout.Add(false);
-        }       
+        }
 
         // Create a list of indicies to use in the dropdown page select.
         string[] pageNames = new string[pageDirectory.list.Count];
@@ -1255,7 +1257,7 @@ public class InventoryPresetEditor : Editor
             focusedItemPage = 0;
         else if (focusedItemPage >= preset.Pages.Count)
             focusedItemPage = preset.Pages.Count - 1;
-        
+
         if (pageDirectory.HasKeyboardControl())
         {
             focusedOnItem = false;
@@ -1380,7 +1382,7 @@ public class InventoryPresetEditor : Editor
                                 EditorGUILayout.BeginHorizontal();
                                 resetReference = GUILayout.Button(new GUIContent("Delete Reference", "Remove the reference to the missing Game Object."));
                                 EditorGUILayout.EndHorizontal();
-                            }                                
+                            }
                             else
                             {
                                 itemObject = (Transform)EditorGUILayout.ObjectField(new GUIContent("Object", "The Game Object that this toggle should affect."), itemObject, typeof(Transform), true);
@@ -1427,7 +1429,7 @@ public class InventoryPresetEditor : Editor
                         EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
                         itemSaved = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemSaved), new string[] { "Disable", "Enable" }));
                         EditorGUILayout.EndHorizontal();
-                    }            
+                    }
 
                     // Like EditorGUILayout.Space(), but smaller.
                     EditorGUILayout.BeginVertical();
@@ -1486,7 +1488,7 @@ public class InventoryPresetEditor : Editor
                 currentItem.Type = itemType;
                 currentItem.InitialState = itemState;
                 if (!currentItem.UseAnimations && !itemAnimations)
-                    currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (InventoryInventor.GetGameObjectPath(itemObject).IndexOf(InventoryInventor.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : InventoryInventor.GetGameObjectPath(itemObject).Substring(InventoryInventor.GetGameObjectPath(itemObject).IndexOf(InventoryInventor.GetGameObjectPath(avatar.transform)) + InventoryInventor.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
+                    currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (Manager.GetGameObjectPath(itemObject).IndexOf(Manager.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : Manager.GetGameObjectPath(itemObject).Substring(Manager.GetGameObjectPath(itemObject).IndexOf(Manager.GetGameObjectPath(avatar.transform)) + Manager.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
                 currentItem.UseAnimations = itemAnimations;
                 currentItem.EnableClip = itemEnable;
                 currentItem.DisableClip = itemDisable;
@@ -1805,7 +1807,7 @@ public class InventoryPresetEditor : Editor
     {
         // Obtain the Rect for the header.
         Rect rect = GUILayoutUtility.GetRect(0, defaultHeaderHeight, GUILayout.ExpandWidth(true));
-        
+
         GUIStyle headerBackground = "RL Header";
 
         // Draw the header background on Repaint Events.
@@ -1852,7 +1854,7 @@ public class InventoryPresetEditor : Editor
         // Get Rects for each button.
         Rect addRect = new Rect(leftEdge + 4, rect.y - 3, rect.width / 2, 13);
         Rect removeRect = new Rect(rightEdge - 4 - (rect.width / 2), rect.y - 3, rect.width / 2, 13);
-        
+
         // Draw the background for the footer on Repaint Events.
         if (Event.current.type == EventType.Repaint)
         {
@@ -1861,7 +1863,7 @@ public class InventoryPresetEditor : Editor
             Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.xMin + rect.width / 2, rect.yMin), new Vector2(rect.xMin + rect.width / 2, rect.yMin + defaultFooterHeight));
         }
-        
+
         // Makes button unable to be used while conditions are met.
         using (new EditorGUI.DisabledScope(!displayAdd ||
             (list.onCanAddCallback != null && !list.onCanAddCallback(list))))
@@ -1893,7 +1895,7 @@ public class InventoryPresetEditor : Editor
 
                 // If neither callback was provided, nothing will happen when the button is clicked.
             }
-        }     
+        }
     }
 
     /*
