@@ -86,7 +86,7 @@ namespace InventoryInventor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<i><size=12>Ambiguous & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("<i><size=12>Ambiguous, Dannie Wolf, & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
