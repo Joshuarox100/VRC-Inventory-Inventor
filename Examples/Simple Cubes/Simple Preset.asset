@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 653c66429c2466845920f9399b645f78, type: 3}
-  m_Name: Cube Preset
+  m_Name: Simple Preset
   m_EditorClassIdentifier: 
   m_Version: 1
   m_Pages:
@@ -400,7 +400,7 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
+  m_ObjectReference: Cube 9
   m_UseAnimations: 1
   m_EnableClip: {fileID: 7400000, guid: aaa48e9a662cd944a82c63378c20f6cc, type: 2}
   m_DisableClip: {fileID: 0}
@@ -741,8 +741,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 6
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 6e6e8ef836a6c3345b29dad1d4a3d544, type: 2}
   m_PageReference: {fileID: 0}
@@ -1267,8 +1267,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 7
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 7400000, guid: 82fca0d663a778e46bada5ffe1bd0c7d, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -1320,7 +1320,7 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
+  m_ObjectReference: Cube 10
   m_UseAnimations: 1
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: abf9fdbe3f6695a4d85ae7e348edfd53, type: 2}
@@ -2292,8 +2292,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 1
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 7400000, guid: 132e90738be75ef4b890dacf69164a51, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -2639,8 +2639,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 4
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 9c762f6fc78d9f5409b9f9529095e51c, type: 2}
   m_PageReference: {fileID: 0}
@@ -2692,8 +2692,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 2
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 5c539b7cd099a3445bf6636b4fd9842e, type: 2}
   m_PageReference: {fileID: 0}
@@ -3573,8 +3573,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 5
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 7400000, guid: afa6adea9cb8917429a4333f8ab47d59, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3816,8 +3816,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 3
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 7400000, guid: f61e808231a17ab439751510f935489f, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3995,8 +3995,8 @@ MonoBehaviour:
   m_Sync: 2
   m_Saved: 1
   m_InitialState: 0
-  m_ObjectReference: 
-  m_UseAnimations: 1
+  m_ObjectReference: Cube 8
+  m_UseAnimations: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 17539b7597a8a964f9c9eb69bf96f76f, type: 2}
   m_PageReference: {fileID: 0}

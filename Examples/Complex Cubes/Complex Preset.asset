@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 653c66429c2466845920f9399b645f78, type: 3}
+  m_Name: Complex Preset
+  m_EditorClassIdentifier: 
+  m_Version: 1
+  m_Pages:
+  - {fileID: 114993171292755196}
+--- !u!114 &114325552770936808
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f23ab51b41c482b4685c99ee5d9bc8f7, type: 3}
+  m_Name: Slot 1
+  m_EditorClassIdentifier: 
+  m_Type: 0
+  m_Sync: 2
+  m_Saved: 1
+  m_InitialState: 0
+  m_ObjectReference: 
+  m_UseAnimations: 0
+  m_EnableClip: {fileID: 0}
+  m_DisableClip: {fileID: 0}
+  m_PageReference: {fileID: 0}
+  m_EnableGroup: []
+  m_DisableGroup: []
+  m_ButtonGroup: []
+  m_Control:
+    name: 
+    icon: {fileID: 0}
+    type: 101
+    parameter:
+      name: 
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  m_Icon: {fileID: 0}
+--- !u!114 &114993171292755196
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
+  m_Name: Page 1
+  m_EditorClassIdentifier: 
+  m_Items:
+  - {fileID: 114325552770936808}
+  m_Icon: {fileID: 0}

@@ -20,7 +20,7 @@ MonoBehaviour:
       name: 
     value: 1
     style: 0
-    subMenu: {fileID: 0}
+    subMenu: {fileID: 11400000, guid: cb978f34787a8ae43a8926a4131bf4ac, type: 2}
     subParameters: []
     labels: []
   - name: All Cubes
@@ -40,6 +40,6 @@ MonoBehaviour:
       name: 
     value: 1
     style: 0
-    subMenu: {fileID: 0}
+    subMenu: {fileID: 11400000, guid: ebb841a7ae7ba994a80679a8897d7fd2, type: 2}
     subParameters: []
     labels: []
