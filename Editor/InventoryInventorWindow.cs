@@ -31,6 +31,7 @@ namespace InventoryInventor
         public static void ManageInventory()
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
+            window.manager.outputPath = InventorSettings.GetSerializedSettings().FindProperty("m_LastPath").stringValue;
             window.minSize = new Vector2(375f, 370f);
             window.wantsMouseMove = true;
             window.Show();
@@ -150,19 +151,22 @@ namespace InventoryInventor
             EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
             GUILayout.FlexibleSpace();
             // Format file path to fit in a button.
-            string displayPath = manager.outputPath.Replace('\\', '/');
+            string displayPath = (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : "";
             displayPath = (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
             while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
             {
                 displayPath = "..." + displayPath.Substring(4);
             }
             // Destination.
-            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", manager.outputPath.Replace('\\', '/')), new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
+            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
             {
                 string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
                 if (absPath.StartsWith(Application.dataPath))
                 {
                     manager.outputPath = "Assets" + absPath.Substring(Application.dataPath.Length);
+                    SerializedObject settings = InventorSettings.GetSerializedSettings();
+                    settings.FindProperty("m_LastPath").stringValue = manager.outputPath;
+                    settings.ApplyModifiedProperties();
                 }
             }
             EditorGUILayout.EndHorizontal();

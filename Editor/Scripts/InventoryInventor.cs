@@ -230,7 +230,11 @@ namespace InventoryInventor
                 }
 
                 // Check that the file destination exists.
-                VerifyDestination();
+                if (!VerifyDestination())
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Neither the chosen destination folder or the default folder could be created.", "Close");
+                    return;
+                }
 
                 // Start doing modifications.
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Starting", 0);
@@ -663,21 +667,36 @@ namespace InventoryInventor
         }
 
         // Checks if the destination is valid.
-        private void VerifyDestination()
+        private bool VerifyDestination()
         {
-            // If the destination is not valid, use the default path.
+            // Load the settings object.
+            SerializedObject settings = InventorSettings.GetSerializedSettings();
+            settings.FindProperty("m_LastPath").stringValue = outputPath;
+
+            // If the destination is not valid, create it if possible or use the default.
             if (!AssetDatabase.IsValidFolder(outputPath))
             {
-                if (!AssetDatabase.IsValidFolder(relativePath + Path.DirectorySeparatorChar + "Output"))
+                try
                 {
-                    string guid = AssetDatabase.CreateFolder(relativePath, "Output");
-                    outputPath = AssetDatabase.GUIDToAssetPath(guid);
+                    Directory.CreateDirectory(outputPath);
                 }
-                else
+                catch (Exception err)
                 {
-                    outputPath = relativePath + Path.DirectorySeparatorChar + "Output";
+                    if (outputPath == settings.FindProperty("m_DefaultPath").stringValue || !EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Could not create the chosen destination.\nTry again with the default location?", "Yes", "No"))
+                    {
+                        outputPath = settings.FindProperty("m_LastPath").stringValue;
+                        Debug.LogError(err);
+                        return false;
+                    }
+                    outputPath = settings.FindProperty("m_DefaultPath").stringValue;
+                    VerifyDestination();
                 }
             }
+
+            // Update the last path used.
+            settings.FindProperty("m_LastPath").stringValue = outputPath;
+            settings.ApplyModifiedProperties();
+            return true;
         }
 
         // Copies an Animator Controller from the VRCSDK to the given location.
@@ -1909,8 +1928,6 @@ namespace InventoryInventor
         // Updates output and relative paths if the directory of this package changes.
         public void UpdatePaths()
         {
-            string old = relativePath;
-
             // Get the relative path.
             string filter = "InventoryInventor";
             string[] guids = AssetDatabase.FindAssets(filter);
@@ -1922,18 +1939,6 @@ namespace InventoryInventor
                     relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Editor") - 1);
                     break;
                 }
-            }
-
-            if (relativePath == old)
-            {
-                // The path was blank.
-                if (outputPath == "")
-                    outputPath = "Assets";
-                return;
-            }
-            else if (!AssetDatabase.IsValidFolder(outputPath))
-            {
-                outputPath = relativePath + Path.DirectorySeparatorChar + "Output" + (avatar != null ? Path.DirectorySeparatorChar + avatar.name : "");
             }
         }
     }

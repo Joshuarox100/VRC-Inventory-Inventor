@@ -18,12 +18,20 @@ namespace InventoryInventor.Version
         }
         static void OnInit()
         {
-            EditorApplication.update -= OnInit;
-            m_Instance = FindObjectOfType<AutoUpdater>();
-            if (m_Instance == null)
+            if (!EditorApplication.isUpdating && !EditorApplication.isCompiling)
             {
-                m_Instance = CreateInstance<AutoUpdater>();
-                Updater.CheckForUpdates(true);
+                SerializedObject settings = InventorSettings.GetSerializedSettings();
+                if (settings != null)
+                {
+                    EditorApplication.update -= OnInit;
+                    m_Instance = FindObjectOfType<AutoUpdater>();
+                    if (m_Instance == null)
+                    {
+                        m_Instance = CreateInstance<AutoUpdater>();
+                        if (settings.FindProperty("m_AutoUpdate").boolValue)
+                            Updater.CheckForUpdates(true);
+                    }
+                }
             }
         }
     }
