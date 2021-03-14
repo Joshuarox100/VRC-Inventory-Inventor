@@ -890,17 +890,17 @@ namespace InventoryInventor
             Vector3 pos = templateMachine.anyStatePosition;
 
             // Create an off state.
-            ChangeState(templateState, "Off");
+            Helper.ChangeState(templateState, "Off");
             templateState.position = pos - new Vector3(150, -45);
             states[0] = templateState.DeepClone();
 
             // Create an on state.
-            ChangeState(templateState, "On");
+            Helper.ChangeState(templateState, "On");
             templateState.position = pos + new Vector3(100, 45);
             states[1] = templateState.DeepClone();
 
             // Create an idle state.
-            ChangeState(templateState, "Idle");
+            Helper.ChangeState(templateState, "Idle");
             templateState.position = pos + new Vector3(-25, 145);
             templateState.state.behaviours = new StateMachineBehaviour[0];
             states[2] = templateState.DeepClone();
@@ -989,14 +989,14 @@ namespace InventoryInventor
                 List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
 
                 // Disabled state.
-                ChangeState(templateMachine.states[0].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].DisableClip);
+                Helper.ChangeState(templateMachine.states[0].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].DisableClip);
                 ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
                 ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].value = 0;
 
                 // Add a transition for each disabled value.
                 for (int j = 0; j < active.Key.Count; j++)
                 {
-                    ChangeTransition(templateTransition, active.Key[j], templateMachine.states[0].state);
+                    Helper.ChangeTransition(templateTransition, active.Key[j], templateMachine.states[0].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
@@ -1007,7 +1007,7 @@ namespace InventoryInventor
                 // Special transition for local toggles.
                 if (items[i].Sync == PageItem.SyncMode.Off || (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved))
                 {
-                    ChangeTransition(templateTransition, i + 1, false, templateMachine.states[0].state);
+                    Helper.ChangeTransition(templateTransition, i + 1, false, templateMachine.states[0].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
@@ -1016,14 +1016,14 @@ namespace InventoryInventor
                 }
 
                 // Enabled state.
-                ChangeState(templateMachine.states[1].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].EnableClip);
+                Helper.ChangeState(templateMachine.states[1].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].EnableClip);
                 ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
                 ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].value = 1;
 
                 // Add a transition for each enabled value.
                 for (int j = 0; j < active.Value.Count; j++)
                 {
-                    ChangeTransition(templateTransition, active.Value[j], templateMachine.states[1].state);
+                    Helper.ChangeTransition(templateTransition, active.Value[j], templateMachine.states[1].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
@@ -1034,7 +1034,7 @@ namespace InventoryInventor
                 // Special transition for local toggles.
                 if (items[i].Sync == PageItem.SyncMode.Off || (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved))
                 {
-                    ChangeTransition(templateTransition, i + 1, true, templateMachine.states[1].state);
+                    Helper.ChangeTransition(templateTransition, i + 1, true, templateMachine.states[1].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
@@ -1043,7 +1043,7 @@ namespace InventoryInventor
                 }
 
                 // Idle state.
-                ChangeState(templateMachine.states[2].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (items[i].InitialState ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip))) : null) : (items[i].InitialState ? items[i].EnableClip : items[i].DisableClip));
+                Helper.ChangeState(templateMachine.states[2].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (items[i].InitialState ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip))) : null) : (items[i].InitialState ? items[i].EnableClip : items[i].DisableClip));
                 templateMachine.states[2].state.transitions = new AnimatorStateTransition[0];
                 AnimatorStateTransition idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[0].state, false);
                 idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory " + (i + 1));
@@ -1218,27 +1218,27 @@ namespace InventoryInventor
                 if (items[i].Sync == PageItem.SyncMode.Auto && !items[i].Saved)
                 {
                     // Create the enabled sync state.
-                    ChangeState(templateState.state, "Syncing " + (i + 1), activeStates[i].Value[0]);
+                    Helper.ChangeState(templateState.state, "Syncing " + (i + 1), activeStates[i].Value[0]);
                     templateState.position = pos - new Vector3(150, 0);
                     states.Add(templateState.DeepClone());
 
                     // Create the disabled sync state.
-                    ChangeState(templateState.state, "Syncing " + (i + 1) + " ", activeStates[i].Key[0]);
+                    Helper.ChangeState(templateState.state, "Syncing " + (i + 1) + " ", activeStates[i].Key[0]);
                     templateState.position = pos + new Vector3(100, 0);
                     states.Add(templateState.DeepClone());
 
                     if (i > 0 && syncExists)
                     {
                         // Create transitions to enabled state from the previous pair.
-                        ChangeTransition(templateTransition, states[states.Count - 2], (i + 1), true);
+                        Helper.ChangeTransition(templateTransition, states[states.Count - 2], (i + 1), true);
                         states[states.Count - 3].state.AddTransition((AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[states.Count - 2]));
-                        ChangeTransition(templateTransition, states[states.Count - 2], (i + 1), true);
+                        Helper.ChangeTransition(templateTransition, states[states.Count - 2], (i + 1), true);
                         states[states.Count - 4].state.AddTransition((AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[states.Count - 2]));
 
                         // Create transitions to disabled state from the previous pair.
-                        ChangeTransition(templateTransition, states[states.Count - 1], (i + 1), false);
+                        Helper.ChangeTransition(templateTransition, states[states.Count - 1], (i + 1), false);
                         states[states.Count - 3].state.AddTransition((AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[states.Count - 1]));
-                        ChangeTransition(templateTransition, states[states.Count - 1], (i + 1), false);
+                        Helper.ChangeTransition(templateTransition, states[states.Count - 1], (i + 1), false);
                         states[states.Count - 4].state.AddTransition((AnimatorStateTransition)AnimatorExtensions.DeepClone(templateTransition, states[states.Count - 1]));
                     }
                     else
@@ -1658,8 +1658,7 @@ namespace InventoryInventor
             return;
         }
 
-        // Helper methods for generating animations.
-
+        // Generates two Animation Clips for when the Game Object is enabled or disabled.
         private int GenerateToggleClip(GameObject obj, bool state)
         {
             if (!AssetDatabase.IsValidFolder(outputPath + Path.DirectorySeparatorChar + "Clips"))
@@ -1668,7 +1667,7 @@ namespace InventoryInventor
 
             // Create the Animation Clip
             AnimationClip clip = new AnimationClip();
-            string path = GetGameObjectPath(obj.transform);
+            string path = Helper.GetGameObjectPath(obj.transform);
             path = path.Substring(path.IndexOf(avatar.transform.name) + avatar.transform.name.Length + 1);
             clip.SetCurve(path, typeof(GameObject), "m_IsActive", new AnimationCurve(new Keyframe[2] { new Keyframe() { value = state ? 1 : 0, time = 0 }, new Keyframe() { value = state ? 1 : 0, time = 0.016666668f } }));
 
@@ -1693,75 +1692,6 @@ namespace InventoryInventor
                 generated.Add(new Asset(AssetDatabase.GetAssetPath(clip)));
 
             return 0;
-        }
-
-        public static string GetGameObjectPath(Transform transform)
-        {
-            if (transform == null)
-                return "";
-            string path = transform.name;
-            while (transform.parent != null)
-            {
-                transform = transform.parent;
-                path = transform.name + "/" + path;
-            }
-            return path;
-        }
-
-        // Helper methods for modifying transitions.
-        public static void ChangeTransition(AnimatorStateTransition transition, int value, AnimatorState state)
-        {
-            transition.destinationState = state;
-            transition.conditions = new AnimatorCondition[0];
-            transition.AddCondition(AnimatorConditionMode.Equals, value, "Inventory");
-        }
-
-        public static void ChangeTransition(AnimatorStateTransition transition, int item, bool value, AnimatorState state)
-        {
-            transition.destinationState = state;
-            transition.conditions = new AnimatorCondition[0];
-            transition.AddCondition(value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0, "Inventory " + item);
-        }
-
-        public static void ChangeTransition(AnimatorStateTransition transition, ChildAnimatorState childState, int name, bool value)
-        {
-            transition.destinationState = childState.state;
-            transition.conditions = new AnimatorCondition[0];
-            switch (value)
-            {
-                case true:
-                    transition.AddCondition(AnimatorConditionMode.If, 0, "Inventory " + name);
-                    break;
-                case false:
-                    transition.AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory " + name);
-                    break;
-            }
-        }
-
-        // Helper methods for modifying states.
-        public static void ChangeState(AnimatorState state, string name, int value)
-        {
-            state.name = name;
-            ((VRCAvatarParameterDriver)state.behaviours[0]).parameters[0].value = value;
-            return;
-        }
-
-        public static void ChangeState(AnimatorState state, string name)
-        {
-            state.name = name;
-            return;
-        }
-
-        public static void ChangeState(ChildAnimatorState childState, string name)
-        {
-            ChangeState(childState.state, name);
-            return;
-        }
-
-        public static void ChangeState(AnimatorState state, Motion motion)
-        {
-            state.motion = motion;
-            return;
         }
 
         // Returns a list of layers and parameters that would be removed with the current settings.

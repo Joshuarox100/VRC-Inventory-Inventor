@@ -1488,7 +1488,7 @@ public class InventoryPresetEditor : Editor
                 currentItem.Type = itemType;
                 currentItem.InitialState = itemState;
                 if (!currentItem.UseAnimations && !itemAnimations)
-                    currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (Manager.GetGameObjectPath(itemObject).IndexOf(Manager.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : Manager.GetGameObjectPath(itemObject).Substring(Manager.GetGameObjectPath(itemObject).IndexOf(Manager.GetGameObjectPath(avatar.transform)) + Manager.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
+                    currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : Helper.GetGameObjectPath(itemObject).Substring(Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) + Helper.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
                 currentItem.UseAnimations = itemAnimations;
                 currentItem.EnableClip = itemEnable;
                 currentItem.DisableClip = itemDisable;
