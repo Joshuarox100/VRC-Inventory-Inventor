@@ -5,6 +5,7 @@ using System.Collections;
 using UnityEngine.Networking;
 using System;
 using System.IO;
+using InventoryInventor.Settings;
 
 namespace InventoryInventor.Version
 {

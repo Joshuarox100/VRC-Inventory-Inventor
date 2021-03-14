@@ -7,6 +7,7 @@ using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using InventoryInventor.Preset;
 using InventoryInventor.Version;
+using InventoryInventor.Settings;
 
 namespace InventoryInventor
 {
