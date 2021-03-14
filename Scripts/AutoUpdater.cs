@@ -79,7 +79,7 @@ namespace InventoryInventor.Version
             }
             if (relativePath == "")
                 return "";
-            Debug.Log(relativePath);
+
             //Read VERSION file
             string installedVersion = (AssetDatabase.FindAssets("VERSION", new string[] { relativePath }).Length > 0) ? File.ReadAllText(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("VERSION", new string[] { relativePath })[0])) : "";
 
