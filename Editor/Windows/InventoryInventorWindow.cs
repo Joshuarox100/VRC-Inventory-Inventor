@@ -137,7 +137,7 @@ namespace InventoryInventor
             // Allow Transforms.
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Allow Transforms", "Skips the check for invalid Animation properties.\n(Can result in unintended behavior)"));
-            manager.allowTransforms = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.allowTransforms), new string[] { "No", "Yes" }));
+            manager.allowTransforms = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.allowTransforms), new string[] { "Yes", "No" }));
             EditorGUILayout.EndHorizontal();
             // Refresh Rate
             manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
@@ -174,7 +174,7 @@ namespace InventoryInventor
             EditorGUILayout.BeginHorizontal();
             // Overwrite All.
             EditorGUILayout.PrefixLabel(new GUIContent("Overwrite All", "Automatically overwrite existing files if needed."));
-            manager.autoOverwrite = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.autoOverwrite), new string[] { "No", "Yes" }));
+            manager.autoOverwrite = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.autoOverwrite), new string[] { "Yes", "No" }));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
             GUILayout.FlexibleSpace();
@@ -230,7 +230,7 @@ namespace InventoryInventor
             EditorGUILayout.BeginHorizontal();
             // Remove Parameters.
             EditorGUILayout.PrefixLabel(new GUIContent("Remove Parameters", "Remove generated parameters from the Animator Controller."));
-            manager.removeParameters = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.removeParameters), new string[] { "No", "Yes" }));
+            manager.removeParameters = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.removeParameters), new string[] { "Yes", "No" }));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
             EditorGUILayout.EndHorizontal();
@@ -247,7 +247,7 @@ namespace InventoryInventor
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(new GUIContent("Include Expression", "Also remove any related Expression Parameters."));
-                manager.removeExpParams = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(manager.removeExpParams), new string[] { "No", "Yes" }));
+                manager.removeExpParams = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.removeExpParams), new string[] { "Yes", "No" }));
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
                 EditorGUILayout.EndHorizontal();

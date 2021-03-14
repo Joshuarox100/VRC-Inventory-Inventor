@@ -50,7 +50,7 @@ namespace InventoryInventor.Preset
             // Import Submenus
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Import Submenus", "Add any Submenus found as well."));
-            enableRecursion = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(enableRecursion), new string[] { "No", "Yes" }));
+            enableRecursion = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!enableRecursion), new string[] { "Yes", "No" }));
             EditorGUILayout.EndHorizontal();
 
             // Confirm Button

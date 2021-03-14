@@ -248,7 +248,7 @@ public class InventoryPresetEditor : Editor
                     };
                     innerList.drawFooterCallback += (Rect footerRect) =>
                     {
-                        DrawButtons(innerList, item.Items.Count < 8, item.Items.Count > 1, "Create Item", "Remove Item", footerRect);
+                        DrawButtons(innerList, item.Items.Count < 8, item.Items.Count > 1, false, "Create Item", "Remove Item", footerRect);
                     };
 
                     // Make sure that there is at least one item in the page.
@@ -1260,7 +1260,7 @@ public class InventoryPresetEditor : Editor
             directoryScroll = EditorGUILayout.BeginScrollView(directoryScroll, GUILayout.Height(Mathf.Clamp(pageDirectory.GetHeight(), 0, pageDirectory.elementHeight * 20 + 10)));
             pageDirectory.DoLayoutList();
             EditorGUILayout.EndScrollView();
-            DrawButtons(pageDirectory, true, preset.Pages.Count > 1, "Create Page", "Remove Page", Rect.zero);
+            DrawButtons(pageDirectory, true, preset.Pages.Count > 1, true, "Create Page", "Remove Page", Rect.zero);
         }
         EditorGUILayout.Space();
         DrawLine();
@@ -1425,7 +1425,7 @@ public class InventoryPresetEditor : Editor
                     // Item starting state.
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.PrefixLabel(new GUIContent("Start", "What state the toggle starts in."));
-                    itemState = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemState), new string[] { "Disabled", "Enabled" }));
+                    itemState = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemState), new string[] { "Enabled", "Disabled" }));
                     EditorGUILayout.EndHorizontal();
 
                     // Separator
@@ -1442,7 +1442,7 @@ public class InventoryPresetEditor : Editor
                     {
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
-                        itemSaved = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemSaved), new string[] { "Disable", "Enable" }));
+                        itemSaved = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemSaved), new string[] { "Enable", "Disable" }));
                         EditorGUILayout.EndHorizontal();
                     }
 
@@ -1553,7 +1553,7 @@ public class InventoryPresetEditor : Editor
                         enableGroupContents.DoLayoutList();
                         EditorGUILayout.EndScrollView();
                     }
-                    DrawButtons(enableGroupContents, true, true, "Create Member", "Remove Member", Rect.zero);
+                    DrawButtons(enableGroupContents, true, true, false, "Create Member", "Remove Member", Rect.zero);
 
                     // Add some empty space between the two groups.
                     EditorGUILayout.Space();
@@ -1571,7 +1571,7 @@ public class InventoryPresetEditor : Editor
                         disableGroupContents.DoLayoutList();
                         EditorGUILayout.EndScrollView();
                     }
-                    DrawButtons(disableGroupContents, true, true, "Create Member", "Remove Member", Rect.zero);
+                    DrawButtons(disableGroupContents, true, true, false, "Create Member", "Remove Member", Rect.zero);
                     EditorGUILayout.Space();
                 }
                 EditorGUI.indentLevel--;
@@ -1598,7 +1598,7 @@ public class InventoryPresetEditor : Editor
                     EditorGUI.indentLevel--;
                     EditorGUILayout.EndScrollView();
                 }
-                DrawButtons(buttonGroupContents, true, true, "Create Member", "Remove Member", Rect.zero);
+                DrawButtons(buttonGroupContents, true, true, false, "Create Member", "Remove Member", Rect.zero);
                 EditorGUILayout.Space();
             }
 
@@ -1842,7 +1842,7 @@ public class InventoryPresetEditor : Editor
     }
 
     // Modified version of Unity's Button Drawing code for ReorderableList.
-    private void DrawButtons(ReorderableList list, bool displayAdd, bool displayRemove, string addText, string removeText, Rect given)
+    private void DrawButtons(ReorderableList list, bool displayAdd, bool displayRemove, bool displayMore, string addText, string removeText, Rect given)
     {
         // Obtain the Rect for the footer.
         Rect rect = given != Rect.zero ? given : GUILayoutUtility.GetRect(4, defaultFooterHeight, GUILayout.ExpandWidth(true));
@@ -1883,8 +1883,10 @@ public class InventoryPresetEditor : Editor
         using (new EditorGUI.DisabledScope(!displayAdd ||
             (list.onCanAddCallback != null && !list.onCanAddCallback(list))))
         {
-            Rect mainAddRect = new Rect(addRect.position, new Vector2(addRect.width - 25f, addRect.height));
-            Rect plusAddRect = new Rect(new Vector2(addRect.width - 5f, addRect.position.y), new Vector2(15f, addRect.height));
+            Rect mainAddRect = addRect;
+            if (displayMore)
+                mainAddRect = new Rect(addRect.position, new Vector2(addRect.width - 25f, addRect.height));
+            
             // Invoke the onAddCallback when the button is clicked followed by onChangedCallback.
             if (SpecialButton(mainAddRect, new GUIContent(addText), out int button, new GUIStyle(newButton)))
             {
@@ -1901,18 +1903,22 @@ public class InventoryPresetEditor : Editor
                     // If neither callback was provided, nothing will happen when the button is clicked.
                 }
             }
-            if (SpecialButton(plusAddRect, iconToolbarPlusMore, out button, new GUIStyle(newButton)))
+            if (displayMore)
             {
-                // Left click
-                if (button == 0)
+                Rect plusAddRect = new Rect(new Vector2(addRect.width - 5f, addRect.position.y), new Vector2(15f, addRect.height));
+                if (SpecialButton(plusAddRect, iconToolbarPlusMore, out button, new GUIStyle(newButton)))
                 {
-                    // Create the menu and add items to it
-                    GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Import External Menus"), false, OnImportExternalMenus);
-                    // Display the menu
-                    menu.ShowAsContext();
+                    // Left click
+                    if (button == 0)
+                    {
+                        // Create the menu and add items to it
+                        GenericMenu menu = new GenericMenu();
+                        menu.AddItem(new GUIContent("Import External Menus"), false, OnImportExternalMenus);
+                        // Display the menu
+                        menu.ShowAsContext();
+                    }
                 }
-            }  
+            }
         }
 
         // Exact same as above, just with the other button and removal callbacks.
