@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 653c66429c2466845920f9399b645f78, type: 3}
   m_Name: Simple Preset
   m_EditorClassIdentifier: 
-  m_Version: 1
+  m_Version: 2
   m_Pages:
   - {fileID: 114556488549054094}
   - {fileID: 114751815937736816}

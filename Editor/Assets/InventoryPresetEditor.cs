@@ -13,7 +13,7 @@ using InventoryInventor;
 public class InventoryPresetEditor : Editor
 {
     // Version tracker used for upgrading old presets.
-    public static readonly int currentVersion = 1;
+    public static readonly int currentVersion = 2;
 
     // The Asset being edited.
     private InventoryPreset preset;
@@ -944,6 +944,12 @@ public class InventoryPresetEditor : Editor
             DestroyImmediate(ImportExternalWindow.Instance);
         }
 
+        //if (AppendPresetWindow.IsOpen)
+        //{
+        //    AppendPresetWindow.Instance.Close();
+        //    DestroyImmediate(AppendPresetWindow.Instance);
+        //}
+
         if (pageDirectory != null)
         {
             pageDirectory.drawHeaderCallback -= pageDirectory.drawHeaderCallback;
@@ -1002,6 +1008,12 @@ public class InventoryPresetEditor : Editor
         {
             ImportExternalWindow.Instance.Close();
             DestroyImmediate(ImportExternalWindow.Instance);
+        }
+
+        if (AppendPresetWindow.IsOpen)
+        {
+            AppendPresetWindow.Instance.Close();
+            DestroyImmediate(AppendPresetWindow.Instance);
         }
 
         AssetDatabase.SaveAssets();
@@ -1792,7 +1804,11 @@ public class InventoryPresetEditor : Editor
                         EditorUtility.DisplayDialog("Inventory Inventor", "One or more Submenu Items were discovered on this Preset while upgrading. These have automatically turned into Control Items and will need to be reassigned their Expressions Menus manually.", "Close");
                     break;
                 case 1:
-                    //Future Upgrade Placeholder.
+                    // Reimport to fix class reference
+                    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(preset.GetInstanceID()), ImportAssetOptions.ImportRecursive);
+                    break;
+                case 2:
+                    // Future upgrade placeholder
                     break;
             }
             preset.Version++;
@@ -1914,6 +1930,7 @@ public class InventoryPresetEditor : Editor
                         // Create the menu and add items to it
                         GenericMenu menu = new GenericMenu();
                         menu.AddItem(new GUIContent("Import External Menus"), false, OnImportExternalMenus);
+                        menu.AddItem(new GUIContent("Append Another Preset"), false, OnAppendAnotherPreset);
                         // Display the menu
                         menu.ShowAsContext();
                     }
@@ -1944,6 +1961,11 @@ public class InventoryPresetEditor : Editor
     private void OnImportExternalMenus()
     {
         ImportExternalWindow.ImportExternalWindowInit(preset);
+    }
+
+    private void OnAppendAnotherPreset()
+    {
+        AppendPresetWindow.AppendPresetWindowInit(preset);
     }
 
     /*
