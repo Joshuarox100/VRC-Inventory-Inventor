@@ -64,8 +64,7 @@ namespace InventoryInventor.Version
         public static string GetVersion()
         {
             // Get the relative path.
-            string filter = typeof(Updater).ToString();
-            filter = filter.Substring(filter.LastIndexOf(".") + 1);
+            string filter = "InventoryInventor";
             string[] guids = AssetDatabase.FindAssets(filter);
             string relativePath = "";
             foreach (string guid in guids)
@@ -73,7 +72,7 @@ namespace InventoryInventor.Version
                 string tempPath = AssetDatabase.GUIDToAssetPath(guid);
                 if (tempPath.LastIndexOf(filter) == tempPath.Length - filter.Length - 3)
                 {
-                    relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Scripts") - 1);
+                    relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Editor") - 1);
                     break;
                 }
             }

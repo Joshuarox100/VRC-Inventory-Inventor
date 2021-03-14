@@ -1912,11 +1912,12 @@ namespace InventoryInventor
             string old = relativePath;
 
             // Get the relative path.
-            string[] guids = AssetDatabase.FindAssets(GetType().ToString());
+            string filter = "InventoryInventor";
+            string[] guids = AssetDatabase.FindAssets(filter);
             foreach (string guid in guids)
             {
                 string tempPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (tempPath.LastIndexOf(typeof(Manager).ToString()) == tempPath.Length - typeof(Manager).ToString().Length - 3)
+                if (tempPath.LastIndexOf(filter) == tempPath.Length - filter.Length - 3)
                 {
                     relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Editor") - 1);
                     break;
