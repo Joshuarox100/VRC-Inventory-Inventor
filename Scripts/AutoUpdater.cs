@@ -30,27 +30,56 @@ namespace InventoryInventor.Version
 
     public class Updater : UnityEngine.Object
     {
-        // Blank MonoBehaviour for running network coroutines.
-        private class NetworkManager : MonoBehaviour { }
+        // MonoBehaviour for running network coroutines.
+        private class NetworkManager : MonoBehaviour 
+        {
+            // Gets a desired request from the internet
+            public static IEnumerator GetFileRequest(string url, string filePath, Action<UnityWebRequest> callback)
+            {
+                UnityWebRequest request = UnityWebRequest.Get(url);
+                request.downloadHandler = new DownloadHandlerFile(filePath);
+                yield return request.SendWebRequest();
+                callback(request);
+            }
+
+            // Retrieves text from a provided URL.
+            public static IEnumerator GetText(string url, Action<string> result)
+            {
+                UnityWebRequest www = UnityWebRequest.Get(url);
+                yield return www.SendWebRequest();
+
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.LogError(www.error);
+                    result?.Invoke("");
+                }
+                else
+                {
+                    result?.Invoke(www.downloadHandler.text);
+                }
+            }
+        }
 
         // Returns the contents of the VERSION file if present.
         public static string GetVersion()
         {
             // Get the relative path.
-            string[] guids = AssetDatabase.FindAssets(typeof(Updater).ToString());
+            string filter = typeof(Updater).ToString();
+            filter = filter.Substring(filter.LastIndexOf(".") + 1);
+            string[] guids = AssetDatabase.FindAssets(filter);
             string relativePath = "";
             foreach (string guid in guids)
             {
                 string tempPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (tempPath.LastIndexOf(typeof(Updater).ToString()) == tempPath.Length - typeof(Updater).ToString().Length - 3)
+                if (tempPath.LastIndexOf(filter) == tempPath.Length - filter.Length - 3)
                 {
-                    relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Inventory Inventor") - 1);
+                    relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Scripts") - 1);
                     break;
                 }
             }
             if (relativePath == "")
                 return "";
-
+            Debug.Log(relativePath);
             //Read VERSION file
             string installedVersion = (AssetDatabase.FindAssets("VERSION", new string[] { relativePath }).Length > 0) ? File.ReadAllText(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("VERSION", new string[] { relativePath })[0])) : "";
 
@@ -64,10 +93,11 @@ namespace InventoryInventor.Version
             string installedVersion = GetVersion();
 
             // Create hidden object to run the coroutine.
-            GameObject netMan = new GameObject { hideFlags = HideFlags.HideInHierarchy };
+            GameObject temp = new GameObject { hideFlags = HideFlags.HideInHierarchy };
 
             // Run a coroutine to retrieve the GitHub data.
-            netMan.AddComponent<NetworkManager>().StartCoroutine(GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
+            NetworkManager manager = temp.AddComponent<NetworkManager>();
+            manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
                 // Network Error.
                 if (latestVersion == "" && !auto)
                 {
@@ -86,9 +116,10 @@ namespace InventoryInventor.Version
                 // An update is available.
                 else if (installedVersion != latestVersion)
                 {
-                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nOpen the Releases page?", "Yes", "No"))
+                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nDownload and install from GitHub?", "Yes", "No"))
                     {
-                        Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases/latest");
+                        // Download the update.
+                        DownloadUpdate(latestVersion);
                     }
                 }
                 // Using latest version.
@@ -96,25 +127,43 @@ namespace InventoryInventor.Version
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
                 }
-                DestroyImmediate(netMan);
+                DestroyImmediate(temp);
             }));
         }
 
-        // Retrieves text from a provided URL.
-        private static IEnumerator GetText(string url, Action<string> result)
+        // Downloads and installs a given version of the package.
+        public static void DownloadUpdate(string version)
         {
-            UnityWebRequest www = UnityWebRequest.Get(url);
-            yield return www.SendWebRequest();
+            string downloadURL = "https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases/download/" + version + "/Inventory.Inventor." + version.Substring(1) + ".unitypackage";
+            string filePath = $"{Application.persistentDataPath}/Files/Inventory.Inventor." + version.Substring(1) + ".unitypackage";
+            Debug.Log("Download URL: " + downloadURL + "\nFile Path: " + filePath);
 
-            if (www.isNetworkError || www.isHttpError)
+            // Create hidden object to run the coroutine.
+            GameObject temp = new GameObject { hideFlags = HideFlags.HideInHierarchy };
+
+            // Run a coroutine to retrieve the GitHub data.
+            NetworkManager manager = temp.AddComponent<NetworkManager>();
+            manager.StartCoroutine(NetworkManager.GetFileRequest(downloadURL, filePath, (UnityWebRequest req) =>
             {
-                Debug.LogError(www.error);
-                result?.Invoke("");
-            }
-            else
-            {
-                result?.Invoke(www.downloadHandler.text);
-            }
+                // Log potential errors
+                if (req.isNetworkError || req.isHttpError)
+                {
+                    // Log any errors that may happen
+                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to download the latest version.\n(Check console for details.)", "Close");
+                    Debug.LogError("Inventory Inventor: " + req.error);
+                }
+                else
+                {
+                    if (File.Exists(filePath))
+                    {
+                        AssetDatabase.ImportPackage(filePath, false);
+                        File.Delete(filePath);
+                    }
+                    else
+                        EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");
+                }
+                DestroyImmediate(temp);
+            }));
         }
     }
 }
