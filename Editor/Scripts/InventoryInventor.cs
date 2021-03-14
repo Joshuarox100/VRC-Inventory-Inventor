@@ -671,7 +671,6 @@ namespace InventoryInventor
         {
             // Load the settings object.
             SerializedObject settings = InventorSettings.GetSerializedSettings();
-            settings.FindProperty("m_LastPath").stringValue = outputPath;
 
             // If the destination is not valid, create it if possible or use the default.
             if (!AssetDatabase.IsValidFolder(outputPath))
