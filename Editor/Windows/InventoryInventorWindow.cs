@@ -17,7 +17,7 @@ namespace InventoryInventor
         private readonly Manager manager = new Manager();
 
         // Window Size.
-        private Rect windowSize = new Rect(0, 0, 375f, 365f);
+        private Rect windowSize = new Rect(0, 0, 375f, 370f);
 
         // Various Trackers.
         private int windowTab;
@@ -33,7 +33,7 @@ namespace InventoryInventor
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
             window.manager.outputPath = InventorSettings.GetSerializedSettings().FindProperty("m_LastPath").stringValue;
-            window.minSize = new Vector2(375f, 370f);
+            window.minSize = new Vector2(375f, 375f);
             window.wantsMouseMove = true;
             window.Show();
         }
