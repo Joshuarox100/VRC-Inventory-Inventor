@@ -2164,7 +2164,7 @@ public class InventoryPresetEditor : Editor
                 parameterNames = new string[0];
 
             //Generic params
-            control.type = (VRCExpressionsMenu.Control.ControlType)EditorGUILayout.EnumPopup("Type", control.type);
+            control.type = (VRCExpressionsMenu.Control.ControlType)EditorGUILayout.EnumPopup("Subtype", control.type);
 
             //Type Info
             var controlType = control.type;
