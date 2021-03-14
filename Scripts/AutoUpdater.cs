@@ -123,7 +123,7 @@ namespace InventoryInventor.Version
                 // An update is available.
                 else if (installedVersion != latestVersion)
                 {
-                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nDownload and install from GitHub?", "Yes", "No"))
+                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)": ""), "Yes", "No"))
                     {
                         // Download the update.
                         DownloadUpdate(latestVersion);
