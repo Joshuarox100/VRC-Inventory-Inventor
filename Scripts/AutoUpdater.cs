@@ -39,6 +39,8 @@ namespace InventoryInventor.Version
 
     public class Updater : UnityEngine.Object
     {
+        private readonly static string[] deletableFiles = { "Editor", "Examples", "Images", "Scripts" };
+
         // MonoBehaviour for running network coroutines.
         private class NetworkManager : MonoBehaviour 
         {
@@ -92,6 +94,24 @@ namespace InventoryInventor.Version
             string installedVersion = (AssetDatabase.FindAssets("VERSION", new string[] { relativePath }).Length > 0) ? File.ReadAllText(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("VERSION", new string[] { relativePath })[0])) : "";
 
             return installedVersion;
+        }
+
+        // Gets the path to the settings asset
+        private static string GetSettingsPath()
+        {
+            string filter = "InventoryInventor";
+            string[] guids = AssetDatabase.FindAssets(filter);
+            string relativePath = "";
+            foreach (string guid in guids)
+            {
+                string tempPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (tempPath.LastIndexOf(filter) == tempPath.Length - filter.Length - 3)
+                {
+                    relativePath = tempPath.Substring(0, tempPath.LastIndexOf("Editor") - 1);
+                    break;
+                }
+            }
+            return relativePath + Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar + "SETTINGS.asset";
         }
 
         // Compares the VERSION file present to the one on GitHub to see if a newer version is available.
@@ -164,8 +184,26 @@ namespace InventoryInventor.Version
                 {
                     if (File.Exists(filePath))
                     {
+                        // Store the current settings
+                        string path = GetSettingsPath();
+                        InventorSettings settings = (InventorSettings)AssetDatabase.LoadAssetAtPath(path, typeof(InventorSettings));
+
+                        // Delete the previous version
+                        string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
+                        string[] folders = Directory.GetDirectories(mainPath);
+                        foreach (string folder in folders)
+                            foreach (string entry in deletableFiles)
+                                if (folder.EndsWith(entry))
+                                    Directory.Delete(folder, true);
+                        AssetDatabase.Refresh();
+
+                        // Import and delete the downloaded package
                         AssetDatabase.ImportPackage(filePath, false);
                         File.Delete(filePath);
+
+                        // Restore the previous settings
+                        AssetDatabase.CreateAsset(settings, path);
+                        AssetDatabase.SaveAssets();
                     }
                     else
                         EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");
