@@ -11,10 +11,7 @@ namespace InventoryInventor.Preset
     {
         // Tracker data
         public static ImportExternalWindow Instance { get; private set; }
-        public static bool IsOpen
-        {
-            get { return Instance != null; }
-        }
+        private static bool IsOpen;
 
         // Preset being modified
         private InventoryPreset preset;
@@ -25,9 +22,22 @@ namespace InventoryInventor.Preset
         // Import Submenus
         private bool enableRecursion = false;
 
+        private void OnEnable()
+        {
+            IsOpen = true;
+            EditorApplication.wantsToQuit += WantsToQuit;
+        }
+
+        private void OnDestroy()
+        {
+            IsOpen = false;
+            EditorApplication.wantsToQuit -= WantsToQuit;
+        }
+
         public static void ImportExternalWindowInit(InventoryPreset preset)
         {
-            Instance = (ImportExternalWindow)GetWindow(typeof(ImportExternalWindow), false, "Inventory Inventor");
+            Instance = (ImportExternalWindow)GetWindow(typeof(ImportExternalWindow), false, preset.name);
+            Instance.titleContent = new GUIContent(preset.name);
             Instance.minSize = new Vector2(375f, 100f);
             Instance.maxSize = new Vector2(375f, 100f);
             Instance.preset = preset;
@@ -149,6 +159,16 @@ namespace InventoryInventor.Preset
 
             // Return Conversion
             return page;
+        }
+
+        static bool WantsToQuit()
+        {
+            if (IsOpen)
+            {
+                Instance.Close();
+                DestroyImmediate(Instance);
+            }
+            return true;
         }
 
         // Draws a line across the GUI.

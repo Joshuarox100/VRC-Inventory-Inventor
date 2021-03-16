@@ -933,18 +933,6 @@ public class InventoryPresetEditor : Editor
     // Remove callbacks to prevent memory leak.
     public void OnDisable()
     {
-        if (ImportExternalWindow.IsOpen)
-        {
-            ImportExternalWindow.Instance.Close();
-            DestroyImmediate(ImportExternalWindow.Instance);
-        }
-
-        if (AppendPresetWindow.IsOpen && !AppendPresetWindow.IsSelecting)
-        {
-            AppendPresetWindow.Instance.Close();
-            DestroyImmediate(AppendPresetWindow.Instance);
-        }
-
         if (pageDirectory != null)
         {
             pageDirectory.drawHeaderCallback -= pageDirectory.drawHeaderCallback;
@@ -999,18 +987,6 @@ public class InventoryPresetEditor : Editor
     //Emergency save if the Editor is closing while a preset is being inspected.
     static bool WantsToQuit()
     {
-        if (ImportExternalWindow.IsOpen)
-        {
-            ImportExternalWindow.Instance.Close();
-            DestroyImmediate(ImportExternalWindow.Instance);
-        }
-
-        if (AppendPresetWindow.IsOpen)
-        {
-            AppendPresetWindow.Instance.Close();
-            DestroyImmediate(AppendPresetWindow.Instance);
-        }
-
         AssetDatabase.SaveAssets();
         return true;
     }

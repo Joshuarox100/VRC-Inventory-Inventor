@@ -8,15 +8,7 @@ namespace InventoryInventor.Preset
     {
         // Tracker data
         public static AppendPresetWindow Instance { get; private set; }
-        public static bool IsOpen
-        {
-            get { return Instance != null; }
-        }
-        public static bool IsSelecting
-        {
-            get { return Instance.Selecting; }
-        }
-        private bool Selecting = false;
+        public static bool IsOpen;
 
         // Preset being modified
         private InventoryPreset preset;
@@ -24,9 +16,22 @@ namespace InventoryInventor.Preset
         // Preset to Append
         private InventoryPreset appendPreset;
 
+        private void OnEnable()
+        {
+            IsOpen = true;
+            EditorApplication.wantsToQuit += WantsToQuit;
+        }
+
+        private void OnDestroy()
+        {
+            IsOpen = false;
+            EditorApplication.wantsToQuit -= WantsToQuit;
+        }
+
         public static void AppendPresetWindowInit(InventoryPreset preset)
         {
-            Instance = (AppendPresetWindow)GetWindow(typeof(AppendPresetWindow), false, "Inventory Inventor");
+            Instance = (AppendPresetWindow)GetWindow(typeof(AppendPresetWindow), false, preset.name);
+            Instance.titleContent = new GUIContent(preset.name);
             Instance.minSize = new Vector2(375f, 100f);
             Instance.maxSize = new Vector2(375f, 100f);
             Instance.preset = preset;
@@ -44,26 +49,21 @@ namespace InventoryInventor.Preset
             GUILayout.FlexibleSpace();
 
             // Preset to Append
-            EditorGUI.BeginChangeCheck();
             appendPreset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset to Append", "The Preset to append."), appendPreset, typeof(InventoryPreset), true);
-            if (EditorGUI.EndChangeCheck())
-                Selecting = true;
-            else
-                Selecting = false;
 
             // Confirm Button
             GUILayout.FlexibleSpace();
             DrawLine(false);
             EditorGUILayout.Space();
             if (GUILayout.Button("Append"))
-                AppendPreset(appendPreset);
+                AppendPreset(preset, appendPreset);
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
 
         // Appends pages from one preset to the current one.
-        private void AppendPreset(InventoryPreset appendPreset)
+        private static void AppendPreset(InventoryPreset preset, InventoryPreset appendPreset)
         {
             // Null checks
             if (appendPreset == null || preset == null)
@@ -112,12 +112,12 @@ namespace InventoryInventor.Preset
 
             // Save changes
             InventoryPresetEditor.SaveChanges(preset);
-            Close();
+            Instance.Close();
             EditorUtility.DisplayDialog("Inventory Inventor", "All menus imported successfully.", "Close");
         }
 
         // Deep clones a page
-        private Page DeepClonePage(Page page)
+        private static Page DeepClonePage(Page page)
         {
             Page newPage = CreateInstance<Page>();
             newPage.name = page.name;
@@ -132,7 +132,7 @@ namespace InventoryInventor.Preset
         }
 
         // Deep clones an item
-        private PageItem DeepCloneItem(PageItem item)
+        private static PageItem DeepCloneItem(PageItem item)
         {
             PageItem newItem = CreateInstance<PageItem>();
             newItem.name = item.name;
@@ -174,7 +174,7 @@ namespace InventoryInventor.Preset
         }
 
         // Deep clones a group item
-        private GroupItem DeepCloneGroupItem(GroupItem groupItem)
+        private static GroupItem DeepCloneGroupItem(GroupItem groupItem)
         {
             GroupItem newGroupItem = CreateInstance<GroupItem>();
             newGroupItem.name = groupItem.name;
@@ -185,7 +185,7 @@ namespace InventoryInventor.Preset
         }
 
         // Finds a cloned page
-        private Page FindClonedPage(Page oldPage, ref List<Page> newPages)
+        private static Page FindClonedPage(Page oldPage, ref List<Page> newPages)
         {
             if (oldPage == null)
                 return null;
@@ -196,7 +196,7 @@ namespace InventoryInventor.Preset
         }
 
         // Finds a cloned item
-        private PageItem FindClonedItem(PageItem oldItem, ref List<Page> newPages, ref List<Page> oldPages)
+        private static PageItem FindClonedItem(PageItem oldItem, ref List<Page> newPages, ref List<Page> oldPages)
         {
             if (oldItem == null)
                 return null;
@@ -211,6 +211,16 @@ namespace InventoryInventor.Preset
                 }
             Page newPage = FindClonedPage(oldPage, ref newPages);
             return newPage.Items[index];
+        }
+
+        static bool WantsToQuit()
+        {
+            if (IsOpen)
+            {
+                Instance.Close();
+                DestroyImmediate(Instance);
+            }
+            return true;
         }
 
         // Draws a line across the GUI.
