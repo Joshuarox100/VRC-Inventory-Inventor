@@ -161,13 +161,13 @@ public class InventoryPresetEditor : Editor
                     };
                     innerList.drawElementCallback += (Rect rect2, int index2, bool active2, bool focused2) =>
                     {
-                        // The item being drawn.
-                        PageItem item2 = item.Items[index2];
-
                         if (focused2)
                         {
                             focusedItemPage = index;
                         }
+
+                        // The item being drawn.
+                        PageItem item2 = item.Items[index2];
 
                         // Draw the item's name and type.
                         EditorGUI.indentLevel--;
@@ -203,6 +203,12 @@ public class InventoryPresetEditor : Editor
                         if (index2 != 0)
                             Handles.DrawLine(new Vector2(rect2.x - 15, rect2.y), new Vector2(rect2.x + rect2.width, rect2.y));
                         EditorGUI.indentLevel++;
+
+                        // Show Context Menu
+                        if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect2.Contains(Event.current.mousePosition))
+                        {
+                            ShowItemContextMenu(index, index2);
+                        }
                     };
                     innerList.onAddCallback += (ReorderableList list2) =>
                     {
@@ -233,8 +239,8 @@ public class InventoryPresetEditor : Editor
                     };
                     innerList.onRemoveCallback += (ReorderableList list2) =>
                     {
-                        // Only continue if there is more than a single item on the page.
-                        if (list2.list.Count > 1)
+                        // Only continue if there is at least a single item on the page.
+                        if (list2.list.Count > 0)
                         {
                             // Mark the preset as dirty and record the affected page before removing the item.
                             EditorUtility.SetDirty(preset);
@@ -248,19 +254,8 @@ public class InventoryPresetEditor : Editor
                     };
                     innerList.drawFooterCallback += (Rect footerRect) =>
                     {
-                        DrawButtons(innerList, item.Items.Count < 8, item.Items.Count > 1, false, "Create Item", "Remove Item", footerRect);
+                        DrawButtons(innerList, item.Items.Count < 8, item.Items.Count > 0, false, "Create Item", "Remove Item", footerRect);
                     };
-
-                    // Make sure that there is at least one item in the page.
-                    if (item.Items.Count < 1)
-                    {
-                        PageItem innerItem = CreateInstance<PageItem>();
-                        string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
-                        innerItem.hideFlags = HideFlags.HideInHierarchy;
-                        AssetDatabase.AddObjectToAsset(innerItem, _path);
-                        innerItem.name = "Slot 1";
-                        preset.Pages[index].Items.Add(innerItem);
-                    }
 
                     pageContentsDict[listKey] = innerList;
                 }
@@ -284,7 +279,7 @@ public class InventoryPresetEditor : Editor
             float propertyHeight = 18f;
             if (pagesFoldout[index] && !draggingPage)
             {
-                propertyHeight += propertyHeight * preset.Pages[index].Items.Count + 36f;
+                propertyHeight += propertyHeight * Mathf.Clamp(preset.Pages[index].Items.Count, 1, float.MaxValue) + 36f;
             }
 
             float spacing = EditorGUIUtility.singleLineHeight / 2;
@@ -1293,7 +1288,7 @@ public class InventoryPresetEditor : Editor
         }
         else
         {
-            if (pageContentsDict.ContainsKey(preset.Pages[focusedItemPage].GetInstanceID().ToString()) && pageContentsDict[preset.Pages[focusedItemPage].GetInstanceID().ToString()].HasKeyboardControl())
+            if (pageContentsDict.ContainsKey(preset.Pages[focusedItemPage].GetInstanceID().ToString()) && pageContentsDict[preset.Pages[focusedItemPage].GetInstanceID().ToString()].HasKeyboardControl() && preset.Pages[focusedItemPage].Items.Count > 0)
             {
                 focusedOnItem = true;
                 pageDirectory.index = -1;
@@ -1301,6 +1296,10 @@ public class InventoryPresetEditor : Editor
                     if (list != pageContentsDict[preset.Pages[focusedItemPage].GetInstanceID().ToString()])
                         list.index = -1;
             }
+            else if (preset.Pages[focusedItemPage].Items.Count == 0)
+            {
+                focusedOnItem = false;
+            }      
         }
         // Check that the selected list is available, otherwise wait until it is.
         if (pageContentsDict.ContainsKey(preset.Pages[focusedItemPage].GetInstanceID().ToString()) && !draggingPage && focusedOnItem)
@@ -1958,6 +1957,10 @@ public class InventoryPresetEditor : Editor
         }
     }
 
+    /*
+    // Context Menu Functions 
+    */
+
     private void OnImportExternalMenus()
     {
         ImportExternalWindow.ImportExternalWindowInit(preset);
@@ -1966,6 +1969,45 @@ public class InventoryPresetEditor : Editor
     private void OnAppendAnotherPreset()
     {
         AppendPresetWindow.AppendPresetWindowInit(preset);
+    }
+
+    // Shows the item context menu
+    private void ShowItemContextMenu(int pageIndex, int itemIndex)
+    {
+        // Create the menu
+        GenericMenu menu = new GenericMenu();
+
+        // Add pages to menu that have space
+        for (int i = 0; i < preset.Pages.Count; i++)
+            if (pageIndex != i && preset.Pages[i].Items.Count < 8)
+                menu.AddItem(new GUIContent("Send to Page/" + preset.Pages[i].name), false, SendItemToPage, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset.Pages[i] });
+
+        // Display the menu
+        menu.ShowAsContext();
+    }
+
+    // Sends a item to a designated page
+    private void SendItemToPage(object args)
+    {
+        // Cast arguments to correct types
+        PageItem item = ((object[])args)[0] as PageItem;
+        Page oldPage = ((object[])args)[1] as Page;
+        Page newPage = ((object[])args)[2] as Page;
+
+        // Record the change
+        Undo.IncrementCurrentGroup();
+        int group = Undo.GetCurrentGroup();
+        
+        // Add item to new page
+        Undo.RecordObject(newPage, "Move Item");
+        newPage.Items.Add(item);
+
+        // Remove item from old page
+        Undo.RecordObject(oldPage, "Move Item");
+        oldPage.Items.Remove(item);
+
+        // Save Undo operation
+        Undo.CollapseUndoOperations(group);
     }
 
     /*
