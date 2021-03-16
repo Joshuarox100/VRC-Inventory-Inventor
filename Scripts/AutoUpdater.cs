@@ -186,7 +186,12 @@ namespace InventoryInventor.Version
                     {
                         // Store the current settings
                         string path = GetSettingsPath();
-                        InventorSettings settings = (InventorSettings)AssetDatabase.LoadAssetAtPath(path, typeof(InventorSettings));
+                        bool foundSettings = false;
+                        if (File.Exists(path))
+                        {
+                            File.Copy(path, $"{ Application.persistentDataPath}/Files/SETTINGS.asset");
+                            foundSettings = true;
+                        }
 
                         // Delete the previous version
                         string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
@@ -195,15 +200,22 @@ namespace InventoryInventor.Version
                             foreach (string entry in deletableFiles)
                                 if (folder.EndsWith(entry))
                                     Directory.Delete(folder, true);
-                        AssetDatabase.Refresh();
 
                         // Import and delete the downloaded package
                         AssetDatabase.ImportPackage(filePath, false);
                         File.Delete(filePath);
 
                         // Restore the previous settings
-                        AssetDatabase.CreateAsset(settings, path);
-                        AssetDatabase.SaveAssets();
+                        if (foundSettings)
+                        {
+                            if (!Directory.Exists(mainPath + "/Editor"))
+                                Directory.CreateDirectory(mainPath + "/Editor");
+                            File.Copy($"{ Application.persistentDataPath}/Files/SETTINGS.asset", path);
+                            File.Delete($"{ Application.persistentDataPath}/Files/SETTINGS.asset");
+                        }
+
+                        // Refresh database
+                        AssetDatabase.Refresh();
                     }
                     else
                         EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");
