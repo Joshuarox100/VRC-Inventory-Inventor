@@ -10,9 +10,11 @@ namespace InventoryInventor.Settings
     public class InventorSettings : ScriptableObject
     {
         [SerializeField]
+        [HideInInspector]
         private bool m_AutoUpdate;
 
         [SerializeField]
+        [HideInInspector]
         private string m_DefaultPath;
 
         [SerializeField]
@@ -43,6 +45,7 @@ namespace InventoryInventor.Settings
             if (settings == null)
             {
                 settings = CreateInstance<InventorSettings>();
+                settings.hideFlags = HideFlags.HideInHierarchy;
                 settings.m_AutoUpdate = true;
                 settings.m_DefaultPath = settingsPath.Substring(0, settingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
                 settings.m_LastPath = settings.m_DefaultPath;
@@ -80,14 +83,14 @@ namespace InventoryInventor.Settings
                 guiHandler = (searchContext) =>
                 {
                     var settings = InventorSettings.GetSerializedSettings();
-                    EditorGUILayout.PropertyField(settings.FindProperty("m_AutoUpdate"), new GUIContent("Startup Update Prompts"));
                     EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.PropertyField(settings.FindProperty("m_AutoUpdate"), new GUIContent("Startup Update Prompts"));
                     EditorGUILayout.PropertyField(settings.FindProperty("m_DefaultPath"), new GUIContent("Default File Destination"));
                     if (EditorGUI.EndChangeCheck() && !settings.FindProperty("m_DefaultPath").stringValue.StartsWith("Assets"))
                     {
                         settings.FindProperty("m_DefaultPath").stringValue = InventorSettings.GetSettingsPath().Substring(0, InventorSettings.GetSettingsPath().LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
+                        settings.ApplyModifiedProperties();
                     }
-                    settings.ApplyModifiedProperties();
                 },
 
                 // Populate the search keywords to enable smart search filtering and label highlighting:
