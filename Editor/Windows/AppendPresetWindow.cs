@@ -9,12 +9,17 @@ namespace InventoryInventor.Preset
         // Tracker data
         public static AppendPresetWindow Instance { get; private set; }
         public static bool IsOpen;
+        private Vector2 scroll = new Vector2();
 
         // Preset being modified
         private InventoryPreset preset;
 
         // Preset to Append
         private InventoryPreset appendPreset;
+
+        // Pages to Add
+        private string[] pageNames;
+        private bool[] selectedPages;
 
         private void OnEnable()
         {
@@ -32,8 +37,8 @@ namespace InventoryInventor.Preset
         {
             Instance = (AppendPresetWindow)GetWindow(typeof(AppendPresetWindow), false, preset.name);
             Instance.titleContent = new GUIContent(preset.name);
-            Instance.minSize = new Vector2(375f, 100f);
-            Instance.maxSize = new Vector2(375f, 100f);
+            Instance.minSize = new Vector2(375f, 200f);
+            Instance.maxSize = new Vector2(375f, Instance.maxSize.y);
             Instance.preset = preset;
             Instance.ShowUtility();
         }
@@ -46,24 +51,93 @@ namespace InventoryInventor.Preset
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Append Settings", EditorStyles.boldLabel);
             DrawLine(false);
-            GUILayout.FlexibleSpace();
 
             // Preset to Append
+            EditorGUI.BeginChangeCheck();
             appendPreset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset to Append", "The Preset to append."), appendPreset, typeof(InventoryPreset), true);
+            if (appendPreset != null && (EditorGUI.EndChangeCheck() || (pageNames != null && pageNames.Length != appendPreset.Pages.Count)))
+            {
+                pageNames = new string[appendPreset.Pages.Count];
+                for (int i = 0; i < appendPreset.Pages.Count; i++)
+                    pageNames[i] = appendPreset.Pages[i].name;
+                selectedPages = new bool[appendPreset.Pages.Count];
+            }
+
+            // Page Display and Confirmation
+            if (appendPreset != null)
+            {
+                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+                EditorGUILayout.BeginHorizontal();
+
+                var r = EditorGUILayout.BeginVertical();
+                if (pageNames.Length > 0 && selectedPages.Length > 0)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(10);
+                    EditorGUILayout.LabelField("Add", EditorStyles.boldLabel, GUILayout.MaxWidth(32f));
+                    GUILayout.Space(6);
+                    EditorGUILayout.LabelField("Pages", EditorStyles.boldLabel);
+                    EditorGUILayout.EndHorizontal();
+                    // Separator
+                    var rect = EditorGUILayout.BeginHorizontal();
+                    Handles.color = Color.gray;
+                    Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                    EditorGUILayout.EndHorizontal();
+
+                    scroll = EditorGUILayout.BeginScrollView(scroll);
+                    for (int i = 0; i < pageNames.Length; i++)
+                    {
+                        if (i != 0)
+                        {
+                            // Separator
+                            rect = EditorGUILayout.BeginHorizontal();
+                            Handles.color = Color.gray;
+                            Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                            EditorGUILayout.EndHorizontal();
+                        }
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Space(16);
+                        selectedPages[i] = EditorGUILayout.Toggle(selectedPages[i], GUILayout.MaxWidth(32f));
+                        EditorGUILayout.LabelField(pageNames[i]);
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    EditorGUILayout.EndScrollView();
+                }
+                EditorGUILayout.EndVertical();
+
+                // Separator
+                Handles.color = Color.gray;
+                Handles.DrawLine(new Vector2(r.x + 48, r.y), new Vector2(r.x + 48, r.y + r.height));
+
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
+            }
+            else
+            {
+                EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.MaxHeight(120f));
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField("<i>No Preset Selected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndVertical();
+            }
+            GUILayout.FlexibleSpace();
 
             // Confirm Button
-            GUILayout.FlexibleSpace();
             DrawLine(false);
             EditorGUILayout.Space();
             if (GUILayout.Button("Append"))
-                AppendPreset(preset, appendPreset);
+                AppendPreset(preset, appendPreset, selectedPages);
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
 
         // Appends pages from one preset to the current one.
-        private static void AppendPreset(InventoryPreset preset, InventoryPreset appendPreset)
+        private static void AppendPreset(InventoryPreset preset, InventoryPreset appendPreset, bool[] selectedPages)
         {
             // Null checks
             if (appendPreset == null || preset == null)
@@ -76,20 +150,23 @@ namespace InventoryInventor.Preset
             string _path = AssetDatabase.GetAssetPath(preset.GetInstanceID());
             List<Page> newPages = new List<Page>();
             List<Page> oldPages = appendPreset.Pages;
-            foreach (Page page in oldPages)
+            for (int i = 0; i < oldPages.Count; i++)
             {
-                Page newPage = DeepClonePage(page);
-                newPages.Add(newPage);
-                AssetDatabase.AddObjectToAsset(newPage, _path);
-                foreach (PageItem item in newPage.Items)
+                if (selectedPages[i])
                 {
-                    AssetDatabase.AddObjectToAsset(item, _path);
-                    foreach (GroupItem groupItem in item.ButtonGroup)
-                        AssetDatabase.AddObjectToAsset(groupItem, _path);
-                    foreach (GroupItem groupItem in item.EnableGroup)
-                        AssetDatabase.AddObjectToAsset(groupItem, _path);
-                    foreach (GroupItem groupItem in item.DisableGroup)
-                        AssetDatabase.AddObjectToAsset(groupItem, _path);
+                    Page newPage = DeepClonePage(oldPages[i]);
+                    newPages.Add(newPage);
+                    AssetDatabase.AddObjectToAsset(newPage, _path);
+                    foreach (PageItem item in newPage.Items)
+                    {
+                        AssetDatabase.AddObjectToAsset(item, _path);
+                        foreach (GroupItem groupItem in item.ButtonGroup)
+                            AssetDatabase.AddObjectToAsset(groupItem, _path);
+                        foreach (GroupItem groupItem in item.EnableGroup)
+                            AssetDatabase.AddObjectToAsset(groupItem, _path);
+                        foreach (GroupItem groupItem in item.DisableGroup)
+                            AssetDatabase.AddObjectToAsset(groupItem, _path);
+                    }
                 }
             }
             preset.Pages.AddRange(newPages);
@@ -112,7 +189,8 @@ namespace InventoryInventor.Preset
 
             // Save changes
             InventoryPresetUtility.SaveChanges(preset);
-            Instance.Close();
+            if (Instance != null)
+                Instance.Close();
             EditorUtility.DisplayDialog("Inventory Inventor", "All menus imported successfully.", "Close");
         }
 
@@ -192,7 +270,7 @@ namespace InventoryInventor.Preset
             foreach (Page page in newPages)
                 if (page.name == oldPage.name)
                     return page;
-            return null;
+            return newPages[0];
         }
 
         // Finds a cloned item
