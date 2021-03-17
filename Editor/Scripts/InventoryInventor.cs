@@ -77,8 +77,8 @@ namespace InventoryInventor
                 }
 
                 // Upgrade the Preset if neccessary.
-                if (preset.Version < InventoryPresetEditor.currentVersion)
-                    InventoryPresetEditor.UpgradePreset(preset);
+                if (preset.Version < InventoryPresetUtility.currentVersion)
+                    InventoryPresetUtility.UpgradePreset(preset);
 
                 /*
                     Check for space in parameters list & check for incompatible Animations.

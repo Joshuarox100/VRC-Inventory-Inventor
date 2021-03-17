@@ -126,7 +126,7 @@ namespace InventoryInventor.Preset
             preset.Pages.AddRange(newPages);
 
             // Save changes
-            InventoryPresetEditor.SaveChanges(preset);
+            InventoryPresetUtility.SaveChanges(preset);
             Close();
             EditorUtility.DisplayDialog("Inventory Inventor", "All menus imported successfully.", "Close");
         }

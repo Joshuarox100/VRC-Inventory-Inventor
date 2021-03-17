@@ -13,5 +13,6 @@ namespace InventoryInventor.Preset
         public List<Page> Pages { get { return m_Pages; } set { m_Pages = value; } }
         [SerializeField]
         private List<Page> m_Pages = new List<Page>();
+
     }
 }

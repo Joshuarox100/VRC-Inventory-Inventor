@@ -111,7 +111,7 @@ namespace InventoryInventor.Preset
             }
 
             // Save changes
-            InventoryPresetEditor.SaveChanges(preset);
+            InventoryPresetUtility.SaveChanges(preset);
             Instance.Close();
             EditorUtility.DisplayDialog("Inventory Inventor", "All menus imported successfully.", "Close");
         }
