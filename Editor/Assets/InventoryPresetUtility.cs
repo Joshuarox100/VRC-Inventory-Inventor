@@ -15,6 +15,9 @@ namespace InventoryInventor.Preset
         // Sends a item to a designated page
         public static void SendItemToPage(object args)
         {
+            // Mark Preset as dirty
+            EditorUtility.SetDirty((InventoryPreset)((object[])args)[3]);
+
             // Cast arguments to correct types
             PageItem item = ((object[])args)[0] as PageItem;
             Page oldPage = ((object[])args)[1] as Page;
@@ -34,7 +37,6 @@ namespace InventoryInventor.Preset
 
             // Save Undo operation
             Undo.CollapseUndoOperations(group);
-            EditorUtility.SetDirty((InventoryPreset)((object[])args)[3]);
         }
 
         // Removes unused Sub-Assets from the file and saves any changes made to the remaining Assets.
@@ -158,6 +160,26 @@ namespace InventoryInventor.Preset
                 preset.Version++;
             }
             SaveChanges(preset);
+        }
+
+        // Upgrades all presets found in the project
+        public static void UpgradeAll()
+        {
+            // Get all presets
+            string[] guids = AssetDatabase.FindAssets("t:InventoryPreset");
+            foreach (string g in guids)
+            {
+                // Get the preset object
+                InventoryPreset preset = (InventoryPreset)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(g), typeof(InventoryPreset));
+                if (preset != null)
+                {
+                    // Upgrade it if necessary
+                    if (preset.Pages.Count == 0)
+                        preset.Version = currentVersion;
+                    else if (preset.Version < currentVersion)
+                        UpgradePreset(preset);
+                }
+            }
         }
     }
 }
