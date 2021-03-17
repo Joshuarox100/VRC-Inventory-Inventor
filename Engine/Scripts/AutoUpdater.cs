@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using System;
 using System.IO;
 using InventoryInventor.Settings;
+using InventoryInventor.Preset;
 
 namespace InventoryInventor.Version
 {
@@ -213,6 +214,10 @@ namespace InventoryInventor.Version
                             File.Copy($"{ Application.persistentDataPath}/Files/SETTINGS.asset", path);
                             File.Delete($"{ Application.persistentDataPath}/Files/SETTINGS.asset");
                         }
+
+                        // Upgrade Presets
+                        if (Type.GetType("InventoryPresetUtility") != null && Type.GetType("InventoryPresetUtility").GetMethod("UpgradeAll") != null)
+                            InventoryPresetUtility.UpgradeAll();
 
                         // Refresh database
                         AssetDatabase.Refresh();

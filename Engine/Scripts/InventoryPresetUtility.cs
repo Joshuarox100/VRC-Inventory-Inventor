@@ -171,6 +171,7 @@ namespace InventoryInventor.Preset
             {
                 // Get the preset object
                 InventoryPreset preset = (InventoryPreset)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(g), typeof(InventoryPreset));
+
                 if (preset != null)
                 {
                     // Upgrade it if necessary

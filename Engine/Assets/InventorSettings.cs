@@ -77,6 +77,7 @@ namespace InventoryInventor.Settings
         {
             public static GUIContent autoUpdate = new GUIContent("Startup Update Prompts");
             public static GUIContent defaultPath = new GUIContent("Default File Destination");
+            public static GUIContent upgradeButton = new GUIContent("Upgrade All Old Presets");
         }
 
         static string k_InventorSettingsPath { get { return InventorSettings.GetSettingsPath(); } }
