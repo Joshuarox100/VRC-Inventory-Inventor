@@ -40,7 +40,7 @@ namespace InventoryInventor.Version
 
     public class Updater : UnityEngine.Object
     {
-        private readonly static string[] deletableFiles = { "Editor", "Examples", "Images", "Scripts" };
+        private readonly static string[] deletableFolders = { "Editor", "Engine", "Examples", "Images" };
 
         // MonoBehaviour for running network coroutines.
         private class NetworkManager : MonoBehaviour 
@@ -198,7 +198,7 @@ namespace InventoryInventor.Version
                         string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
                         string[] folders = Directory.GetDirectories(mainPath);
                         foreach (string folder in folders)
-                            foreach (string entry in deletableFiles)
+                            foreach (string entry in deletableFolders)
                                 if (folder.EndsWith(entry))
                                     Directory.Delete(folder, true);
 
