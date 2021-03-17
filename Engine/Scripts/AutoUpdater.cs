@@ -27,7 +27,7 @@ namespace InventoryInventor.Version
                 {
                     EditorApplication.update -= OnInit;
                     m_Instance = FindObjectOfType<AutoUpdater>();
-                    if (m_Instance == null)
+                    if (m_Instance == null && !EditorApplication.isPlayingOrWillChangePlaymode)
                     {
                         m_Instance = CreateInstance<AutoUpdater>();
                         if (settings.FindProperty("m_AutoUpdate").boolValue)
