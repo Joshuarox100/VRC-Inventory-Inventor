@@ -1,5 +1,5 @@
-﻿using BMBLibraries.Classes;
-using BMBLibraries.Extensions;
+﻿using InventoryInventor.BMBLibraries.Classes;
+using InventoryInventor.BMBLibraries.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

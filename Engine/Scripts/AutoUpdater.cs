@@ -40,8 +40,6 @@ namespace InventoryInventor.Version
 
     public class Updater : UnityEngine.Object
     {
-        private readonly static string[] deletableFolders = { "Editor", "Engine", "Examples", "Images" };
-
         // MonoBehaviour for running network coroutines.
         private class NetworkManager : MonoBehaviour 
         {
@@ -196,11 +194,7 @@ namespace InventoryInventor.Version
 
                         // Delete the previous version
                         string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
-                        string[] folders = Directory.GetDirectories(mainPath);
-                        foreach (string folder in folders)
-                            foreach (string entry in deletableFolders)
-                                if (folder.EndsWith(entry))
-                                    Directory.Delete(folder, true);
+                        DeleteCurrentVersion(mainPath);
 
                         // Import and delete the downloaded package
                         AssetDatabase.ImportPackage(filePath, false);
@@ -227,6 +221,29 @@ namespace InventoryInventor.Version
                 }
                 DestroyImmediate(temp);
             }));
+        }
+        
+        // Folders to delete during deletion in the main path
+        private readonly static string[] deletableFolders = { "Editor", "Engine", "Examples", "Images", "Libraries" };
+
+        // Deletes the current version
+        private static void DeleteCurrentVersion(string mainPath)
+        {
+            // Delete Primary Directory
+            string[] folders = Directory.GetDirectories(mainPath);
+            foreach (string folder in folders)
+                foreach (string entry in deletableFolders)
+                    if (folder.EndsWith(entry))
+                        Directory.Delete(folder, true);
+
+            // Delete Gizmos
+            folders = Directory.GetDirectories("Assets" + Path.DirectorySeparatorChar + "Gizmos");
+            foreach (string folder in folders)
+                if (folder.EndsWith("InventoryInventor"))
+                {
+                    Directory.Delete(folder, true);
+                    break;
+                }
         }
     }
 }
