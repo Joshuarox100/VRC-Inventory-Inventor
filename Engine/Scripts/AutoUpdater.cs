@@ -165,7 +165,7 @@ namespace InventoryInventor.Version
         {
             string downloadURL = "https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases/download/" + version + "/Inventory.Inventor." + version.Substring(1) + ".unitypackage";
             string filePath = $"{Application.persistentDataPath}/Files/Inventory.Inventor." + version.Substring(1) + ".unitypackage";
-            Debug.Log("Download URL: " + downloadURL + "\nFile Path: " + filePath);
+            //Debug.Log("Download URL: " + downloadURL + "\nFile Path: " + filePath);
 
             // Create hidden object to run the coroutine.
             GameObject temp = new GameObject { hideFlags = HideFlags.HideInHierarchy };
