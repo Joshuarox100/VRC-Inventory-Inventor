@@ -1,9 +1,11 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 
 namespace InventoryInventor.Settings
 {
@@ -45,7 +47,6 @@ namespace InventoryInventor.Settings
             if (settings == null)
             {
                 settings = CreateInstance<InventorSettings>();
-                settings.hideFlags = HideFlags.HideInHierarchy;
                 settings.m_AutoUpdate = true;
                 settings.m_DefaultPath = settingsPath.Substring(0, settingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
                 settings.m_LastPath = settings.m_DefaultPath;
@@ -67,38 +68,68 @@ namespace InventoryInventor.Settings
         }
     }
 
-    // Register a SettingsProvider using IMGUI for the drawing framework:
-    static class InventorSettingsIMGUIRegister
+    //Create MyCustomSettingsProvider by deriving from SettingsProvider:
+    class InventorSettingsProvider : SettingsProvider
     {
+        private SerializedObject m_InventorSettings;
+
+        class Styles
+        {
+            public static GUIContent autoUpdate = new GUIContent("Startup Update Prompts");
+            public static GUIContent defaultPath = new GUIContent("Default File Destination");
+        }
+
+        static string k_InventorSettingsPath { get { return InventorSettings.GetSettingsPath(); } }
+        public InventorSettingsProvider(string path, SettingsScope scope = SettingsScope.User)
+            : base(path, scope) { }
+
+        public static bool IsSettingsAvailable()
+        {
+            return File.Exists(k_InventorSettingsPath);
+        }
+
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+           //This function is called when the user clicks on the MyCustom element in the Settings window.
+           m_InventorSettings = InventorSettings.GetSerializedSettings();
+        }
+
+        public override void OnGUI(string searchContext)
+        {
+            m_InventorSettings.Update();
+
+            // Auto Update
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(Styles.autoUpdate);
+            m_InventorSettings.FindProperty("m_AutoUpdate").boolValue = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!m_InventorSettings.FindProperty("m_AutoUpdate").boolValue), new string[] { "Yes", "No" }));
+            EditorGUILayout.EndHorizontal();
+
+            // Default Path
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_InventorSettings.FindProperty("m_DefaultPath"), Styles.defaultPath);
+            if (EditorGUI.EndChangeCheck() && !m_InventorSettings.FindProperty("m_DefaultPath").stringValue.StartsWith("Assets"))
+                m_InventorSettings.FindProperty("m_DefaultPath").stringValue = k_InventorSettingsPath.Substring(0, k_InventorSettingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
+
+            m_InventorSettings.ApplyModifiedProperties();
+        }
+
+        //Register the SettingsProvider
         [SettingsProvider]
         public static SettingsProvider CreateInventorSettingsProvider()
         {
-            // First parameter is the path in the Settings window.
-            // Second parameter is the scope of this setting: it only appears in the Project Settings window.
-            var provider = new SettingsProvider("Project/Inventory Inventor", SettingsScope.Project)
+            if (IsSettingsAvailable())
             {
-                // By default the last token of the path is used as display name if no label is provided.
-                label = "Inventory Inventor",
-                // Create the SettingsProvider and initialize its drawing (IMGUI) function in place:
-                guiHandler = (searchContext) =>
+                var provider = new InventorSettingsProvider("Project/Inventory Inventor", SettingsScope.Project)
                 {
-                    var settings = InventorSettings.GetSerializedSettings();
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(settings.FindProperty("m_AutoUpdate"), new GUIContent("Startup Update Prompts"));
-                    EditorGUILayout.PropertyField(settings.FindProperty("m_DefaultPath"), new GUIContent("Default File Destination"));
-                    if (EditorGUI.EndChangeCheck() && !settings.FindProperty("m_DefaultPath").stringValue.StartsWith("Assets"))
-                    {
-                        settings.FindProperty("m_DefaultPath").stringValue = InventorSettings.GetSettingsPath().Substring(0, InventorSettings.GetSettingsPath().LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
-                        settings.ApplyModifiedProperties();
-                    }
-                },
+                    //Automatically extract all keywords from the Styles.
+                    keywords = GetSearchKeywordsFromGUIContentProperties<Styles>()
+                };
+                return provider;
+            }
 
-                // Populate the search keywords to enable smart search filtering and label highlighting:
-                keywords = new HashSet<string>(new[] { "Startup Update Prompts", "Default File Destination" })
-            };
-
-            return provider;
+            //Settings Asset doesn't exist yet; no need to display anything in the Settings window.
+            return null;
         }
-    }
+    } 
 }
 #endif
