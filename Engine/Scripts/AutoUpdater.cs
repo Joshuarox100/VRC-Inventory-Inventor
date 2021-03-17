@@ -217,7 +217,7 @@ namespace InventoryInventor.Version
 
                         // Upgrade Presets
                         if (Type.GetType("InventoryPresetUtility") != null && Type.GetType("InventoryPresetUtility").GetMethod("UpgradeAll") != null)
-                            InventoryPresetUtility.UpgradeAll();
+                            InventoryPresetUtility.UpgradeAll(false);
 
                         // Refresh database
                         AssetDatabase.Refresh();
