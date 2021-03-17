@@ -164,10 +164,11 @@ namespace InventoryInventor.Preset
         }
 
         // Upgrades all presets found in the project
-        public static void UpgradeAll()
+        public static void UpgradeAll(bool notify)
         {
             // Get all presets
             string[] guids = AssetDatabase.FindAssets("t:InventoryPreset");
+            int counter = guids.Length;
             foreach (string g in guids)
             {
                 // Get the preset object
@@ -180,8 +181,18 @@ namespace InventoryInventor.Preset
                         preset.Version = currentVersion;
                     else if (preset.Version < currentVersion)
                         UpgradePreset(preset);
+                    else
+                        counter--;
                 }
             }
+            if (notify)
+            {
+                if (counter > 0)
+                    EditorUtility.DisplayDialog("Inventory Inventor", counter + " presets were upgraded.", "Close");
+                else
+                    EditorUtility.DisplayDialog("Inventory Inventor", "No outdated presets found.", "Close");
+            }
+                
         }
     }
 }
