@@ -221,7 +221,7 @@ Inventory Inventor has a few persistent settings and options you can access with
 | Setting | Description |
 | :----: | ------ |
 | Automatic Update Checker | Check for updates whenever Unity starts. If an update is found, you can choose to download and install it automatically. |
-| Allow Transforms | Skips the check for invalid Animation properties.<br>(Can result in unintended behavior. Only use if you know what you're doing.) |
+| Allow Invalid Animations | Skips the check for invalid Animation properties.<br>(Can result in unintended behavior. Only use if you know what you're doing.) |
 | Default Output Path | The default output location the Manager will fallback on when it is unable to use the provided location.<br>(Must be located within the Assets folder.) |
 | Upgrade All Old Presets | Automatically search for and upgrade any and all older Presets found within the Project. |
 
