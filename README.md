@@ -81,6 +81,10 @@ All Pages can contain up to 8 different [Items](#items) used for toggling object
 The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
 #### Creating Pages
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Pages/Create.png">
+</p>
+
 Aside from the obvious button for creating a Page, there are two other methods of adding Pages to a Preset: importing existing menus or appending another Preset. Both of these additional options can be opened by clicking the plus icon on the right side of the 'Create Page' button.
 
 ##### Importing Existing Menus
@@ -96,9 +100,6 @@ This option allows you to import an existing VRC Expressions Menu into the Prese
 </p>
 
 This option allows you to add Pages from another Preset. After selecting a Preset, you can choose which Pages you want to append from it. If a appended Page contains a [Subpage Item](#subpage) that directs to a Page that was not added, it will instead redirect to the first Page of the Preset it was added to. If an appended Page shares the name of an already existing Page, the new Page will be renamed as described earlier.
-
-#### Removing Pages
-To remove a Page, simply select the Page you want to delete in the Directory and click the 'Remove Page' button.
 
 ### Items
 <p align="center">
