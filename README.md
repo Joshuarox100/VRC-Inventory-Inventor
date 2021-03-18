@@ -107,6 +107,7 @@ This option allows you to add Pages from another Preset. After selecting a Prese
 </p>
 
 An Item represents a control contained within a [Page](#pages). An Item can be one of four types: a [Toggle](#toggle), a [Button](#button), a [Subpage](#subpage), or a [Control](#control). Each type of Item functions differently.
+>Items can also be moved between [Pages](#pages) by right-clicking them and selecting a different [Page](#pages). (**You cannot move an Item into a [Page](#pages) that is already full**).
 
 #### Toggle
 <p align="center">
