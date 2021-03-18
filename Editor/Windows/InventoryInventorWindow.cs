@@ -27,6 +27,10 @@ namespace InventoryInventor
         // Removal Preview.
         private List<AnimatorControllerLayer> layers;
         private List<AnimatorControllerParameter> parameters;
+        private List<bool> expression;
+
+        // Colors
+        private readonly static Color32 navy = new Color32(143, 0, 254, 255);
 
         [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory", priority = 0)]
         public static void ManageInventory()
@@ -123,7 +127,7 @@ namespace InventoryInventor
             manager.controller = (AnimatorController)EditorGUILayout.ObjectField(new GUIContent("Animator Controller", "The Animator Controller to modify.\n(If left empty, a new Animator Controller will be created and used.)"), manager.controller, typeof(AnimatorController), false);
             if (EditorGUI.EndChangeCheck())
             {
-                manager.PreviewRemoval(out layers, out parameters);
+                manager.PreviewRemoval(out layers, out parameters, out expression);
             }
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
@@ -185,7 +189,7 @@ namespace InventoryInventor
             {
                 manager.CreateInventory();
                 EditorUtility.ClearProgressBar();
-                manager.PreviewRemoval(out layers, out parameters);
+                manager.PreviewRemoval(out layers, out parameters, out expression);
             }
             EditorGUILayout.EndVertical();
 
@@ -246,15 +250,18 @@ namespace InventoryInventor
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.BeginHorizontal();
+                var old = EditorStyles.label.normal.textColor;
+                EditorStyles.label.normal.textColor = navy;
                 EditorGUILayout.PrefixLabel(new GUIContent("Include Expression", "Also remove any related Expression Parameters."));
                 manager.removeExpParams = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.removeExpParams), new string[] { "Yes", "No" }));
+                EditorStyles.label.normal.textColor = old;
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
                 EditorGUILayout.EndHorizontal();
             }
-            if (EditorGUI.EndChangeCheck() || layers == null || parameters == null)
+            if (EditorGUI.EndChangeCheck() || layers == null || parameters == null || expression == null)
             {
-                manager.PreviewRemoval(out layers, out parameters);
+                manager.PreviewRemoval(out layers, out parameters, out expression);
             }
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
@@ -324,7 +331,10 @@ namespace InventoryInventor
                             EditorGUILayout.EndHorizontal();
                         }
 
-                        EditorGUILayout.LabelField(parameters[i].name, GUILayout.Width(155f));
+                        if (manager.removeExpParams && expression[i])
+                            EditorGUILayout.LabelField(parameters[i].name, new GUIStyle(GUI.skin.label) { normal = new GUIStyleState() { textColor = navy } }, GUILayout.Width(155f));
+                        else
+                            EditorGUILayout.LabelField(parameters[i].name, GUILayout.Width(155f));
                     }
                 }
                 EditorGUILayout.EndVertical();
@@ -357,7 +367,7 @@ namespace InventoryInventor
                 {
                     manager.RemoveInventory();
                     EditorUtility.ClearProgressBar();
-                    manager.PreviewRemoval(out layers, out parameters);
+                    manager.PreviewRemoval(out layers, out parameters, out expression);
                 }
             }
             EditorGUILayout.EndVertical();
@@ -400,7 +410,7 @@ namespace InventoryInventor
                     manager.controller = manager.avatar.baseAnimationLayers.Length == 5 ? ((manager.avatar.baseAnimationLayers[4].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[4].animatorController : null) : ((manager.avatar.baseAnimationLayers[2].animatorController != null) ? (AnimatorController)manager.avatar.baseAnimationLayers[2].animatorController : null);
 
                 if (manager.controller != null)
-                    manager.PreviewRemoval(out layers, out parameters);
+                    manager.PreviewRemoval(out layers, out parameters, out expression);
 
                 if (manager.menu == null)
                     manager.menu = manager.avatar.expressionsMenu != null ? manager.avatar.expressionsMenu : null;

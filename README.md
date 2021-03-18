@@ -200,16 +200,16 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 </p>
 
 The 'Remove' menu is used for removing an existing Inventory from a provided Animator Controller.
->This will **NOT** remove or delete any menus or Expression Parameters from an Avatar by default.
+>This will **NOT** remove or delete any created menus or other files created by the tool.
 
-Any layers or parameters that will be removed from the provided Controller during the operation will be shown under 'Will Be Removed'.
+Any layers or parameters that will be removed from the provided Controller during the operation will be shown under 'Will Be Removed'. If you choose to use 'Include Expression', any Expression Parameters to be removed will be highlighted in purple.
 
 | Setting | Description |
 | :----: | ------ |
 | Active Avatar | The Avatar you want to manage an Inventory for. |
 | Animator Controller | The Animator Controller to modify. |
 | Remove Parameters | Remove all parameters involved with the Inventory<br>(If you have other parameters named "Inventory ###", they will also be removed). |
-| Expression Parameters? | (When using Remove Parameters,) also remove Expression Parameters related to the removed parameters if they exist. |
+| Include Expression | (When using Remove Parameters,) also remove Expression Parameters related to the removed parameters if they exist. |
 
 ## Common Questions
 **Can I have multiple Inventories on a single Avatar?**

@@ -1714,10 +1714,11 @@ namespace InventoryInventor
         }
 
         // Returns a list of layers and parameters that would be removed with the current settings.
-        public void PreviewRemoval(out List<AnimatorControllerLayer> layers, out List<AnimatorControllerParameter> parameters)
+        public void PreviewRemoval(out List<AnimatorControllerLayer> layers, out List<AnimatorControllerParameter> parameters, out List<bool> expression)
         {
             layers = new List<AnimatorControllerLayer>();
             parameters = new List<AnimatorControllerParameter>();
+            expression = new List<bool>();
 
             if (controller == null)
                 return;
@@ -1732,6 +1733,21 @@ namespace InventoryInventor
                     if (nameFilter.IsMatch(controller.parameters[i].name))
                     {
                         parameters.Add(controller.parameters[i]);
+                        if (avatar != null && avatar.expressionParameters != null)
+                        {
+                            bool found = false;
+                            foreach (VRCExpressionParameters.Parameter parameter in avatar.expressionParameters.parameters)
+                                if (controller.parameters[i].name == parameter.name)
+                                {
+                                    expression.Add(true);
+                                    found = true;
+                                    break;
+                                }
+                            if (!found)
+                                expression.Add(false);
+                        }
+                        else
+                            expression.Add(false);
                     }
                 }
             }
