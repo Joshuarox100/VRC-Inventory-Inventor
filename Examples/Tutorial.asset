@@ -144,7 +144,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
-  m_Name: You can skip this one.
+  m_Name: You can skip this one
   m_EditorClassIdentifier: 
   m_Items:
   - {fileID: 114059772306131826}
@@ -297,7 +297,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
-  m_Name: Click or drag anywhere else to select or reorder Pages.
+  m_Name: Click or drag anywhere else to select or reorder Pages
   m_EditorClassIdentifier: 
   m_Items: []
   m_Icon: {fileID: 0}
@@ -381,7 +381,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23ec8a1ec75d388428a70a5e51aa382c, type: 3}
-  m_Name: <== Click this to view the contents of a Page.
+  m_Name: <== Click this to view the contents of a Page
   m_EditorClassIdentifier: 
   m_Items: []
   m_Icon: {fileID: 0}
