@@ -289,7 +289,7 @@ namespace InventoryInventor.Preset
             foreach (Page page in newPages)
                 if (page.name == oldPage.name)
                     return page;
-            return newPages[0];
+            return null;
         }
 
         // Finds a cloned item

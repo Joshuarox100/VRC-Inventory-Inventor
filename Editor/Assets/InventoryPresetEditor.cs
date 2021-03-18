@@ -1441,31 +1441,31 @@ public class InventoryPresetEditor : Editor
                     break;
                 case PageItem.ItemType.Subpage:
                     // Check if another page besides the current one exists.
+                    string[] names = new string[] { "None" };
+                    Page[] pages = new Page[0];
                     if (preset.Pages.Count - 1 > 0)
                     {
-                        string[] names = new string[preset.Pages.Count - 1];
-                        Page[] pages = new Page[preset.Pages.Count - 1];
+                        names = new string[preset.Pages.Count];
+                        names[0] = "None";
+                        pages = new Page[preset.Pages.Count - 1];
 
                         // Store each page's name and index (excluding the currently selected page).
                         int index = 0;
                         for (int i = 0; i < preset.Pages.Count; i++)
-                        {
                             if (i != focusedItemPage)
                             {
-                                names[index] = preset.Pages[i].name;
+                                names[index + 1] = preset.Pages[i].name;
                                 pages[index] = preset.Pages[i];
                                 index++;
                             }
-                        }
+                    }
+                    int pageIndex = EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null && Array.IndexOf(pages, itemPage) != -1 ? Array.IndexOf(pages, itemPage) + 1 : 0, names);
 
-                        // Item page reference.
-                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), itemPage != null && Array.IndexOf(pages, itemPage) != -1 ? Array.IndexOf(pages, itemPage) : 0, names)])];
-                    }
+                    // Item page reference.
+                    if (pageIndex > 0)
+                        itemPage = preset.Pages[preset.Pages.IndexOf(pages[pageIndex - 1])];
                     else
-                    {
-                        // Display an empty list.
-                        EditorGUILayout.Popup(new GUIContent("Page", "The page to direct to."), 0, new string[] { "None" });
-                    }
+                        itemPage = null;
                     break;
                 case PageItem.ItemType.Control:
                     // Item control.
