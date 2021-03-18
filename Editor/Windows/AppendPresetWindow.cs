@@ -306,8 +306,12 @@ namespace InventoryInventor.Preset
                     oldPage = page;
                     break;
                 }
-            Page newPage = FindClonedPage(oldPage, ref newPages);
-            return newPage.Items[index];
+            if (oldPage != null)
+            {
+                Page newPage = FindClonedPage(oldPage, ref newPages);
+                return newPage.Items[index];
+            }
+            return null;
         }
 
         static bool WantsToQuit()

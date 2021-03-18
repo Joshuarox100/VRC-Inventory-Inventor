@@ -377,7 +377,7 @@ public class InventoryPresetEditor : Editor
             // Create a list of all toggles, toggles not currently in the group, and the names of those later toggles.
             List<PageItem> allToggles = new List<PageItem>();
             List<PageItem> remainingToggles = new List<PageItem>();
-            List<string> toggleNames = new List<string>();
+            List<string> toggleNames = new List<string>() { "None" };
             foreach (Page page in preset.Pages)
             {
                 foreach (PageItem pageItem in page.Items)
@@ -395,30 +395,20 @@ public class InventoryPresetEditor : Editor
                     }
                 }
             }
-
-            if (remainingToggles.Count > 0)
+            // Display a dropdown selector for which toggle the item affects.
+            EditorGUI.BeginChangeCheck();
+            int itemIndex = EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) + 1 : 0, toggleNames.ToArray());
+            bool changed = EditorGUI.EndChangeCheck();
+            if (changed)
             {
-                // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null || !allToggles.Contains(item.Item))
-                {
-                    item.Item = remainingToggles[0];
-                }
+                PageItem selected = null;
+                if (itemIndex > 0)
+                    selected = allToggles[allToggles.IndexOf(remainingToggles[itemIndex - 1])];
 
-                // Display a dropdown selector for which toggle the item affects.
-                EditorGUI.BeginChangeCheck();
-                PageItem selected = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
-                if (EditorGUI.EndChangeCheck())
-                {
-                    // Mark the preset as dirty, record the item, and update it.
-                    EditorUtility.SetDirty(preset);
-                    Undo.RecordObject(item, "Group Modified");
-                    item.Item = selected;
-                }
-            }
-            else
-            {
-                // Display a placeholder dropdown selector.
-                EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), 0, new string[] { "None" });
+                // Mark the preset as dirty, record the item, and update it.
+                EditorUtility.SetDirty(preset);
+                Undo.RecordObject(item, "Group Modified");
+                item.Item = selected;
             }
 
             // Separator
@@ -569,7 +559,7 @@ public class InventoryPresetEditor : Editor
             // Create a list of all toggles, toggles not currently in the group, and the names of those later toggles.
             List<PageItem> allToggles = new List<PageItem>();
             List<PageItem> remainingToggles = new List<PageItem>();
-            List<string> toggleNames = new List<string>();
+            List<string> toggleNames = new List<string>() { "None" };
             foreach (Page page in preset.Pages)
             {
                 foreach (PageItem pageItem in page.Items)
@@ -587,30 +577,20 @@ public class InventoryPresetEditor : Editor
                     }
                 }
             }
-
-            if (remainingToggles.Count > 0)
+            // Display a dropdown selector for which toggle the item affects.
+            EditorGUI.BeginChangeCheck();
+            int itemIndex = EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) + 1 : 0, toggleNames.ToArray());
+            bool changed = EditorGUI.EndChangeCheck();
+            if (changed)
             {
-                // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null || !allToggles.Contains(item.Item))
-                {
-                    item.Item = remainingToggles[0];
-                }
+                PageItem selected = null;
+                if (itemIndex > 0)
+                    selected = allToggles[allToggles.IndexOf(remainingToggles[itemIndex - 1])];
 
-                // Display a dropdown selector for which toggle the item affects.
-                EditorGUI.BeginChangeCheck();
-                PageItem selected = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
-                if (EditorGUI.EndChangeCheck())
-                {
-                    // Mark the preset as dirty, record the item, and update it.
-                    EditorUtility.SetDirty(preset);
-                    Undo.RecordObject(item, "Group Modified");
-                    item.Item = selected;
-                }
-            }
-            else
-            {
-                // Display a placeholder dropdown selector.
-                EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), 0, new string[] { "None" });
+                // Mark the preset as dirty, record the item, and update it.
+                EditorUtility.SetDirty(preset);
+                Undo.RecordObject(item, "Group Modified");
+                item.Item = selected;
             }
 
             // Separator
@@ -760,7 +740,7 @@ public class InventoryPresetEditor : Editor
             // Create a list of all toggles, toggles not currently in the group, and the names of those later toggles.
             List<PageItem> allToggles = new List<PageItem>();
             List<PageItem> remainingToggles = new List<PageItem>();
-            List<string> toggleNames = new List<string>();
+            List<string> toggleNames = new List<string>() { "None" };
             foreach (Page page in preset.Pages)
             {
                 foreach (PageItem pageItem in page.Items)
@@ -778,30 +758,20 @@ public class InventoryPresetEditor : Editor
                     }
                 }
             }
-
-            if (remainingToggles.Count > 0)
+            // Display a dropdown selector for which toggle the item affects.
+            EditorGUI.BeginChangeCheck();
+            int itemIndex = EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) + 1 : 0, toggleNames.ToArray());
+            bool changed = EditorGUI.EndChangeCheck();
+            if (changed)
             {
-                // Set the item to use the first remaining toggle if it has none assigned.
-                if (item.Item == null || !allToggles.Contains(item.Item))
-                {
-                    item.Item = remainingToggles[0];
-                }
+                PageItem selected = null;
+                if (itemIndex > 0)
+                    selected = allToggles[allToggles.IndexOf(remainingToggles[itemIndex - 1])];
 
-                // Display a dropdown selector for which toggle the item affects.
-                EditorGUI.BeginChangeCheck();
-                PageItem selected = allToggles[allToggles.IndexOf(remainingToggles[EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), (remainingToggles.IndexOf(item.Item) != -1) ? remainingToggles.IndexOf(item.Item) : 0, toggleNames.ToArray())])];
-                if (EditorGUI.EndChangeCheck())
-                {
-                    // Mark the preset as dirty, record the item, and update it.
-                    EditorUtility.SetDirty(preset);
-                    Undo.RecordObject(item, "Group Modified");
-                    item.Item = selected;
-                }
-            }
-            else
-            {
-                // Display a placeholder dropdown selector.
-                EditorGUI.Popup(new Rect(rect.x, rect.y + (rect.height - 18f) / 2, (rect.width / 2) - 15f, rect.height), 0, new string[] { "None" });
+                // Mark the preset as dirty, record the item, and update it.
+                EditorUtility.SetDirty(preset);
+                Undo.RecordObject(item, "Group Modified");
+                item.Item = selected;
             }
 
             // Separator

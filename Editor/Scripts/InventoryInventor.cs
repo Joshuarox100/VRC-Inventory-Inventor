@@ -1366,7 +1366,7 @@ namespace InventoryInventor
                 for (int j = 0; j < items[i].EnableGroup.Length; j++)
                 {
                     // Catch faulty data
-                    if (items.IndexOf(items[i].EnableGroup[j].Item) == -1)
+                    if (items[i].EnableGroup[j].Item != null && items.IndexOf(items[i].EnableGroup[j].Item) == -1)
                     {
                         EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + "\'s Enable Group has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
                         Selection.activeObject = preset;
@@ -1499,7 +1499,7 @@ namespace InventoryInventor
                 for (int j = 0; j < items[i].DisableGroup.Length; j++)
                 {
                     // Catch faulty data
-                    if (items.IndexOf(items[i].DisableGroup[j].Item) == -1)
+                    if (items[i].DisableGroup[j].Item != null && items.IndexOf(items[i].DisableGroup[j].Item) == -1)
                     {
                         EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + "\'s Disable Group has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
                         Selection.activeObject = preset;
@@ -1620,7 +1620,7 @@ namespace InventoryInventor
                 for (int j = 0; j < buttons[i].ButtonGroup.Length; j++)
                 {
                     // Catch faulty data
-                    if (items.IndexOf(buttons[i].ButtonGroup[j].Item) == -1)
+                    if (buttons[i].ButtonGroup[j] != null && items.IndexOf(buttons[i].ButtonGroup[j].Item) == -1)
                     {
                         EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
                         Selection.activeObject = preset;
