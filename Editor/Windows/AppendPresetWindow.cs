@@ -169,10 +169,8 @@ namespace InventoryInventor.Preset
                     }
                 }
             }
-            preset.Pages.AddRange(newPages);
 
             // Correct references
-            
             foreach (Page page in newPages)
             {
                 foreach (PageItem item in page.Items)
@@ -187,7 +185,28 @@ namespace InventoryInventor.Preset
                 }
             }
 
+            // Deal with Pages with the same name
+            List<string> oldNames = new List<string>();
+            foreach (Page page in preset.Pages)
+                oldNames.Add(page.name);
+            for (int i = 0; i < newPages.Count; i++)
+            {
+                List<string> newNames = new List<string>();
+                foreach (Page newPage in newPages)
+                    if (newPage != newPages[i])
+                        newNames.Add(newPage.name);
+                if (oldNames.Contains(newPages[i].name) || newNames.Contains(newPages[i].name))
+                {
+                    int occurance = 0;
+                    while (oldNames.Contains(newPages[i].name + " " + occurance) || newNames.Contains(newPages[i].name + " " + occurance))
+                        occurance++;
+                    newPages[i].name = newPages[i].name + " " + occurance;
+                }
+            }
+                
+
             // Save changes
+            preset.Pages.AddRange(newPages);
             InventoryPresetUtility.SaveChanges(preset);
             if (Instance != null)
                 Instance.Close();
