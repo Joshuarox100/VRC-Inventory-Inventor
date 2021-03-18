@@ -207,6 +207,10 @@ public class InventoryPresetEditor : Editor
                             ShowItemContextMenu(index, index2);
                         }
                     };
+                    innerList.drawNoneElementCallback += (Rect rect2) =>
+                    {
+                        EditorGUI.LabelField(rect2, "Page is Empty");
+                    };
                     innerList.onAddCallback += (ReorderableList list2) =>
                     {
                         // Continue if there is less than eight items on the page.
