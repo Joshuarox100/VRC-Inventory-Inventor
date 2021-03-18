@@ -18,6 +18,10 @@ namespace InventoryInventor.Settings
 
         [SerializeField]
         [HideInInspector]
+        private bool m_AllowInvalid;
+
+        [SerializeField]
+        [HideInInspector]
         private string m_DefaultPath;
 
         [SerializeField]
@@ -49,6 +53,7 @@ namespace InventoryInventor.Settings
             {
                 settings = CreateInstance<InventorSettings>();
                 settings.m_AutoUpdate = true;
+                settings.m_AllowInvalid = false;
                 settings.m_DefaultPath = settingsPath.Substring(0, settingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
                 settings.m_LastPath = settings.m_DefaultPath;
                 AssetDatabase.CreateAsset(settings, settingsPath);
@@ -76,8 +81,9 @@ namespace InventoryInventor.Settings
 
         class Styles
         {
-            public static GUIContent autoUpdate = new GUIContent("Automatic Update Checker");
-            public static GUIContent defaultPath = new GUIContent("Default Output Destination");
+            public static GUIContent autoUpdate = new GUIContent("Automatic Update Checker", "Check for updates whenever Unity starts.");
+            public static GUIContent allowInvalid = new GUIContent("Allow Invalid Animations", "Skip the check for invalid Animation properties when applying Presets.");
+            public static GUIContent defaultPath = new GUIContent("Default Output Destination", "The default output location the Manager will fallback on when it is unable to use the provided location.");
             public static GUIContent upgradeButton = new GUIContent("Upgrade All Old Presets");
         }
 
@@ -105,6 +111,14 @@ namespace InventoryInventor.Settings
             EditorGUILayout.LabelField(Styles.autoUpdate, new GUILayoutOption[] { GUILayout.MinWidth(160f) });
             m_InventorSettings.FindProperty("m_AutoUpdate").boolValue = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!m_InventorSettings.FindProperty("m_AutoUpdate").boolValue), new string[] { "Yes", "No" }, new GUILayoutOption[] { GUILayout.MinWidth(128f), GUILayout.MaxWidth(384f) }));
             EditorGUILayout.EndHorizontal();
+            GUILayout.Space(2);
+
+            // Auto Update
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(Styles.allowInvalid, new GUILayoutOption[] { GUILayout.MinWidth(160f) });
+            m_InventorSettings.FindProperty("m_AllowInvalid").boolValue = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!m_InventorSettings.FindProperty("m_AllowInvalid").boolValue), new string[] { "Yes", "No" }, new GUILayoutOption[] { GUILayout.MinWidth(128f), GUILayout.MaxWidth(384f) }));
+            EditorGUILayout.EndHorizontal();
+            GUILayout.Space(4);
 
             // Default Path
             EditorGUILayout.BeginHorizontal();
@@ -114,9 +128,9 @@ namespace InventoryInventor.Settings
             if (EditorGUI.EndChangeCheck() && !m_InventorSettings.FindProperty("m_DefaultPath").stringValue.StartsWith("Assets"))
                 m_InventorSettings.FindProperty("m_DefaultPath").stringValue = k_InventorSettingsPath.Substring(0, k_InventorSettingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
             // Upgrade All
-            EditorGUILayout.Space();
             DrawLine(false);
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();

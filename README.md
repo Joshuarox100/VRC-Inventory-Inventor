@@ -212,6 +212,20 @@ Any layers or parameters that will be removed from the provided Controller durin
 | Remove Parameters | Remove all parameters involved with the Inventory<br>(If you have other parameters named "Inventory ###", they will also be removed). |
 | Include Expression | (When using Remove Parameters,) also remove Expression Parameters related to the removed parameters if they exist. |
 
+## Available Settings
+<p align="center">
+  <img width="80%" height="80%" src="Images/Other/Settings.png">
+</p>
+
+Inventory Inventor has a few persistent settings and options you can access within Project Settings ('Edit -> Project Settings').
+
+| Setting | Description |
+| :----: | ------ |
+| Automatic Update Checker | Check for updates whenever Unity starts. If an update is found, you can choose to download and install it automatically. |
+| Allow Transforms | Skips the check for invalid Animation properties.<br>(Can result in unintended behavior. Only use if you know what you're doing.) |
+| Default Output Path | The default output location the Manager will fallback on when it is unable to use the provided location.<br>(Must be located within the Assets folder.) |
+| Upgrade All Old Presets | Automatically search for and upgrade any and all older Presets found within the Project. |
+
 ## Common Questions
 **Can I have multiple Inventories on a single Avatar?**
 >Not at the moment. I don't really plan or see the need for this feature, but if I see demand for it I will supply.

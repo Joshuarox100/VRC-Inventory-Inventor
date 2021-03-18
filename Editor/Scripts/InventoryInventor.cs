@@ -29,7 +29,6 @@ namespace InventoryInventor
         public float refreshRate = 0.05f;
         public bool removeParameters = false;
         public bool removeExpParams = false;
-        public bool allowTransforms = false;
 
         // Path related.
         public string relativePath;
@@ -127,17 +126,17 @@ namespace InventoryInventor
                         switch (item.Type)
                         {
                             case PageItem.ItemType.Toggle:
-                                if (item.UseAnimations && !allowTransforms)
+                                if (item.UseAnimations && InventorSettings.GetSerializedSettings().FindProperty("m_AllowInvalid").boolValue)
                                 {
                                     if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
                                     {
-                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Transforms\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
                                         Selection.activeObject = item.EnableClip;
                                         return;
                                     }
                                     if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
                                     {
-                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Transforms\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
+                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
                                         Selection.activeObject = item.DisableClip;
                                         return;
                                     }

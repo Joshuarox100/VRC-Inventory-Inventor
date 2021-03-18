@@ -17,7 +17,7 @@ namespace InventoryInventor
         private readonly Manager manager = new Manager();
 
         // Window Size.
-        private Rect windowSize = new Rect(0, 0, 375f, 370f);
+        private Rect windowSize = new Rect(0, 0, 375f, 350f);
 
         // Various Trackers.
         private int windowTab;
@@ -30,14 +30,14 @@ namespace InventoryInventor
         private List<bool> expression;
 
         // Colors
-        private readonly static Color32 navy = new Color32(143, 0, 254, 255);
+        private readonly static Color32 navy = new Color32(143, 0, 254, 255);   
 
         [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory", priority = 0)]
         public static void ManageInventory()
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
             window.manager.outputPath = InventorSettings.GetSerializedSettings().FindProperty("m_LastPath").stringValue;
-            window.minSize = new Vector2(375f, 375f);
+            window.minSize = new Vector2(375f, 355f);
             window.wantsMouseMove = true;
             window.Show();
         }
@@ -138,11 +138,6 @@ namespace InventoryInventor
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             // Preset
             manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
-            // Allow Transforms.
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel(new GUIContent("Allow Transforms", "Skips the check for invalid Animation properties.\n(Can result in unintended behavior)"));
-            manager.allowTransforms = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!manager.allowTransforms), new string[] { "Yes", "No" }));
-            EditorGUILayout.EndHorizontal();
             // Refresh Rate
             manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
             EditorGUILayout.EndVertical();
