@@ -18,7 +18,7 @@ Before following these steps, set up your Avatar how you normally would and ensu
 
 2) Then use the manager to apply your Preset as described in [Using the Manager](#using-the-manager).
 
-If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there are a few example Scenes and Presets you can reference in the 'Examples' folder. Additionally, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
+If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there are a few example Scenes and Presets you can reference in the 'Examples' folder. There are also some [additional settings](#additional-settings) you can adjust. Furthermore, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
 ## Creating a Preset
 To add an Inventory to an Avatar, you first need to create a Preset!
@@ -212,7 +212,7 @@ Any layers or parameters that will be removed from the provided Controller durin
 | Remove Parameters | Remove all parameters involved with the Inventory<br>(If you have other parameters named "Inventory ###", they will also be removed). |
 | Include Expression | (When using Remove Parameters,) also remove Expression Parameters related to the removed parameters if they exist. |
 
-## Available Settings
+## Additional Settings
 <p align="center">
   <img width="80%" height="80%" src="Images/Other/Settings.png">
 </p>
