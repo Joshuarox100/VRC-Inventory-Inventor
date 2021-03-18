@@ -263,51 +263,76 @@ namespace InventoryInventor
             // Preview of items that will be removed.
             EditorGUILayout.LabelField("Will Be Removed", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUILayout.BeginVertical(GUILayout.Width(155f));
-            if (layers.Count > 0)
+            if (layers.Count > 0 || parameters.Count > 0)
             {
-                EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel, GUILayout.Width(155f));
-                foreach (AnimatorControllerLayer layer in layers)
+                var topR = EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(4);
+                if (layers.Count > 0)
+                    EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel, GUILayout.Width(155f));
+                if (parameters.Count > 0)
                 {
-                    // Separator
-                    var rect = EditorGUILayout.BeginHorizontal();
                     Handles.color = Color.gray;
-                    Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
-                    EditorGUILayout.EndHorizontal();
-
-                    EditorGUILayout.LabelField(layer.name, GUILayout.Width(155f));
+                    Handles.DrawLine(new Vector2(topR.x + (topR.width / 2) - 17, topR.y), new Vector2(topR.x + (topR.width / 2) - 17, topR.y + topR.height));
+                    GUILayout.Space(4);
+                    EditorGUILayout.LabelField("Parameters", EditorStyles.boldLabel, GUILayout.Width(155f));
                 }
-                EditorGUILayout.Space();
-            }
-            EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
+                // Separator
+                var r = EditorGUILayout.BeginHorizontal();
+                Handles.color = Color.gray;
+                Handles.DrawLine(new Vector2(r.x, r.y + 1), new Vector2(r.x + r.width + 5f, r.y + 1));
+                EditorGUILayout.EndHorizontal();
 
-            // Separator
-            var midRect = EditorGUILayout.BeginVertical(GUILayout.Width(155f));
-            Handles.color = Color.gray;
-            Handles.DrawLine(new Vector2(midRect.x, midRect.y), new Vector2(midRect.x, midRect.y + midRect.height));
+                scroll = EditorGUILayout.BeginScrollView(scroll);
+                EditorGUILayout.BeginHorizontal();
 
-            if (parameters.Count > 0)
-            {
-                EditorGUILayout.LabelField("Parameters", EditorStyles.boldLabel, GUILayout.Width(155f));
-                foreach (AnimatorControllerParameter parameter in parameters)
+                EditorGUILayout.BeginVertical(GUILayout.Width(155f));
+                if (layers.Count > 0)
                 {
-                    // Separator
-                    var rect = EditorGUILayout.BeginHorizontal();
-                    Handles.color = Color.gray;
-                    Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
-                    EditorGUILayout.EndHorizontal();
+                    for (int i = 0; i < layers.Count; i++)
+                    {
+                        // Separator
+                        if (i != 0)
+                        {
+                            var rect = EditorGUILayout.BeginHorizontal();
+                            Handles.color = Color.gray;
+                            Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                            EditorGUILayout.EndHorizontal();
+                        }
 
-                    EditorGUILayout.LabelField(parameter.name, GUILayout.Width(155f));
+                        EditorGUILayout.LabelField(layers[i].name, GUILayout.Width(155f));
+                    }
+                    EditorGUILayout.Space();
                 }
-            }
-            EditorGUILayout.EndVertical();
+                EditorGUILayout.EndVertical();
 
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndScrollView();
-            if (layers.Count == 0 && parameters.Count == 0)
+                // Separator
+                var midRect = EditorGUILayout.BeginVertical(GUILayout.Width(155f));
+                Handles.color = Color.gray;
+                Handles.DrawLine(new Vector2(midRect.x, midRect.y), new Vector2(midRect.x, midRect.y + midRect.height));
+
+                if (parameters.Count > 0)
+                {
+                    for (int i = 0; i < parameters.Count; i++)
+                    {
+                        // Separator
+                        if (i != 0)
+                        {
+                            var rect = EditorGUILayout.BeginHorizontal();
+                            Handles.color = Color.gray;
+                            Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.x + rect.width + 5f, rect.y + 1));
+                            EditorGUILayout.EndHorizontal();
+                        }
+
+                        EditorGUILayout.LabelField(parameters[i].name, GUILayout.Width(155f));
+                    }
+                }
+                EditorGUILayout.EndVertical();
+
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndScrollView();
+            }
+            else
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginHorizontal();
@@ -315,12 +340,8 @@ namespace InventoryInventor
                 EditorGUILayout.LabelField("<i>No Inventory Detected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
-                GUILayout.FlexibleSpace();
             }
-            else
-            {
-                GUILayout.FlexibleSpace();
-            }
+            GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
             DrawLine();
