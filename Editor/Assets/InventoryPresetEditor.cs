@@ -128,7 +128,8 @@ public class InventoryPresetEditor : Editor
                 nameSize = new GUIStyle().CalcSize(new GUIContent(displayedName + ((index == 0) ? " (Default)" : "")));
                 width--;
             }
-            pagesFoldout[index] = EditorGUI.Foldout(new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, rect.width, 18f), pagesFoldout[index], displayedName + ((index == 0) ? " (Default)" : ""));
+            Rect foldoutRect = new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, 0f, 18f);
+            pagesFoldout[index] = EditorGUI.Foldout(foldoutRect, pagesFoldout[index], displayedName + ((index == 0) ? " (Default)" : ""));
 
             if (pagesFoldout[index] && !draggingPage)
             {
