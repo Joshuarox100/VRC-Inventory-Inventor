@@ -190,7 +190,6 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 | Expressions Menu | The Expressions Menu you want to access the Inventory from. Leave this empty if you don't want any menus to be affected.<br>(Will be added as a Submenu.) |
 | Animator Controller | The Animator Controller to modify.<br>(If left empty, a new Animator Controller will be created and used.) |
 | Preset | The Preset you want to apply to the Avatar. |
-| Allow Transforms | Skips the check for invalid Animation properties.<br>(Can result in unintended behavior. Only use if you know what you're doing.) |
 | Refresh Rate | How long each synced toggle is given to synchronize with late joiners (seconds per item). |
 | Destination | The folder where generated files will be saved to. |
 | Overwrite All | Automatically overwrite existing files and parameters if needed. |
