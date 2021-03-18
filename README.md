@@ -9,7 +9,7 @@ Dependencies:
 
 ## Installation Guide
 Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
-> **Do NOT download and try to use the source code on its own from the main page. It will not compile correctly unless you download BMB Libraries and you will also be missing other minor files.**
+> **Do NOT download and try to use the source code on its own from the main page. You will encounter unintended behavior.**
 
 ## How to Use
 Before following these steps, set up your Avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
@@ -18,7 +18,7 @@ Before following these steps, set up your Avatar how you normally would and ensu
 
 2) Then use the manager to apply your Preset as described in [Using the Manager](#using-the-manager).
 
-If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there is an example Scene and Preset you can reference in the 'Example' folder. Additionally, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
+If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there are a few example Scenes and Presets you can reference in the 'Examples' folder. Additionally, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
 ## Creating a Preset
 To add an Inventory to an Avatar, you first need to create a Preset!
@@ -80,6 +80,26 @@ All Pages can contain up to 8 different [Items](#items) used for toggling object
 #### Default
 The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
+#### Creating Pages
+Aside from the obvious button for creating a Page, there are two other methods of adding Pages to a Preset: importing existing menus or appending another Preset. Both of these additional options can be opened by clicking the plus icon on the right side of the 'Create Page' button.
+
+##### Importing Existing Menus
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Pages/Import.png">
+</p>
+
+This option allows you to import an existing VRC Expressions Menu into the Preset as a unique Page. This will be commonly used when you want to add a menu someone else has created inside of a Preset. All [Items](#items) within these Pages will automatically be set as [Controls](#control) with their existing settings. If you use 'Import Submenus', any submenus found within the menu will be imported as well and any items directing to them will be configured as [Subpages](#subpage). 
+
+##### Appending Another Preset
+<p align="center">
+  <img width="80%" height="80%" src="Images/Preset/Pages/Append.png">
+</p>
+
+This option allows you to add Pages from another Preset. After selecting a Preset, you can choose which Pages you want to append from it. If a appended Page contains a [Subpage Item](#subpage) that directs to a Page that was not added, it will instead redirect to the first Page of the Preset it was added to. If an appended Page shares the name of an already existing Page, the new Page will be renamed as described earlier.
+
+#### Removing Pages
+To remove a Page, simply select the Page you want to delete in the Directory and click the 'Remove Page' button.
+
 ### Items
 <p align="center">
   <img width="80%" height="80%" src="Images/Preset/Items/Overview.png">
@@ -110,7 +130,7 @@ Toggles can be used to toggle between two Animations and can be configured in se
   <img width="80%" height="80%" src="Images/Preset/Items/Button.png">
 </p>
 
-Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific outfits quickly, and are more data-efficient than using [Groups](#groups) on [Toggles](#toggle). Buttons will set the state of items every time they are activated.
+Button Items act like one-way [Groups](#groups). They can usually be used for switching to specific Item configurations quickly, and are more data-efficient than using [Groups](#groups) on [Toggles](#toggle). Buttons will set the state of Items the same way every time they are activated.
 
 #### Subpage
 <p align="center">
@@ -138,13 +158,13 @@ Every member contained within a Group can be either enabled or disabled upon the
 ### Tips
 Here are some things you should keep in mind as you create your Preset.
 
-1. The Animations you use for [Toggles](#toggle) must be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar.
+1. The Animations you use for [Toggles](#toggle) should be usable in the FX layer. If they're not compatible, you will receive an error when applying the Preset to an Avatar. If you know what you're doing, you can hide this error using the 'Allow Transforms' option in the [Manager](#using-the-manager).
 
 2. Any [Pages](#pages) that exist in the Preset but don't have a way to be accessed will still be created when the Preset is applied to an Avatar. You can then take the menus for these [Pages](#pages) and put them elsewhere on your Avatar if you wish.
 
 3. If you want to trigger something else with a [Toggle](#toggle) that isn't part of the Preset, you can have an empty [Toggle](#toggle) and use its layer's values elsewhere.
 
-4. Because of how ScripatbleObjects in Unity work, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a [Toggle](#toggle) was using from your right hand to your left, you will need to reassign that object to the [Toggle](#toggle).
+4. Because of how Unity works, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a [Toggle](#toggle) was using from your right hand to your left, you will need to reassign that object to the [Toggle](#toggle).
 
 ## Using the Manager
 The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
@@ -168,6 +188,7 @@ The 'Create' menu is used for creating an Inventory from a given Preset and appl
 | Expressions Menu | The Expressions Menu you want to access the Inventory from. Leave this empty if you don't want any menus to be affected.<br>(Will be added as a Submenu.) |
 | Animator Controller | The Animator Controller to modify.<br>(If left empty, a new Animator Controller will be created and used.) |
 | Preset | The Preset you want to apply to the Avatar. |
+| Allow Transforms | Skips the check for invalid Animation properties.<br>(Can result in unintended behavior. Only use if you know what you're doing.) |
 | Refresh Rate | How long each synced toggle is given to synchronize with late joiners (seconds per item). |
 | Destination | The folder where generated files will be saved to. |
 | Overwrite All | Automatically overwrite existing files and parameters if needed. |
