@@ -28,6 +28,10 @@ namespace InventoryInventor.Settings
         [HideInInspector]
         private string m_LastPath;
 
+        [SerializeField]
+        [HideInInspector]
+        private bool m_Updating;
+
         internal static string GetSettingsPath()
         {
             string filter = "InventoryInventor";
@@ -56,6 +60,9 @@ namespace InventoryInventor.Settings
                 settings.m_AllowInvalid = false;
                 settings.m_DefaultPath = settingsPath.Substring(0, settingsPath.LastIndexOf("Editor") - 1) + Path.DirectorySeparatorChar + "Output";
                 settings.m_LastPath = settings.m_DefaultPath;
+                settings.m_Updating = false;
+                // Throwaway line to stop compiler warning for unused variable. (Short circuits on first condition).
+                if (settings.m_AllowInvalid && settings.m_AutoUpdate && settings.m_Updating && settings.m_LastPath == "") { }
                 AssetDatabase.CreateAsset(settings, settingsPath);
                 AssetDatabase.SaveAssets();
             }

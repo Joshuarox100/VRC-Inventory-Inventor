@@ -14,6 +14,7 @@ namespace InventoryInventor.Version
     public class AutoUpdater : ScriptableObject
     {
         static AutoUpdater m_Instance = null;
+
         static AutoUpdater()
         {
             EditorApplication.update += OnInit;
@@ -96,7 +97,7 @@ namespace InventoryInventor.Version
         }
 
         // Gets the path to the settings asset
-        private static string GetSettingsPath()
+        public static string GetSettingsPath()
         {
             string filter = "InventoryInventor";
             string[] guids = AssetDatabase.FindAssets(filter);
@@ -114,10 +115,11 @@ namespace InventoryInventor.Version
         }
 
         // Compares the VERSION file present to the one on GitHub to see if a newer version is available.
-        public static void CheckForUpdates(bool auto = false)
+        public static bool CheckForUpdates(bool auto = false)
         {
             // Read VERSION file.
             string installedVersion = GetVersion();
+            bool updated = false;
 
             // Create hidden object to run the coroutine.
             GameObject temp = new GameObject { hideFlags = HideFlags.HideInHierarchy };
@@ -147,6 +149,7 @@ namespace InventoryInventor.Version
                     {
                         // Download the update.
                         DownloadUpdate(latestVersion);
+                        updated = true;
                     }
                 }
                 // Using latest version.
@@ -156,6 +159,7 @@ namespace InventoryInventor.Version
                 }
                 DestroyImmediate(temp);
             }));
+            return updated;
         }
 
         // Downloads and installs a given version of the package.
@@ -185,15 +189,15 @@ namespace InventoryInventor.Version
                     {
                         // Store the current settings
                         string path = GetSettingsPath();
+                        string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
                         bool foundSettings = false;
                         if (File.Exists(path))
                         {
-                            File.Copy(path, $"{ Application.persistentDataPath}/Files/SETTINGS.asset");
+                            AssetDatabase.MoveAsset(path, mainPath + "/SETTINGS.asset");
                             foundSettings = true;
                         }
 
                         // Delete the previous version
-                        string mainPath = path.Substring(0, path.LastIndexOf("Editor") - 1);
                         DeleteCurrentVersion(mainPath);
 
                         // Import and delete the downloaded package
@@ -205,17 +209,16 @@ namespace InventoryInventor.Version
                         {
                             if (!Directory.Exists(mainPath + "/Editor"))
                                 Directory.CreateDirectory(mainPath + "/Editor");
-                            File.Copy($"{ Application.persistentDataPath}/Files/SETTINGS.asset", path);
-                            File.Delete($"{ Application.persistentDataPath}/Files/SETTINGS.asset");
+                            AssetDatabase.MoveAsset(mainPath + "/SETTINGS.asset", path);
+
+                            // Enable Updating Flag
+                            var settings = InventorSettings.GetSerializedSettings();
+                            settings.FindProperty("m_Updating").boolValue = true;
+                            settings.ApplyModifiedProperties();
                         }
 
-                        // Upgrade Presets
-                        if (Type.GetType("InventoryPresetUtility") != null && Type.GetType("InventoryPresetUtility").GetMethod("UpgradeAll") != null)
-                            InventoryPresetUtility.UpgradeAll(false);
-
-                        // Display Changes
-                        if (File.Exists(mainPath + "/CHANGES.md"))
-                            Selection.activeObject = (TextAsset)AssetDatabase.LoadAssetAtPath(mainPath + "/CHANGES.md", typeof(TextAsset));
+                        // Refresh the Database
+                        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
                     }
                     else
                         EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");
@@ -245,6 +248,40 @@ namespace InventoryInventor.Version
                     Directory.Delete(folder, true);
                     break;
                 }
+        }
+
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            if (InventorSettings.GetSerializedSettings().FindProperty("m_Updating").boolValue)
+            {
+                // Get Main Path
+                string mainPath = GetSettingsPath().Substring(0, GetSettingsPath().LastIndexOf("Editor") - 1);
+
+                // Upgrade Presets
+                InventoryPresetUtility.UpgradeAll(false);
+
+                // Display Changes
+                if (File.Exists(mainPath + "/CHANGES.md"))
+                    EditorApplication.update += OnUpdatedUpdate;
+
+                // Disable Updating Flag
+                var settings = InventorSettings.GetSerializedSettings();
+                settings.FindProperty("m_Updating").boolValue = false;
+                settings.ApplyModifiedProperties();
+            }
+        }
+
+        private static void OnUpdatedUpdate()
+        {
+            // Get Main Path
+            string mainPath = GetSettingsPath().Substring(0, GetSettingsPath().LastIndexOf("Editor") - 1);
+
+            // Display Changes
+            Selection.activeObject = (TextAsset)AssetDatabase.LoadAssetAtPath(mainPath + "/CHANGES.md", typeof(TextAsset));
+
+            if (Selection.activeObject.name == "CHANGES")
+                EditorApplication.update -= OnUpdatedUpdate;
         }
     }
 }
