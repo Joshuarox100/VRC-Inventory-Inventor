@@ -213,12 +213,9 @@ namespace InventoryInventor.Version
                         if (Type.GetType("InventoryPresetUtility") != null && Type.GetType("InventoryPresetUtility").GetMethod("UpgradeAll") != null)
                             InventoryPresetUtility.UpgradeAll(false);
 
-                        // Refresh database
-                        AssetDatabase.Refresh();
-
                         // Display Changes
                         if (File.Exists(mainPath + "/CHANGES.md"))
-                            Selection.activeObject = AssetDatabase.LoadAssetAtPath(mainPath + "/CHANGES.md", typeof(File));
+                            Selection.activeObject = (TextAsset)AssetDatabase.LoadAssetAtPath(mainPath + "/CHANGES.md", typeof(TextAsset));
                     }
                     else
                         EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");
