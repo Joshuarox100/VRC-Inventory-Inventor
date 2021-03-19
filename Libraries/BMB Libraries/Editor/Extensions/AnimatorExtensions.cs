@@ -2,7 +2,7 @@
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace InventoryInventor.BMBLibraries
+namespace InventoryInventor.Libraries.BMBLibraries
 {
     namespace Extensions
     {

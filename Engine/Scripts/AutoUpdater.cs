@@ -215,6 +215,10 @@ namespace InventoryInventor.Version
 
                         // Refresh database
                         AssetDatabase.Refresh();
+
+                        // Display Changes
+                        if (File.Exists(mainPath + "/CHANGES.md"))
+                            Selection.activeObject = AssetDatabase.LoadAssetAtPath(mainPath + "/CHANGES.md", typeof(File));
                     }
                     else
                         EditorUtility.DisplayDialog("Inventory Inventor", "Failed to install the latest version.\n(File could not be found.)", "Close");

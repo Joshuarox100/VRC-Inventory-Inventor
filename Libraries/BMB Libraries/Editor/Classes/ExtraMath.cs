@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace InventoryInventor.BMBLibraries
+namespace InventoryInventor.Libraries.BMBLibraries
 {
     namespace Classes
     {

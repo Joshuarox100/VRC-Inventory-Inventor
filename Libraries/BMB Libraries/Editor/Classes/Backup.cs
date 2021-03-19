@@ -3,7 +3,7 @@ using System.IO;
 using UnityEditor.VersionControl;
 using UnityEngine;
 
-namespace InventoryInventor.BMBLibraries
+namespace InventoryInventor.Libraries.BMBLibraries
 {
     namespace Classes
     {
