@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using InventoryInventor.Preset;
 
 [CustomEditor(typeof(GroupItem))]
 public class GroupItemEditor : Editor
