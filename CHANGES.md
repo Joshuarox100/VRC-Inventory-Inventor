@@ -48,7 +48,7 @@ There have been many additions and changes relating to Presets such as the abili
 	- One of the Presets, 'Tutorial', featured in the README's screenshots is now included.
 
 ## Changes
-- **Overall**
+- **General**
 	- Swapped the placement of Yes/No options to be consistent with the rest of the tool and Unity as a whole (sorry for ruining your muscle memory).
 	- Code has been further divided into separate files to improve readability.
 - **File Structure**
