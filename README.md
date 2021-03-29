@@ -20,6 +20,8 @@ Before following these steps, set up your Avatar how you normally would and ensu
 
 If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there are a few example Scenes and Presets you can reference in the 'Examples' folder. There are also some [additional settings](#additional-settings) you can adjust. Furthermore, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
+Additionally, I have made a tutorial video covering much of the basics for using Inventory Inventor, which you can watch [here](https://youtu.be/KSkQnb4q1sA)!
+
 ## Creating a Preset
 To add an Inventory to an Avatar, you first need to create a Preset!
 
