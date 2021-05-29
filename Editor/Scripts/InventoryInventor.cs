@@ -1007,7 +1007,20 @@ namespace InventoryInventor
                 List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
 
                 // Disabled state.
-                Helper.ChangeState(templateMachine.states[0].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].DisableClip);
+                AnimationClip toggleClip = !items[i].UseAnimations ? null : items[i].DisableClip;
+                if (!items[i].UseAnimations && !items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null)
+                {
+                    foreach (string guid in AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }))
+                    {
+                        AnimationClip tempClip = (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(AnimationClip));
+                        if (tempClip.name == avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off")
+                        {
+                            toggleClip = tempClip;
+                            break;
+                        }
+                    }
+                }
+                Helper.ChangeState(templateMachine.states[0].state, toggleClip);
                 ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
                 ((VRCAvatarParameterDriver)templateMachine.states[0].state.behaviours[0]).parameters[0].value = 0;
 
@@ -1034,7 +1047,23 @@ namespace InventoryInventor
                 }
 
                 // Enabled state.
-                Helper.ChangeState(templateMachine.states[1].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : null) : items[i].EnableClip);
+                toggleClip = !items[i].UseAnimations ? null : items[i].EnableClip;
+                //Debug.Log(items[i].ObjectReference + " | " + (avatar.transform.Find(items[i].ObjectReference) != null ? avatar.transform.Find(items[i].ObjectReference).gameObject.name : "NOT_FOUND") + "\n" + "UseAnims = " + items[i].UseAnimations + " | RefNull = " + items[i].ObjectReference.Equals("") + " | Exists = " + (avatar.transform.Find(items[i].ObjectReference) != null));
+                if (!items[i].UseAnimations && !items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null)
+                {
+                    //Debug.Log(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }).Length);
+                    foreach (string guid in AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }))
+                    {
+                        AnimationClip tempClip = (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(AnimationClip));
+                        //Debug.Log(items[i].ObjectReference + " | " + avatar.transform.Find(items[i].ObjectReference).gameObject.name + " : " + tempClip.name);
+                        if (tempClip.name == avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On")
+                        {
+                            toggleClip = tempClip;
+                            break;
+                        }
+                    }
+                }
+                Helper.ChangeState(templateMachine.states[1].state, toggleClip);
                 ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].name = "Inventory " + (i + 1);
                 ((VRCAvatarParameterDriver)templateMachine.states[1].state.behaviours[0]).parameters[0].value = 1;
 
@@ -1061,7 +1090,20 @@ namespace InventoryInventor
                 }
 
                 // Idle state.
-                Helper.ChangeState(templateMachine.states[2].state, !items[i].UseAnimations ? (!items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null ? (items[i].InitialState ? (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip)) : (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" })[0]), typeof(AnimationClip))) : null) : (items[i].InitialState ? items[i].EnableClip : items[i].DisableClip));
+                toggleClip = !items[i].UseAnimations ? null : items[i].InitialState ? items[i].EnableClip : items[i].DisableClip;
+                if (!items[i].UseAnimations && !items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null)
+                {
+                    foreach (string guid in items[i].InitialState ? AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }) : AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }))
+                    {
+                        AnimationClip tempClip = (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(AnimationClip));
+                        if (tempClip.name == (items[i].InitialState ? avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On" : avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_Off"))
+                        {
+                            toggleClip = tempClip;
+                            break;
+                        }
+                    }
+                }
+                Helper.ChangeState(templateMachine.states[2].state, toggleClip);
                 templateMachine.states[2].state.transitions = new AnimatorStateTransition[0];
                 AnimatorStateTransition idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[0].state, false);
                 idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory " + (i + 1));

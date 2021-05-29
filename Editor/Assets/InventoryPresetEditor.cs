@@ -1036,7 +1036,7 @@ public class InventoryPresetEditor : Editor
                                 savedUsage++;
                                 if (avatar != null)
                                 {
-                                    if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                                    if (avatar.expressionParameters != null && avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
                                         totalMemory--;
                                     totalMemory++;
                                 }
@@ -1115,7 +1115,7 @@ public class InventoryPresetEditor : Editor
         GUIStyle barUnderStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
         if (savedUsage > 120)
             barUnderStyle.normal.background = barColors[1];
-        else if (avatar != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+        else if (avatar != null && avatar.expressionParameters != null &&  avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
             barUnderStyle.normal.background = barColors[0];
         else
             barUnderStyle.normal.background = barColors[2];
@@ -1143,7 +1143,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.HelpBox("This preset exceeds the maximum amount of data usable.", MessageType.Error);
         if (savedUsage + 8 > VRCExpressionParameters.MAX_PARAMETER_COST)
             EditorGUILayout.HelpBox("This preset uses more memory than the amount possible available on an Avatar (" + (savedUsage + 8) + "/" + 128 + " bits).", MessageType.Error);
-        else if (avatar != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+        else if (avatar != null && avatar.expressionParameters != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
             EditorGUILayout.HelpBox("This preset uses more memory than is available on the Active Avatar (" + totalMemory + "/" + (VRCExpressionParameters.MAX_PARAMETER_COST - avatar.expressionParameters.CalcTotalCost()) + " bits).", MessageType.Warning);
         EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
         EditorGUI.indentLevel++;
