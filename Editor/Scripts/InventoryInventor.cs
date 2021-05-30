@@ -115,9 +115,38 @@ namespace InventoryInventor
                     expParamNames.Add("Inventory");
                 }
 
+                // Check for loaded parameter
+
+                if (avatar.expressionParameters.FindParameter("Inventory Loaded") == null)
+                {
+                    expParamNames.Add("Inventory Loaded");
+                    neededMem += 1;
+                }
+                else if (avatar.expressionParameters.FindParameter("Inventory Loaded").valueType != VRCExpressionParameters.ValueType.Bool)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Expression Parameter \"Inventory Loaded\" is present with the wrong type.", "Close");
+                    Selection.activeObject = avatar.expressionParameters;
+                    return;
+                }
+                else
+                {
+                    if (!autoOverwrite)
+                    {
+                        if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory Loaded\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
+                            Selection.activeObject = avatar.expressionParameters;
+                            return;
+                        }
+                    }
+                    delParamNames.Add("Inventory Loaded");
+                    expParamNames.Add("Inventory Loaded");
+                }
+
                 // Check that no Animations modify a humanoid rig or Transform.
                 totalToggles = 0;
                 int totalUsage = 1;
+                List<string> savedToggles = new List<string>();
 
                 foreach (Page page in preset.Pages)
                 {
@@ -179,6 +208,7 @@ namespace InventoryInventor
                                         neededMem--;
                                     }
                                     expParamNames.Add("Inventory " + totalToggles);
+                                    savedToggles.Add("Inventory " + totalToggles);
                                     neededMem++;
                                 }
                                 else if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
@@ -194,6 +224,7 @@ namespace InventoryInventor
                                     delParamNames.Add("Inventory " + totalToggles);
                                     neededMem--;
                                 }
+
                                 break;
                             case PageItem.ItemType.Button:
                                 totalUsage++;
@@ -394,7 +425,7 @@ namespace InventoryInventor
                 AnimatorControllerParameter[] srcParam = newAnimator.parameters;
 
                 // Check if the parameters already exist. If one does as the correct type, use it. If one already exists as the wrong type, abort.
-                bool[] existing = new bool[totalToggles + 2];
+                bool[] existing = new bool[totalToggles + savedToggles.Count + 3];
 
                 for (int i = 0; i < srcParam.Length; i++)
                 {
@@ -410,6 +441,51 @@ namespace InventoryInventor
                     if (flag)
                     {
                         break;
+                    }
+                    if (srcParam[i].name == "Inventory")
+                    {
+                        if (srcParam[i].type == AnimatorControllerParameterType.Int)
+                        {
+                            existing[existing.Length - 2] = true;
+                            continue;
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
+                            RevertChanges();
+                            Selection.activeObject = animator;
+                            return;
+                        }
+                    }
+                    else if (srcParam[i].name == "IsLocal")
+                    {
+                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
+                        {
+                            existing[existing.Length - 1] = true;
+                            continue;
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
+                            RevertChanges();
+                            Selection.activeObject = animator;
+                            return;
+                        }
+                    }
+                    else if (srcParam[i].name == "Inventory Loaded")
+                    {
+                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
+                        {
+                            existing[existing.Length - 3] = true;
+                            continue;
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
+                            RevertChanges();
+                            Selection.activeObject = animator;
+                            return;
+                        }
                     }
                     for (int j = 0; j < totalToggles; j++)
                     {
@@ -428,26 +504,11 @@ namespace InventoryInventor
                                 return;
                             }
                         }
-                        else if (srcParam[i].name == "Inventory")
-                        {
-                            if (srcParam[i].type == AnimatorControllerParameterType.Int)
-                            {
-                                existing[existing.Length - 2] = true;
-                                break;
-                            }
-                            else
-                            {
-                                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
-                                RevertChanges();
-                                Selection.activeObject = animator;
-                                return;
-                            }
-                        }
-                        else if (srcParam[i].name == "IsLocal")
+                        else if (savedToggles.Contains("Inventory " + (j + 1)) && srcParam[i].name == "Inventory " + (j + 1) + " (Default)")
                         {
                             if (srcParam[i].type == AnimatorControllerParameterType.Bool)
                             {
-                                existing[existing.Length - 1] = true;
+                                existing[totalToggles + savedToggles.IndexOf("Inventory " + (j + 1))] = true;
                                 break;
                             }
                             else
@@ -465,11 +526,18 @@ namespace InventoryInventor
                 for (int i = 0; i < existing.Length; i++)
                 {
                     EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.075f + (0.025f * (float.Parse(i.ToString()) / existing.Length)));
-                    if (i < existing.Length - 2)
+                    if (i < totalToggles)
                     {
                         if (!existing[i])
                         {
                             newAnimator.AddParameter("Inventory " + (i + 1), AnimatorControllerParameterType.Bool);
+                        }
+                    }
+                    else if (i < totalToggles + savedToggles.Count)
+                    {
+                        if (!existing[i])
+                        {
+                            newAnimator.AddParameter(savedToggles[i - totalToggles] + " (Default)", AnimatorControllerParameterType.Bool);
                         }
                     }
                     else if (i == existing.Length - 2)
@@ -484,6 +552,13 @@ namespace InventoryInventor
                         if (!existing[i])
                         {
                             newAnimator.AddParameter("IsLocal", AnimatorControllerParameterType.Bool);
+                        }
+                    }
+                    else if (i == existing.Length - 3)
+                    {
+                        if (!existing[i])
+                        {
+                            newAnimator.AddParameter("Inventory Loaded", AnimatorControllerParameterType.Bool);
                         }
                     }
                 }
@@ -509,7 +584,13 @@ namespace InventoryInventor
                     {
                         if (srcParam[j].name == "Inventory " + (i + 1))
                         {
-                            srcParam[j].defaultBool = (items[i].Sync != PageItem.SyncMode.Auto || !items[i].Saved) && items[i].InitialState;
+                            srcParam[j].defaultBool = items[i].InitialState;
+                            if (!(items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved))
+                                break;
+                        }
+                        else if (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved && srcParam[j].name == "Inventory " + (i + 1) + " (Default)")
+                        {
+                            srcParam[j].defaultBool = items[i].InitialState;
                             break;
                         }
                     }
@@ -546,6 +627,17 @@ namespace InventoryInventor
                             valueType = VRCExpressionParameters.ValueType.Int,
                             defaultValue = 0,
                             saved = false
+                        };
+                        parameters.Add(param);
+                    }
+                    else if (expName.Equals("Inventory Loaded"))
+                    {
+                        VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter
+                        {
+                            name = "Inventory Loaded",
+                            valueType = VRCExpressionParameters.ValueType.Bool,
+                            defaultValue = 1,
+                            saved = true
                         };
                         parameters.Add(param);
                     }
@@ -918,7 +1010,7 @@ namespace InventoryInventor
             states[1] = templateState.DeepClone();
 
             // Create an idle state.
-            Helper.ChangeState(templateState, "Idle");
+            Helper.ChangeState(templateState, "Default");
             templateState.position = pos + new Vector3(-25, 145);
             templateState.state.behaviours = new StateMachineBehaviour[0];
             states[2] = templateState.DeepClone();
@@ -1030,32 +1122,34 @@ namespace InventoryInventor
                     Helper.ChangeTransition(templateTransition, active.Key[j], templateMachine.states[0].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
-                    {
-                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-                    }
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");  
                 }
 
                 // Special transition for local toggles.
                 if (items[i].Sync == PageItem.SyncMode.Off || (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved))
                 {
-                    Helper.ChangeTransition(templateTransition, i + 1, false, templateMachine.states[0].state);
+                    Helper.ChangeTransition(templateTransition, "" + (i + 1), false, templateMachine.states[0].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
                     }
+                    else
+                    {
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                        Helper.ChangeTransition(templateTransition, (i + 1) + " (Default)", false, templateMachine.states[0].state);
+                        transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory Loaded");
+                    }
                 }
 
                 // Enabled state.
                 toggleClip = !items[i].UseAnimations ? null : items[i].EnableClip;
-                //Debug.Log(items[i].ObjectReference + " | " + (avatar.transform.Find(items[i].ObjectReference) != null ? avatar.transform.Find(items[i].ObjectReference).gameObject.name : "NOT_FOUND") + "\n" + "UseAnims = " + items[i].UseAnimations + " | RefNull = " + items[i].ObjectReference.Equals("") + " | Exists = " + (avatar.transform.Find(items[i].ObjectReference) != null));
                 if (!items[i].UseAnimations && !items[i].ObjectReference.Equals("") && avatar.transform.Find(items[i].ObjectReference) != null)
                 {
-                    //Debug.Log(AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }).Length);
                     foreach (string guid in AssetDatabase.FindAssets(avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On", new string[] { outputPath + Path.DirectorySeparatorChar + "Clips" }))
                     {
                         AnimationClip tempClip = (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(AnimationClip));
-                        //Debug.Log(items[i].ObjectReference + " | " + avatar.transform.Find(items[i].ObjectReference).gameObject.name + " : " + tempClip.name);
                         if (tempClip.name == avatar.transform.Find(items[i].ObjectReference).gameObject.name + "_On")
                         {
                             toggleClip = tempClip;
@@ -1081,11 +1175,18 @@ namespace InventoryInventor
                 // Special transition for local toggles.
                 if (items[i].Sync == PageItem.SyncMode.Off || (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved))
                 {
-                    Helper.ChangeTransition(templateTransition, i + 1, true, templateMachine.states[1].state);
+                    Helper.ChangeTransition(templateTransition, "" + (i + 1), true, templateMachine.states[1].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                     {
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+                    }
+                    else
+                    {
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                        Helper.ChangeTransition(templateTransition, (i + 1) + " (Default)", true, templateMachine.states[1].state);
+                        transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.IfNot, 0, "Inventory Loaded");
                     }
                 }
 
@@ -1108,9 +1209,27 @@ namespace InventoryInventor
                 AnimatorStateTransition idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[0].state, false);
                 idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory " + (i + 1));
                 idleTrans.duration = 0f;
+                if (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved)
+                {
+                    idleTrans.AddCondition(AnimatorConditionMode.If, 0f, "Inventory Loaded");
+
+                    idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[0].state, false);
+                    idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory " + (i + 1) + " (Default)");
+                    idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory Loaded");
+                    idleTrans.duration = 0f;
+                }    
                 idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[1].state, false);
                 idleTrans.AddCondition(AnimatorConditionMode.If, 0f, "Inventory " + (i + 1));
                 idleTrans.duration = 0f;
+                if (items[i].Sync == PageItem.SyncMode.Auto && items[i].Saved)
+                {
+                    idleTrans.AddCondition(AnimatorConditionMode.If, 0f, "Inventory Loaded");
+
+                    idleTrans = templateMachine.states[2].state.AddTransition(templateMachine.states[1].state, false);
+                    idleTrans.AddCondition(AnimatorConditionMode.If, 0f, "Inventory " + (i + 1) + " (Default)");
+                    idleTrans.AddCondition(AnimatorConditionMode.IfNot, 0f, "Inventory Loaded");
+                    idleTrans.duration = 0f;
+                }
 
                 // Inventory machine identifier
                 transitions.Add(new AnimatorStateTransition

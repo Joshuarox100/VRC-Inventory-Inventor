@@ -28,7 +28,7 @@ namespace InventoryInventor
             transition.AddCondition(AnimatorConditionMode.Equals, value, "Inventory");
         }
 
-        public static void ChangeTransition(AnimatorStateTransition transition, int item, bool value, AnimatorState state)
+        public static void ChangeTransition(AnimatorStateTransition transition, string item, bool value, AnimatorState state)
         {
             transition.destinationState = state;
             transition.conditions = new AnimatorCondition[0];
