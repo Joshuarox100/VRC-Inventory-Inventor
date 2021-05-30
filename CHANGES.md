@@ -1,8 +1,12 @@
-# v1.2.2
-This patch resolves some issues regarding the lack of parameters on avatars and animation generation.
-On a side note, there is currently a problem with VRChat that causes remote clients to view your avatar with all saved parameters disabled if they load your avatar before you do yourself. The only real counter to this issue (until they fix it) is to either disable your avatar until you load it locally with a saved parameter or to not use saved parameters entirely. **This is not an issue with Inventory Inventor, stop asking me about it.**
+# v1.2.3
+Normally, I'd wait to implement more changes before releasing a patch or update, but just from my own personal observations in VRChat, this feels like an immediate necessity. So you know how in the last patch, I talked about that problem with saved Expression Parameters that wasn't my fault and I wasn't going to fix?  
+**Yeah, I made a fix for it anyway...**  
+
+**After installing this patch, you will need to reapply your presets to your avatars to see the fix.**
 
 ## Fixes
+### v1.2.3
+- Worked around the saved parameter issue to display the default state of the inventory to remote clients until the local client has loaded their avatar themselves.
 ### v1.2.2
 - Added several null checks to fix problems when viewing presets for an avatar without Expression Parameters assigned.
 - Fixed an oversight that caused the script to use the wrong animation file generated for objects.

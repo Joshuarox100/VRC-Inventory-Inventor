@@ -997,6 +997,7 @@ public class InventoryPresetEditor : Editor
         // Check if memory is available.
         int totalToggles = 0;
         int totalMemory = (avatar != null && avatar.expressionParameters != null && avatar.expressionParameters.FindParameter("Inventory") == null) ? 8 : 0;
+        totalMemory += (avatar != null && avatar.expressionParameters != null && avatar.expressionParameters.FindParameter("Inventory Loaded") == null) ? 1 : 0;
 
         // Check if an object is missing.
         List<string> objectsMissing = new List<string>();
