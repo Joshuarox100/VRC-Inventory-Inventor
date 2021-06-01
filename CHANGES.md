@@ -1,10 +1,11 @@
-# v1.2.3
-Normally, I'd wait to implement more changes before releasing a patch or update, but just from my own personal observations in VRChat, this feels like an immediate necessity. So you know how in the last patch, I talked about that problem with saved Expression Parameters that wasn't my fault and I wasn't going to fix?  
-**Yeah, I made a fix for it anyway...**  
+# v1.2.4
+After putting out the patch yesterday, I decided to think for more than 12 seconds and realized I overengineered a solution when one was staring me in the face.
 
-**After installing this patch, you will need to reapply your presets to your avatars to see the fix.**
+**If you used the previous patch, keep in mind that you will need to manually delete the extra parameters it created after reapplying your preset.**
 
 ## Fixes
+### v1.2.4
+- Modified the solution introduced by the previous patch to not require the usage of extra unsynced parameters within the animator.
 ### v1.2.3
 - Worked around the saved parameter issue to display the default state of the inventory to remote clients until the local client has loaded their avatar themselves.
 ### v1.2.2
