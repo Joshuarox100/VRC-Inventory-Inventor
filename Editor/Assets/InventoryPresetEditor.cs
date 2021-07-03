@@ -103,10 +103,10 @@ public class InventoryPresetEditor : Editor
 
             // Deal with pages that share the same name.
             List<string> names = new List<string>();
-            foreach (Page page in preset.Pages)
+            for (int i = 0; i <= index && i < preset.Pages.Count; i++)
             {
-                if (page != item)
-                    names.Add(page.name);
+                if (preset.Pages[i] != item)
+                    names.Add(preset.Pages[i].name);
             }
             if (names.Contains(item.name) && names.IndexOf(item.name) != index)
             {
@@ -130,6 +130,12 @@ public class InventoryPresetEditor : Editor
             }
             Rect foldoutRect = new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, 0f, 18f);
             pagesFoldout[index] = EditorGUI.Foldout(foldoutRect, pagesFoldout[index], displayedName + ((index == 0) ? " (Default)" : ""));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                ShowPageContextMenu(index);
+            }
 
             if (pagesFoldout[index] && !draggingPage)
             {
@@ -364,6 +370,13 @@ public class InventoryPresetEditor : Editor
         enableGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Enabled...", "Modifies listed toggles when this toggle is enabled."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 0);
+            }
         };
         enableGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -387,7 +400,7 @@ public class InventoryPresetEditor : Editor
                         allToggles.Add(pageItem);
 
                         // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if (pageItem != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetEnableGroupItems(), pageItem) == -1))
+                        if ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetEnableGroupItems(), pageItem) == -1)
                         {
                             remainingToggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -546,6 +559,13 @@ public class InventoryPresetEditor : Editor
         disableGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Disabled...", "Modifies listed toggles when this toggle is disabled."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 1);
+            }
         };
         disableGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -569,7 +589,7 @@ public class InventoryPresetEditor : Editor
                         allToggles.Add(pageItem);
 
                         // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if (pageItem != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetDisableGroupItems(), pageItem) == -1))
+                        if ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetDisableGroupItems(), pageItem) == -1)
                         {
                             remainingToggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -727,6 +747,13 @@ public class InventoryPresetEditor : Editor
         buttonGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Activated...", "Modifies listed toggles when this button is used."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 2);
+            }
         };
         buttonGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -775,7 +802,7 @@ public class InventoryPresetEditor : Editor
             }
 
             // Separator
-            Handles.color = Color.gray;
+                Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
             if (index != 0)
                 Handles.DrawLine(new Vector2(rect.x - 15, rect.y - 1f), new Vector2(rect.x + rect.width, rect.y - 1f));
@@ -1283,6 +1310,8 @@ public class InventoryPresetEditor : Editor
             bool itemState = currentItem.InitialState;
             Transform itemObject = avatar != null && !currentItem.ObjectReference.Equals("") ? avatar.transform.Find(currentItem.ObjectReference) : null;
             bool itemAnimations = currentItem.UseAnimations;
+            bool itemTransitionType = currentItem.TransitionType;
+            float itemTransitionDuration = currentItem.TransitionDuration;
             AnimationClip itemEnable = currentItem.EnableClip;
             AnimationClip itemDisable = currentItem.DisableClip;
             PageItem.SyncMode itemSync = currentItem.Sync;
@@ -1345,6 +1374,22 @@ public class InventoryPresetEditor : Editor
 
                         // Item disabled clip.
                         itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
+
+                        GUILayout.Space(2f);
+                        rect = EditorGUILayout.BeginHorizontal();
+                        Handles.color = Color.gray;
+                        Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 25, rect.y + 1));
+                        EditorGUILayout.EndHorizontal();
+                        GUILayout.Space(2f);
+
+                        // Item transition timing.
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PrefixLabel(new GUIContent("Timing", "Whether the duration is in fixed (s) or normalized (%) time."));
+                        itemTransitionType = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionType), new string[] { "Fixed", "Normalized" }));
+                        EditorGUILayout.EndHorizontal();
+
+                        // Item transition duration.
+                        itemTransitionDuration = EditorGUILayout.FloatField(new GUIContent("Duration", "How long the transition between states takes."), itemTransitionDuration);
                     }
                     else
                     {
@@ -1465,6 +1510,10 @@ public class InventoryPresetEditor : Editor
                 if (!currentItem.UseAnimations && !itemAnimations)
                     currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : Helper.GetGameObjectPath(itemObject).Substring(Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) + Helper.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
                 currentItem.UseAnimations = itemAnimations;
+                currentItem.TransitionType = itemTransitionType;
+                if (itemTransitionDuration < 0)
+                    itemTransitionDuration = 0;
+                currentItem.TransitionDuration = itemTransitionDuration;
                 currentItem.EnableClip = itemEnable;
                 currentItem.DisableClip = itemDisable;
                 currentItem.Sync = itemSync;
@@ -1797,16 +1846,65 @@ public class InventoryPresetEditor : Editor
         AppendPresetWindow.AppendPresetWindowInit(preset);
     }
 
+    // Shows the page context menu
+    private void ShowPageContextMenu(int pageIndex)
+    {
+        // Create the menu
+        GenericMenu menu = new GenericMenu();
+
+        // Copy the page settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyPageSettings, new object[] { preset.Pages[pageIndex] });
+
+        // Paste the page settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PastePageSettings, new object[] { preset.Pages[pageIndex], preset });
+
+        menu.AddSeparator("");
+
+        // Duplicate the page
+        menu.AddItem(new GUIContent("Duplicate Page"), false, InventoryPresetUtility.DuplicatePage, new object[] { preset.Pages[pageIndex], preset });
+
+        // Display the menu
+        menu.ShowAsContext();
+    }
+
     // Shows the item context menu
     private void ShowItemContextMenu(int pageIndex, int itemIndex)
     {
         // Create the menu
         GenericMenu menu = new GenericMenu();
 
+        // Copy the item settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        // Paste the item settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        menu.AddSeparator("");
+
         // Add pages to menu that have space
         for (int i = 0; i < preset.Pages.Count; i++)
             if (pageIndex != i && preset.Pages[i].Items.Count < 8)
                 menu.AddItem(new GUIContent("Send to Page/" + preset.Pages[i].name), false, InventoryPresetUtility.SendItemToPage, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset.Pages[i], preset });
+
+        // Duplicate the item within the same page
+        if (preset.Pages[pageIndex].Items.Count < 8)
+        menu.AddItem(new GUIContent("Duplicate Item"), false, InventoryPresetUtility.DuplicateItem, new object[] { preset.Pages[pageIndex], preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        // Display the menu
+        menu.ShowAsContext();
+    }
+
+    // Shows the group context menu
+    private void ShowGroupContextMenu(int pageIndex, int itemIndex, int groupType)
+    {
+        // Create the menu
+        GenericMenu menu = new GenericMenu();
+
+        // Copy the group settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
+
+        // Paste the group settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
 
         // Display the menu
         menu.ShowAsContext();

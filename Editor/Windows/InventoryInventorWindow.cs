@@ -137,7 +137,10 @@ namespace InventoryInventor
             EditorGUILayout.LabelField("Inventory Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             // Preset
+            EditorGUI.BeginChangeCheck();
             manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
+            if (EditorGUI.EndChangeCheck() && manager.preset != null && manager.preset.LastPath != null && manager.preset.LastPath != "")
+                manager.outputPath = manager.preset.LastPath;
             // Refresh Rate
             manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
             EditorGUILayout.EndVertical();

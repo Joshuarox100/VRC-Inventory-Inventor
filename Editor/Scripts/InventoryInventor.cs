@@ -273,14 +273,24 @@ namespace InventoryInventor
                 /*
                     Get FX Animator.
                     */
-
-                // An avatar is humanoid if the descriptor has the Gesture and Additive layers available.
-                bool humanoid = avatar.baseAnimationLayers.Length == 5;
-
                 AnimatorController animator = controller != null ? controller : null;
 
                 // Replace the Animator Controller in the descriptor if this Controller was there to begin with.
-                bool replaceAnimator = humanoid ? (animator != null && avatar.baseAnimationLayers[4].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[4].animatorController) : (animator != null && avatar.baseAnimationLayers[2].animatorController != null && animator == (AnimatorController)avatar.baseAnimationLayers[2].animatorController);
+                List<bool> replaceAnimator = new List<bool>();
+                foreach (VRCAvatarDescriptor.CustomAnimLayer c in avatar.baseAnimationLayers)
+                {
+                    if (c.animatorController != null && animator == (AnimatorController)c.animatorController)
+                        replaceAnimator.Add(true);
+                    else
+                        replaceAnimator.Add(false);
+                }
+                foreach (VRCAvatarDescriptor.CustomAnimLayer c in avatar.specialAnimationLayers)
+                {
+                    if (c.animatorController != null && animator == (AnimatorController)c.animatorController)
+                        replaceAnimator.Add(true);
+                    else
+                        replaceAnimator.Add(false);
+                }
 
                 // Create new Animator Controller from SDK template if none was provided.
                 if (animator == null)
@@ -353,12 +363,14 @@ namespace InventoryInventor
                 AssetDatabase.Refresh();
 
                 // Replace the Animator Controller in the descriptor if it was there.
-                if (replaceAnimator)
+                if (replaceAnimator.Contains(true))
                 {
-                    if (humanoid)
-                        avatar.baseAnimationLayers[4].animatorController = newAnimator;
-                    else
-                        avatar.baseAnimationLayers[2].animatorController = newAnimator;
+                    for (int i = 0; i < avatar.baseAnimationLayers.Length; i++)
+                        if (replaceAnimator[i])
+                            avatar.baseAnimationLayers[i].animatorController = newAnimator;
+                    for (int i = 0; i < avatar.specialAnimationLayers.Length; i++)
+                        if (replaceAnimator[i + avatar.baseAnimationLayers.Length])
+                            avatar.specialAnimationLayers[i].animatorController = newAnimator;
                 }
                 controller = newAnimator;
 
@@ -749,6 +761,8 @@ namespace InventoryInventor
             // Update the last path used.
             settings.FindProperty("m_LastPath").stringValue = outputPath;
             settings.ApplyModifiedProperties();
+            preset.LastPath = outputPath;
+            InventoryPresetUtility.SaveChanges(preset);
             return true;
         }
 
@@ -1059,6 +1073,16 @@ namespace InventoryInventor
 
                 // Create an AnyState transition to the on and off state with their assigned conditionals.
                 List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
+                if (items[i].UseAnimations && items[i].TransitionDuration > 0)
+                {
+                    templateTransition.hasFixedDuration = !items[i].TransitionType;
+                    templateTransition.duration = items[i].TransitionDuration;
+                }
+                else
+                {
+                    templateTransition.hasFixedDuration = false;
+                    templateTransition.duration = 0f;
+                }
 
                 // Disabled state.
                 AnimationClip toggleClip = !items[i].UseAnimations ? null : items[i].DisableClip;
@@ -1122,9 +1146,7 @@ namespace InventoryInventor
                     Helper.ChangeTransition(templateTransition, active.Value[j], templateMachine.states[1].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
-                    {
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-                    }
                 }
 
                 // Special transition for local toggles.
