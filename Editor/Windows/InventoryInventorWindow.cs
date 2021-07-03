@@ -32,7 +32,7 @@ namespace InventoryInventor
         // Colors
         private readonly static Color32 navy = new Color32(143, 0, 254, 255);   
 
-        [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory", priority = 0)]
+        [MenuItem("Tools/Joshuarox100/Inventory Inventor/Manage Inventory", priority = 0)]
         public static void ManageInventory()
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
@@ -42,7 +42,7 @@ namespace InventoryInventor
             window.Show();
         }
 
-        [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Check For Updates", priority = 11)]
+        [MenuItem("Tools/Joshuarox100/Inventory Inventor/Check For Updates", priority = 11)]
         public static void CheckForUpdates()
         {
             Updater.CheckForUpdates();

@@ -9,7 +9,7 @@ namespace InventoryInventor
         // Window Size.
         private Rect windowSize = new Rect(0, 0, 375f, 450f);
 
-        [MenuItem("Tools/Avatars 3.0/Inventory Inventor/About", priority = 12)]
+        [MenuItem("Tools/Joshuarox100/Inventory Inventor/About", priority = 12)]
         public static void AboutWindow()
         {
             InventoryInventorAboutWindow window = (InventoryInventorAboutWindow)GetWindow(typeof(InventoryInventorAboutWindow), false, "Inventory Inventor");

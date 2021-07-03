@@ -400,7 +400,7 @@ public class InventoryPresetEditor : Editor
                         allToggles.Add(pageItem);
 
                         // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetEnableGroupItems(), pageItem) == -1)
+                        if (pageItem != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetEnableGroupItems(), pageItem) == -1))
                         {
                             remainingToggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -589,7 +589,7 @@ public class InventoryPresetEditor : Editor
                         allToggles.Add(pageItem);
 
                         // Only add the toggle as a selectable one if it is one not currently in the group.
-                        if ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetDisableGroupItems(), pageItem) == -1)
+                        if (pageItem != preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index] && ((item.Item != null && pageItem == item.Item) || Array.IndexOf(preset.Pages[focusedItemPage].Items[pageContentsDict[listKey].index].GetDisableGroupItems(), pageItem) == -1))
                         {
                             remainingToggles.Add(pageItem);
                             toggleNames.Add(page.name + ": " + pageItem.name);
@@ -802,7 +802,7 @@ public class InventoryPresetEditor : Editor
             }
 
             // Separator
-                Handles.color = Color.gray;
+            Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y), new Vector2(rect.x + ((rect.width - 15f) / 2), rect.y + rect.height));
             if (index != 0)
                 Handles.DrawLine(new Vector2(rect.x - 15, rect.y - 1f), new Vector2(rect.x + rect.width, rect.y - 1f));
@@ -1877,7 +1877,7 @@ public class InventoryPresetEditor : Editor
         menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset });
 
         // Paste the item settings from the buffer
-        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset });
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset });
 
         menu.AddSeparator("");
 
@@ -1905,6 +1905,11 @@ public class InventoryPresetEditor : Editor
 
         // Paste the group settings from the buffer
         menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
+
+        menu.AddSeparator("");
+
+        // Clear the group settings
+        menu.AddItem(new GUIContent("Clear Settings"), false, InventoryPresetUtility.ClearGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
 
         // Display the menu
         menu.ShowAsContext();

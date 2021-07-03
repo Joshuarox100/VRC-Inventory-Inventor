@@ -497,9 +497,10 @@ namespace InventoryInventor.Preset
                 return;
 
             PageItem item = ((object[])args)[0] as PageItem;
-            InventoryPreset preset = ((object[])args)[1] as InventoryPreset;
+            Page itemPage = ((object[])args)[1] as Page;
 
             // Mark Preset as dirty
+            InventoryPreset preset = ((object[])args)[2] as InventoryPreset;
             EditorUtility.SetDirty(preset);
 
             // Record the change
@@ -508,7 +509,23 @@ namespace InventoryInventor.Preset
 
             // Paste item settings
             Undo.RecordObject(item, "Pasted Settings");
+
+            // Deal with items that share the same name.
             item.name = settings[2];
+            List<string> names = new List<string>();
+            for (int i = 0; i < itemPage.Items.Count; i++)
+            {
+                if (itemPage.Items[i] != item)
+                    names.Add(itemPage.Items[i].name);
+            }
+            if (names.Contains(item.name) && names.IndexOf(item.name) != itemPage.Items.IndexOf(item))
+            {
+                int occurance = 0;
+                while (names.Contains(item.name + " " + occurance))
+                    occurance++;
+                item.name = item.name + " " + occurance;
+            }
+
             if (settings[3] != "NULL")
                 item.Icon = (Texture2D)AssetDatabase.LoadAssetAtPath(settings[3], typeof(Texture2D));
             switch (settings[4])
@@ -579,7 +596,8 @@ namespace InventoryInventor.Preset
                             foreach (PageItem item3 in page.Items)
                                 if (item3.name == settings[index + 1])
                                 {
-                                    item2.Item = item3;
+                                    if (item3 != item)
+                                        item2.Item = item3;
                                     break;
                                 }
                             break;
@@ -621,7 +639,8 @@ namespace InventoryInventor.Preset
                             foreach (PageItem item3 in page.Items)
                                 if (item3.name == settings[index + 1])
                                 {
-                                    item2.Item = item3;
+                                    if (item3 != item)
+                                        item2.Item = item3;
                                     break;
                                 }
                             break;
@@ -663,7 +682,8 @@ namespace InventoryInventor.Preset
                             foreach (PageItem item3 in page.Items)
                                 if (item3.name == settings[index + 1])
                                 {
-                                    item2.Item = item3;
+                                    if (item3 != item)
+                                        item2.Item = item3;
                                     break;
                                 }
                             break;
@@ -773,7 +793,23 @@ namespace InventoryInventor.Preset
 
             // Configure the new item and add it to the Asset.
             item.hideFlags = HideFlags.HideInHierarchy;
+
+            // Deal with items that share the same name.
             item.name = oldItem.name;
+            List<string> names = new List<string>();
+            for (int i = 0; i < oldPage.Items.Count; i++)
+            {
+                if (oldPage.Items[i] != item)
+                    names.Add(oldPage.Items[i].name);
+            }
+            if (names.Contains(item.name) && names.IndexOf(item.name) != oldPage.Items.IndexOf(item))
+            {
+                int occurance = 0;
+                while (names.Contains(item.name + " " + occurance))
+                    occurance++;
+                item.name = item.name + " " + occurance;
+            }
+
             item.Icon = oldItem.Icon;
             item.Type = oldItem.Type;
             item.UseAnimations = oldItem.UseAnimations;
@@ -1011,7 +1047,8 @@ namespace InventoryInventor.Preset
                             foreach (PageItem item3 in page.Items)
                                 if (item3.name == settings[index + 1])
                                 {
-                                    item2.Item = item3;
+                                    if (item3 != item)
+                                        item2.Item = item3;
                                     break;
                                 }
                             break;
@@ -1033,6 +1070,39 @@ namespace InventoryInventor.Preset
                     break;
                 case 2:
                     item.ButtonGroup = itemGroup;
+                    break;
+            }
+
+            // Save Undo operation
+            Undo.CollapseUndoOperations(group);
+        }
+
+        // Clears all the items within a group
+        public static void ClearGroupSettings(object args)
+        {
+            PageItem item = ((object[])args)[0] as PageItem;
+            int groupType = (int)((object[])args)[1];
+
+            // Mark Preset as dirty
+            InventoryPreset preset = (InventoryPreset)((object[])args)[2];
+            EditorUtility.SetDirty(preset);
+
+            // Record the change
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+
+            // Clear the group
+            Undo.RecordObject(item, "Cleared Settings");
+            switch (groupType)
+            {
+                case 0:
+                    item.EnableGroup = new GroupItem[0];
+                    break;
+                case 1:
+                    item.DisableGroup = new GroupItem[0];
+                    break;
+                case 2:
+                    item.ButtonGroup = new GroupItem[0];
                     break;
             }
 
