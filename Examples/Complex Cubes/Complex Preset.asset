@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 653c66429c2466845920f9399b645f78, type: 3}
   m_Name: Complex Preset
   m_EditorClassIdentifier: 
-  m_Version: 2
+  m_Version: 3
+  m_LastPath: 
   m_Pages:
   - {fileID: 114556488549054094}
   - {fileID: 114751815937736816}
@@ -402,6 +403,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 9
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: aaa48e9a662cd944a82c63378c20f6cc, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -497,6 +501,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -574,6 +581,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -651,6 +661,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114370941908486564}
@@ -743,6 +756,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 6
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 6e6e8ef836a6c3345b29dad1d4a3d544, type: 2}
   m_PageReference: {fileID: 0}
@@ -838,6 +854,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 1881d8af30ec4ed4099dc69e974c162e, type: 2}
   m_PageReference: {fileID: 0}
@@ -1066,6 +1085,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -1269,6 +1291,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 7
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: 82fca0d663a778e46bada5ffe1bd0c7d, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -1322,6 +1347,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 10
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: abf9fdbe3f6695a4d85ae7e348edfd53, type: 2}
   m_PageReference: {fileID: 0}
@@ -1389,6 +1417,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -1596,6 +1627,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: 2c228771f87a9ba42a3dae7ab8e4d6f4, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -1901,6 +1935,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114248397600098376}
@@ -1979,6 +2016,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -2084,6 +2124,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 97517eee1a46c4c449901a0afc682355, type: 2}
   m_PageReference: {fileID: 0}
@@ -2294,6 +2337,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 1
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: 132e90738be75ef4b890dacf69164a51, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -2641,6 +2687,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 4
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 9c762f6fc78d9f5409b9f9529095e51c, type: 2}
   m_PageReference: {fileID: 0}
@@ -2694,6 +2743,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 2
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 5c539b7cd099a3445bf6636b4fd9842e, type: 2}
   m_PageReference: {fileID: 0}
@@ -2733,6 +2785,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: 8c50101976a2cda4890157ae45f1a863, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -2800,6 +2855,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 63f009b8dca77214c8963e82b772956f, type: 2}
   m_PageReference: {fileID: 0}
@@ -2937,6 +2995,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114907665713386326}
@@ -3057,6 +3118,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 1
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: 36d6230c35f37a24b945025d7b8813bd, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3118,6 +3182,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3237,6 +3304,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3328,6 +3398,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114253049466962344}
@@ -3420,6 +3493,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114751815937736816}
@@ -3526,6 +3602,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3575,6 +3654,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 5
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: afa6adea9cb8917429a4333f8ab47d59, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3818,6 +3900,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 3
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 7400000, guid: f61e808231a17ab439751510f935489f, type: 2}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -3997,6 +4082,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: Cube 8
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 7400000, guid: 17539b7597a8a964f9c9eb69bf96f76f, type: 2}
   m_PageReference: {fileID: 0}
@@ -4036,6 +4124,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}

@@ -1312,6 +1312,7 @@ public class InventoryPresetEditor : Editor
             bool itemAnimations = currentItem.UseAnimations;
             bool itemTransitionType = currentItem.TransitionType;
             float itemTransitionDuration = currentItem.TransitionDuration;
+            bool itemTransitionOffset = currentItem.TransitionOffset;
             AnimationClip itemEnable = currentItem.EnableClip;
             AnimationClip itemDisable = currentItem.DisableClip;
             PageItem.SyncMode itemSync = currentItem.Sync;
@@ -1389,7 +1390,13 @@ public class InventoryPresetEditor : Editor
                         EditorGUILayout.EndHorizontal();
 
                         // Item transition duration.
-                        itemTransitionDuration = EditorGUILayout.FloatField(new GUIContent("Duration", "How long the transition between states takes."), itemTransitionDuration);
+                        itemTransitionDuration = EditorGUILayout.FloatField(new GUIContent("Blend Duration", "How long the transition between states takes."), itemTransitionDuration);
+
+                        // Item transition offset.
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PrefixLabel(new GUIContent("Loading Point", "Where in the animation to display while loading."));
+                        itemTransitionOffset = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionOffset), new string[] { "Start", "End" }));
+                        EditorGUILayout.EndHorizontal();
                     }
                     else
                     {
@@ -1514,6 +1521,7 @@ public class InventoryPresetEditor : Editor
                 if (itemTransitionDuration < 0)
                     itemTransitionDuration = 0;
                 currentItem.TransitionDuration = itemTransitionDuration;
+                currentItem.TransitionOffset = itemTransitionOffset;
                 currentItem.EnableClip = itemEnable;
                 currentItem.DisableClip = itemDisable;
                 currentItem.Sync = itemSync;

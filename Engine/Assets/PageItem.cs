@@ -39,6 +39,10 @@ namespace InventoryInventor.Preset
         [SerializeField]
         private float m_TransitionDuration;
 
+        public bool TransitionOffset { get { return m_TransitionOffset; } set { m_TransitionOffset = value; } }
+        [SerializeField]
+        private bool m_TransitionOffset;
+
         public AnimationClip EnableClip { get { return m_EnableClip; } set { m_EnableClip = value; } }
         [SerializeField]
         private AnimationClip m_EnableClip;
@@ -95,6 +99,7 @@ namespace InventoryInventor.Preset
             UseAnimations = false;
             TransitionType = true;
             TransitionDuration = 0f;
+            TransitionOffset = false;
             EnableClip = null;
             DisableClip = null;
             Sync = SyncMode.Auto;

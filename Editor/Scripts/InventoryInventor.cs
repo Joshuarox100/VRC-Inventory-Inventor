@@ -1071,8 +1071,9 @@ namespace InventoryInventor
                 AnimatorControllerLayer currentLayer = layers[layers.Length - 1];
                 currentLayer.defaultWeight = 1;
 
-                // Create an AnyState transition to the on and off state with their assigned conditionals.
+                // Create transitions to the on and off state with their assigned conditionals.
                 List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
+                List<AnimatorStateTransition> defaultTransitions = new List<AnimatorStateTransition>();
                 if (items[i].UseAnimations && items[i].TransitionDuration > 0)
                 {
                     templateTransition.hasFixedDuration = !items[i].TransitionType;
@@ -1108,7 +1109,8 @@ namespace InventoryInventor
                     Helper.ChangeTransition(templateTransition, active.Key[j], templateMachine.states[0].state);
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
-                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");  
+                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
                 }
 
                 // Special transition for local toggles.
@@ -1118,9 +1120,21 @@ namespace InventoryInventor
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-                    else
-                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                    defaultTransitions.Add((AnimatorStateTransition)transitions[transitions.Count - 1].DeepClone(templateMachine.states[0]));
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
                 }
+                else
+                {
+                    Helper.ChangeTransition(templateTransition, "" + (i + 1), false, templateMachine.states[0].state);
+                    defaultTransitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[0]));
+                }
+                defaultTransitions[defaultTransitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                if (items[i].TransitionOffset)
+                    defaultTransitions[defaultTransitions.Count - 1].offset = 1f;
+
+                // Add transitions to the other state.
+                templateMachine.states[1].state.transitions = transitions.ToArray();
+                transitions.Clear();
 
                 // Enabled state.
                 toggleClip = !items[i].UseAnimations ? null : items[i].EnableClip;
@@ -1147,6 +1161,7 @@ namespace InventoryInventor
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
                 }
 
                 // Special transition for local toggles.
@@ -1156,9 +1171,21 @@ namespace InventoryInventor
                     transitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
                     if (items[i].Sync == PageItem.SyncMode.Off)
                         transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-                    else
-                        transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                    defaultTransitions.Add((AnimatorStateTransition)transitions[transitions.Count - 1].DeepClone(templateMachine.states[1]));
+                    transitions[transitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
                 }
+                else
+                {
+                    Helper.ChangeTransition(templateTransition, "" + (i + 1), true, templateMachine.states[1].state);
+                    defaultTransitions.Add((AnimatorStateTransition)templateTransition.DeepClone(templateMachine.states[1]));
+                }
+                defaultTransitions[defaultTransitions.Count - 1].AddCondition(AnimatorConditionMode.If, 0, "Inventory Loaded");
+                if (items[i].TransitionOffset)
+                    defaultTransitions[defaultTransitions.Count - 1].offset = 1f;
+
+                // Add transitions to the other state.
+                templateMachine.states[0].state.transitions = transitions.ToArray();
+                transitions.Clear();
 
                 // Idle state.
                 toggleClip = !items[i].UseAnimations ? null : items[i].InitialState ? items[i].EnableClip : items[i].DisableClip;
@@ -1175,6 +1202,17 @@ namespace InventoryInventor
                     }
                 }
                 Helper.ChangeState(templateMachine.states[2].state, toggleClip);
+                if (items[i].TransitionOffset)
+                {
+                    // Set the speed to the smallest negative number possible, forces animations to skip to their end point on the first possible frame even with looping turned off.
+                    templateMachine.states[2].state.speed = -0.000000000000001f;
+                }
+                else
+                    templateMachine.states[2].state.speed = 0f;
+
+                // Add transitions to the default state.
+                templateMachine.states[2].state.transitions = defaultTransitions.ToArray();
+                defaultTransitions.Clear();
 
                 // Inventory machine identifier
                 transitions.Add(new AnimatorStateTransition
@@ -1189,11 +1227,13 @@ namespace InventoryInventor
 
                 // Configure the machine and clone it
                 templateMachine.name = currentLayer.name;
-                templateMachine.anyStateTransitions = transitions.ToArray();
                 templateMachine.defaultState = templateMachine.states[2].state;
+                templateMachine.anyStateTransitions = transitions.ToArray();
                 currentLayer.stateMachine = templateMachine.DeepClone();
                 layers[layers.Length - 1] = currentLayer;
                 source.layers = layers;
+
+                transitions.Clear();
             }
             return;
         }
