@@ -1622,7 +1622,7 @@ public class InventoryPresetEditor : Editor
             // End item settings container.
             EditorGUILayout.EndVertical();
         }
-        else if (!focusedOnItem && pageDirectory.index > -1)
+        else if (!focusedOnItem && pageDirectory.index > -1 && pageDirectory.index < preset.Pages.Count)
         {
             // Draw page control container.
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
@@ -1871,6 +1871,10 @@ public class InventoryPresetEditor : Editor
         // Duplicate the page
         menu.AddItem(new GUIContent("Duplicate Page"), false, InventoryPresetUtility.DuplicatePage, new object[] { preset.Pages[pageIndex], preset });
 
+        // Delete the selected page
+        if (preset.Pages.Count > 1)
+            menu.AddItem(new GUIContent("Remove Page"), false, InventoryPresetUtility.RemovePage, new object[] { preset.Pages[pageIndex], pagesFoldout, preset });
+
         // Display the menu
         menu.ShowAsContext();
     }
@@ -1894,9 +1898,14 @@ public class InventoryPresetEditor : Editor
             if (pageIndex != i && preset.Pages[i].Items.Count < 8)
                 menu.AddItem(new GUIContent("Send to Page/" + preset.Pages[i].name), false, InventoryPresetUtility.SendItemToPage, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset.Pages[i], preset });
 
+        menu.AddSeparator("");
+
         // Duplicate the item within the same page
         if (preset.Pages[pageIndex].Items.Count < 8)
         menu.AddItem(new GUIContent("Duplicate Item"), false, InventoryPresetUtility.DuplicateItem, new object[] { preset.Pages[pageIndex], preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        // Delete the selected item
+        menu.AddItem(new GUIContent("Remove Item"), false, InventoryPresetUtility.RemoveItem, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset });
 
         // Display the menu
         menu.ShowAsContext();

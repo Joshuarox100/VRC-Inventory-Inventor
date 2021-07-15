@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -234,6 +235,21 @@ namespace InventoryInventor.Preset
             Undo.RecordObject(preset, "Duplicate Page");
             preset.Pages.Add(page);
             Undo.CollapseUndoOperations(group);
+        }
+
+        // Removes a page from the preset
+        public static void RemovePage(object args)
+        {
+            InventoryPreset preset = (InventoryPreset)((object[])args)[2];
+            List<bool> pagesFoldout = (List<bool>)((object[])args)[1];
+            Page page = ((object[])args)[0] as Page;
+
+            // Mark the preset as dirty and record the preset before the page's deletion. 
+            EditorUtility.SetDirty(preset);
+            Undo.RecordObject(preset, "Remove Page");
+            int index = preset.Pages.IndexOf(page);
+            preset.Pages.Remove(page);
+            pagesFoldout.RemoveAt(index);
         }
 
         // Copies the settings of an item to the system buffer
@@ -769,6 +785,28 @@ namespace InventoryInventor.Preset
             }
             index += 1;
             item.Control.value = float.Parse(settings[index]);
+
+            // Save Undo operation
+            Undo.CollapseUndoOperations(group);
+        }
+
+        // Removes an item from a page
+        public static void RemoveItem(object args)
+        {
+            PageItem item = ((object[])args)[0] as PageItem;
+            Page itemPage = ((object[])args)[1] as Page;
+
+            // Mark Preset as dirty
+            InventoryPreset preset = ((object[])args)[2] as InventoryPreset;
+            EditorUtility.SetDirty(preset);
+
+            // Record the change
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+
+            // Remove the item
+            Undo.RecordObject(itemPage, "Removed Item");
+            itemPage.Items.Remove(item);
 
             // Save Undo operation
             Undo.CollapseUndoOperations(group);
