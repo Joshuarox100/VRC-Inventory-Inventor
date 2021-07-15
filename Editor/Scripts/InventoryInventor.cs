@@ -191,7 +191,7 @@ namespace InventoryInventor
                                         break;
                                 }
                                 totalToggles++;
-                                if (item.Sync == PageItem.SyncMode.Auto && item.Saved)
+                                if (item.Sync != PageItem.SyncMode.Manual && item.Saved)
                                 {
                                     if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
                                     {

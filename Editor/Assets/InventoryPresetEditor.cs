@@ -1047,6 +1047,16 @@ public class InventoryPresetEditor : Editor
                                 totalUsage++;
                             if (pageItem.DisableGroup.Length > 0)
                                 totalUsage++;
+                            if (pageItem.Saved)
+                            {
+                                savedUsage++;
+                                if (avatar != null)
+                                {
+                                    if (avatar.expressionParameters != null && avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                                        totalMemory--;
+                                    totalMemory++;
+                                }
+                            }
                             break;
                         // If the toggle is manual, add three: one for the menu, being enabled, and being disabled.
                         case PageItem.SyncMode.Manual:
@@ -1376,6 +1386,21 @@ public class InventoryPresetEditor : Editor
                         // Item disabled clip.
                         itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
 
+                        // Custom Spacer
+                        GUILayout.Space(2f);
+                        rect = EditorGUILayout.BeginHorizontal();
+                        Handles.color = Color.gray;
+                        Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 25, rect.y + 1));
+                        EditorGUILayout.EndHorizontal();
+                        GUILayout.Space(2f);
+
+                        // Item transition offset.
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PrefixLabel(new GUIContent("Loading State", "Where in the animation to display while/upon loading."));
+                        itemTransitionOffset = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionOffset), new string[] { "Start", "End" }));
+                        EditorGUILayout.EndHorizontal();
+
+                        // Custom Spacer
                         GUILayout.Space(2f);
                         rect = EditorGUILayout.BeginHorizontal();
                         Handles.color = Color.gray;
@@ -1385,18 +1410,12 @@ public class InventoryPresetEditor : Editor
 
                         // Item transition timing.
                         EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.PrefixLabel(new GUIContent("Timing", "Whether the duration is in fixed (s) or normalized (%) time."));
+                        EditorGUILayout.PrefixLabel(new GUIContent("Blend Timing", "Whether the duration is in fixed (s) or normalized (%) time."));
                         itemTransitionType = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionType), new string[] { "Fixed", "Normalized" }));
                         EditorGUILayout.EndHorizontal();
 
                         // Item transition duration.
                         itemTransitionDuration = EditorGUILayout.FloatField(new GUIContent("Blend Duration", "How long the transition between states takes."), itemTransitionDuration);
-
-                        // Item transition offset.
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.PrefixLabel(new GUIContent("Loading Point", "Where in the animation to display while loading."));
-                        itemTransitionOffset = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionOffset), new string[] { "Start", "End" }));
-                        EditorGUILayout.EndHorizontal();
                     }
                     else
                     {
@@ -1450,13 +1469,12 @@ public class InventoryPresetEditor : Editor
 
                     // Item sync setting.
                     itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
-                    if (itemSync == PageItem.SyncMode.Auto)
-                    {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
-                        itemSaved = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemSaved), new string[] { "Enable", "Disable" }));
-                        EditorGUILayout.EndHorizontal();
-                    }
+                    EditorGUI.BeginDisabledGroup(itemSync == PageItem.SyncMode.Manual);
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
+                    itemSaved = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemSaved), new string[] { "Enable", "Disable" }));
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUI.EndDisabledGroup();
 
                     // Like EditorGUILayout.Space(), but smaller.
                     EditorGUILayout.BeginVertical();
