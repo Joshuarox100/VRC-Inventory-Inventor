@@ -1,9 +1,12 @@
-# v1.2.4
-After putting out the patch yesterday, I decided to think for more than 12 seconds and realized I overengineered a solution when one was staring me in the face.
+# v1.2.5
+This is a quick patch to the updater so that updates between Unity 2018.4 and Unity 2019.4 for Inventory Inventor are distinguishable. Unfortunately, I'm both not knowledgeable pr determined enough to maintain two seperate builds of the tool for 2018.4 and 2019.4, so consider this to be the last version supported for Unity 2018.4. 
 
-**If you used the previous patch, keep in mind that you will need to manually delete the extra parameters it created after reapplying your preset.**
+>**VERY IMPORTANT NOTE: Before upgrading your project to Unity 2019, install Inventory Inventor v1.3.0, which should release at the same time the update for VRChat goes live. Otherwise, *things will break* and you will likely be unable to upload avatars until you manually update it, since the included updater likely won't work either due to compiler issues.**
 
 ## Fixes
+### v1.2.5
+- Modified the VERSION file syntax to include the supported Unity version and modified the Updater to account for the information.
+- Fixed an issue with the AutoUpdater that could result in it failing midway through the installation.
 ### v1.2.4
 - Modified the solution introduced by the previous patch to not require the usage of extra unsynced parameters within the animator.
 ### v1.2.3
