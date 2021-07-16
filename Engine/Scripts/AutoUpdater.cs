@@ -159,7 +159,7 @@ namespace InventoryInventor.Version
                 // An update is available.
                 else if (buildVersion != "" && unityVersion != "" && buildVersion != latestBuild)
                 {
-                    if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Do this before migrating)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")) 
+                    if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Only do this before migrating!)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")) 
                     || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
                     {
                         // Download the update.
