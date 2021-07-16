@@ -163,7 +163,7 @@ namespace InventoryInventor.Version
                     || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
                     {
                         // Download the update.
-                        DownloadUpdate(latestVersion);
+                        DownloadUpdate(latestBuild);
                         updated = true;
                     }
                 }
