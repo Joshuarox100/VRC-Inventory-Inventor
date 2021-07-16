@@ -130,7 +130,7 @@ namespace InventoryInventor
                 manager.PreviewRemoval(out layers, out parameters, out expression);
             }
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
+            GUILayout.Space(3);
             DrawLine();
 
             // List Inventory Settings.
@@ -144,24 +144,24 @@ namespace InventoryInventor
             // Refresh Rate
             manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
+            GUILayout.Space(3);
             DrawLine();
 
             // List Output Settings.
             EditorGUILayout.LabelField("Output Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(50f));
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+            EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { textColor = GUI.skin.label.normal.textColor, background = null } });
             GUILayout.FlexibleSpace();
             // Format file path to fit in a button.
             string displayPath = (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : "";
             displayPath = (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
-            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
+            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = GUI.skin.GetStyle("Button").normal, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
             {
                 displayPath = "..." + displayPath.Substring(4);
             }
             // Destination.
-            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
+            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
             {
                 string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
                 if (absPath.StartsWith(Application.dataPath))

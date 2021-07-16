@@ -270,6 +270,7 @@ namespace InventoryInventor.Preset
              * DISABLE CLIP PATH
              * TRANSITION TYPE
              * TRANSITION DURATION
+             * TRANSITION OFFSET
              * OBJECT REFERENCE
              * INITIAL STATE
              * SYNC
@@ -319,6 +320,7 @@ namespace InventoryInventor.Preset
             itemEncode.AppendLine((item.DisableClip != null) ? AssetDatabase.GetAssetPath(item.DisableClip.GetInstanceID()) : "NULL");
             itemEncode.AppendLine(item.TransitionType ? "TRUE" : "FALSE");
             itemEncode.AppendLine(item.TransitionDuration.ToString());
+            itemEncode.AppendLine(item.TransitionOffset ? "TRUE" : "FALSE");
             itemEncode.AppendLine(item.ObjectReference != null ? item.ObjectReference : "NULL");
             itemEncode.AppendLine(item.InitialState ? "TRUE" : "FALSE");
             switch (item.Sync)
@@ -566,9 +568,10 @@ namespace InventoryInventor.Preset
                 item.DisableClip = (AnimationClip)AssetDatabase.LoadAssetAtPath(settings[7], typeof(AnimationClip));
             item.TransitionType = (settings[8] == "TRUE") ? true : false;
             item.TransitionDuration = float.Parse(settings[9]);
-            item.ObjectReference = settings[10];
-            item.InitialState = (settings[11] == "TRUE") ? true : false;
-            switch (settings[12])
+            item.TransitionOffset = (settings[10] == "TRUE") ? true : false;
+            item.ObjectReference = settings[11];
+            item.InitialState = (settings[12] == "TRUE") ? true : false;
+            switch (settings[13])
             {
                 case "AUTO":
                     item.Sync = PageItem.SyncMode.Auto;
@@ -580,9 +583,9 @@ namespace InventoryInventor.Preset
                     item.Sync = PageItem.SyncMode.Off;
                     break;
             }
-            item.Saved = (settings[13] == "TRUE") ? true : false;
-            GroupItem[] itemGroup = new GroupItem[int.Parse(settings[14])];
-            int index = 15;
+            item.Saved = (settings[14] == "TRUE") ? true : false;
+            GroupItem[] itemGroup = new GroupItem[int.Parse(settings[15])];
+            int index = 16;
             for (int i = 0; i < itemGroup.Length; i++)
             {
                 GroupItem item2 = ScriptableObject.CreateInstance<GroupItem>();

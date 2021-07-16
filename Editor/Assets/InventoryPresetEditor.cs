@@ -5,9 +5,9 @@ using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDK3.Avatars.Components; 
-using System.Reflection;
 using InventoryInventor.Preset;
 using InventoryInventor;
+using UnityEngine.UIElements;
 
 [CustomEditor(typeof(InventoryPreset))]
 public class InventoryPresetEditor : Editor
@@ -978,7 +978,7 @@ public class InventoryPresetEditor : Editor
             buttonGroupContents.onRemoveCallback -= buttonGroupContents.onRemoveCallback;
         }
 
-        if (IsDirtyUtility.IsDirty(preset.GetInstanceID()))
+        if (EditorUtility.IsDirty(preset.GetInstanceID()))
             InventoryPresetUtility.SaveChanges(preset);
         EditorApplication.wantsToQuit -= WantsToQuit;
     }
@@ -1114,7 +1114,7 @@ public class InventoryPresetEditor : Editor
             Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 15, rect.y + 1));
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")));
             EditorGUI.indentLevel++;
             if (missingFoldout = EditorGUILayout.Foldout(missingFoldout, "Missing Objects", true))
             {
@@ -1152,11 +1152,20 @@ public class InventoryPresetEditor : Editor
         GUIStyle barFrontStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
         GUIStyle barUnderStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
         if (savedUsage > 120)
+        {
             barUnderStyle.normal.background = barColors[1];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[1] };
+        }
         else if (avatar != null && avatar.expressionParameters != null &&  avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+        {
             barUnderStyle.normal.background = barColors[0];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[0] };
+        }
         else
+        {
             barUnderStyle.normal.background = barColors[2];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[2] };
+        }
         GUIStyle barTextColor = new GUIStyle(EditorStyles.label)
         {
             alignment = TextAnchor.MiddleCenter,
@@ -1166,12 +1175,14 @@ public class InventoryPresetEditor : Editor
         if (togglePercentage >= 0.85f)
         {
             barFrontStyle.normal.background = barColors[1];
+            barFrontStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[1] };
             barTextColor.normal.textColor = Color.white;
             barText = "<b>Data: " + (totalUsage - 1) + " of 255</b>";
         }
         else if (togglePercentage >= 0.7f)
         {
             barFrontStyle.normal.background = barColors[0];
+            barFrontStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[0] };
         }
         DoCustomProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), togglePercentage, savedPercentage, barBackStyle, barFrontStyle, barUnderStyle);
         EditorGUI.LabelField(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), barText, barTextColor);
@@ -1183,7 +1194,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.HelpBox("This preset uses more memory than the amount possible available on an Avatar (" + (savedUsage + 8) + "/" + 128 + " bits).", MessageType.Error);
         else if (avatar != null && avatar.expressionParameters != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
             EditorGUILayout.HelpBox("This preset uses more memory than is available on the Active Avatar (" + totalMemory + "/" + (VRCExpressionParameters.MAX_PARAMETER_COST - avatar.expressionParameters.CalcTotalCost()) + " bits).", MessageType.Warning);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")));
         EditorGUI.indentLevel++;
         if (usageFoldout = EditorGUILayout.Foldout(usageFoldout, "What Uses Data and Memory?", true))
         {
@@ -1331,7 +1342,7 @@ public class InventoryPresetEditor : Editor
             VRCExpressionsMenu.Control itemControl = currentItem.Control;
 
             // Item type.
-            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) }, GUILayout.Height(24f));
+            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("HelpBox")) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) }, GUILayout.Height(24f));
             itemType = (PageItem.ItemType)EditorGUILayout.IntPopup(new GUIContent("Type", "The type of item."), (int)itemType, typePopupName, typePopupVal);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
@@ -1347,7 +1358,7 @@ public class InventoryPresetEditor : Editor
             // Draw item renamer.
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
+            itemName = EditorGUILayout.TextField(itemName, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
 
             // Item icon (only if the item is not of type Page).
@@ -1377,7 +1388,7 @@ public class InventoryPresetEditor : Editor
                     itemAnimations = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemAnimations), new string[] { "Game Object", "Animation Clips" }));
                     EditorGUILayout.EndHorizontal();
 
-                    EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
+                    EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
                     if (itemAnimations)
                     {
                         // Item enabled clip.
@@ -1439,7 +1450,7 @@ public class InventoryPresetEditor : Editor
                             EditorGUILayout.HelpBox(new GUIContent("An avatar must be present in order to switch objects."));
                             EditorGUILayout.BeginHorizontal();
                             EditorGUILayout.PrefixLabel(new GUIContent("Object Path", "The stored path to the affected Game Object. (Read-Only)"));
-                            EditorGUILayout.LabelField(currentItem.ObjectReference, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+                            EditorGUILayout.LabelField(currentItem.ObjectReference, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
                             EditorGUILayout.EndHorizontal();
                         }
                     }
@@ -1649,7 +1660,7 @@ public class InventoryPresetEditor : Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
+            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
             if (EditorGUI.EndChangeCheck())
             {
@@ -1710,7 +1721,7 @@ public class InventoryPresetEditor : Editor
         serializedObject.ApplyModifiedProperties();
 
         // Save Changes before entering Play Mode
-        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying && IsDirtyUtility.IsDirty(preset.GetInstanceID()))
+        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying && EditorUtility.IsDirty(preset.GetInstanceID()))
         {
             InventoryPresetUtility.SaveChanges(preset);
         }
@@ -1770,7 +1781,7 @@ public class InventoryPresetEditor : Editor
 
         GUIStyle preButton = "RL FooterButton";
         GUIStyle newButton = new GUIStyle(preButton);
-        newButton.normal.textColor = Color.Lerp(Color.black, Color.grey, 0.65f);
+        newButton.normal.textColor = GUI.skin.button.normal.textColor;//Color.Lerp(Color.black, Color.grey, 0.65f);
         GUIStyle footerBackground = "RL Footer";
 
         // Modify the footer rect for the two buttons.
@@ -1783,16 +1794,17 @@ public class InventoryPresetEditor : Editor
         rect = new Rect(leftEdge, rect.y, rightEdge - leftEdge, rect.height);
 
         // Get Rects for each button.
-        Rect addRect = new Rect(leftEdge + 4, rect.y - 3, rect.width / 2, 13);
-        Rect removeRect = new Rect(rightEdge - 4 - (rect.width / 2), rect.y - 3, rect.width / 2, 13);
+        Rect addRect = new Rect(leftEdge + 4, rect.y , rect.width / 2, 13);
+        Rect removeRect = new Rect(rightEdge - 4 - (rect.width / 2), rect.y , rect.width / 2, 13);
 
         // Draw the background for the footer on Repaint Events.
         if (Event.current.type == EventType.Repaint)
         {
             footerBackground.Draw(rect, false, false, false, false);
-            // Separator
+            // Separators
             Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.xMin + rect.width / 2, rect.yMin), new Vector2(rect.xMin + rect.width / 2, rect.yMin + defaultFooterHeight));
+            Handles.DrawLine(new Vector2(rect.x, rect.y), new Vector2(rect.width + 15, rect.y));
         }
 
         // Makes button unable to be used while conditions are met.
@@ -2059,11 +2071,6 @@ public class InventoryPresetEditor : Editor
                     var barRect = new Rect(position.x + cursor + scale, position.y, barWidth, position.height);
                     progressBarUnderStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
                 }
-                //for (int i = 1; i < 120; i++)
-                //{
-                //    Handles.color = Color.black;
-                //    Handles.DrawLine(new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y), new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y + memBar.height));
-                //}
                 break;
         }
     }
@@ -2382,36 +2389,6 @@ public class InventoryPresetEditor : Editor
             EditorGUI.indentLevel -= 2;
             subControl.icon = (Texture2D)EditorGUILayout.ObjectField(subControl.icon, typeof(Texture2D), false);
             EditorGUILayout.EndHorizontal();
-        }
-    }
-
-    /*
-    // Check if an item is dirty
-    */
-
-    private class IsDirtyUtility
-    {
-        //Cached Value
-        private static Func<int, bool> _isDirtyCallback;
-
-        private static Func<int, bool> IsDirtyCallback
-        {
-            get
-            {
-                if (_isDirtyCallback == null)
-                {
-                    //Reflection
-                    MethodInfo isDirtyMethod = typeof(EditorUtility).GetMethod("IsDirty", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(int) }, null);
-                    _isDirtyCallback = (Func<int, bool>)Delegate.CreateDelegate(typeof(Func<int, bool>), null, isDirtyMethod);
-                }
-
-                return _isDirtyCallback;
-            }
-        }
-
-        public static bool IsDirty(int instanceID)
-        {
-            return IsDirtyCallback(instanceID);
         }
     }
 }
