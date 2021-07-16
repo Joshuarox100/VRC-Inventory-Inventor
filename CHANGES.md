@@ -1,7 +1,7 @@
 # v1.2.5
-This is a quick patch to the updater so that updates between Unity 2018.4 and Unity 2019.4 for Inventory Inventor are distinguishable. Unfortunately, I'm both not knowledgeable pr determined enough to maintain two seperate builds of the tool for 2018.4 and 2019.4, so consider this to be the last version supported for Unity 2018.4. 
+This is a quick patch to the updater so that updates between Unity 2018.4 and Unity 2019.4 for Inventory Inventor are distinguishable. Unfortunately, I'm both not knowledgeable or determined enough to maintain two separate builds of the tool for 2018.4 and 2019.4, so consider this to be the last version supported for Unity 2018.4. 
 
->**VERY IMPORTANT NOTE: Before upgrading your project to Unity 2019, install Inventory Inventor v1.3.0, which should release at the same time the update for VRChat goes live. Otherwise, *things will break* and you will likely be unable to upload avatars until you manually update it, since the included updater likely won't work either due to compiler issues.**
+>**VERY IMPORTANT NOTE: Before upgrading your project to Unity 2019, install Inventory Inventor v1.3.0, which should release at the same time the update for VRChat goes live. Otherwise, *things will break* and you will likely be unable to upload avatars due to compiler issues until you manually update it, since the included updater likely won't work either.**
 
 ## Fixes
 ### v1.2.5
