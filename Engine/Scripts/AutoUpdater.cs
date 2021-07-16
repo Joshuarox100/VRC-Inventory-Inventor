@@ -147,7 +147,7 @@ namespace InventoryInventor.Version
                     EditorUtility.DisplayDialog("Inventory Inventor", "Failed to fetch the latest version.\n(Check console for details.)", "Close");
                 }
                 // VERSION file missing.
-                else if ((buildVersion == "" || unityVersion == "") && !auto)
+                else if (buildVersion == "" && !auto)
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "Failed to identify installed version.\n(VERSION file was not found.)", "Close");
                 }
@@ -157,7 +157,7 @@ namespace InventoryInventor.Version
                     EditorUtility.DisplayDialog("Inventory Inventor", "Project has been put on hold indefinitely.", "Close");
                 }
                 // An update is available.
-                else if (buildVersion != "" && unityVersion != "" && buildVersion != latestBuild)
+                else if (buildVersion != "" && buildVersion != latestBuild)
                 {
                     if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Only do this before migrating!)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")) 
                     || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
