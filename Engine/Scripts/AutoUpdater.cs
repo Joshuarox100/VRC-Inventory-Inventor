@@ -118,7 +118,13 @@ namespace InventoryInventor.Version
         public static bool CheckForUpdates(bool auto = false)
         {
             // Read VERSION file.
-            string installedVersion = GetVersion();
+            string[] installedVersion = GetVersion().Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string buildVersion = "";
+            string unityVersion = "";
+            if (installedVersion.Length > 0)
+                buildVersion = installedVersion[0];
+            if (installedVersion.Length > 1)
+                unityVersion = installedVersion[1];
             bool updated = false;
 
             // Create hidden object to run the coroutine.
@@ -127,13 +133,21 @@ namespace InventoryInventor.Version
             // Run a coroutine to retrieve the GitHub data.
             NetworkManager manager = temp.AddComponent<NetworkManager>();
             manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
+                string[] decodedVersion = latestVersion.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                string latestBuild = "";
+                string latestUnity = "";
+                if (decodedVersion.Length > 0)
+                    latestBuild = decodedVersion[0];
+                if (decodedVersion.Length > 1)
+                    latestUnity = decodedVersion[1];
+
                 // Network Error.
                 if (latestVersion == "" && !auto)
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "Failed to fetch the latest version.\n(Check console for details.)", "Close");
                 }
                 // VERSION file missing.
-                else if (installedVersion == "" && !auto)
+                else if (buildVersion == "" && !auto)
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "Failed to identify installed version.\n(VERSION file was not found.)", "Close");
                 }
@@ -143,12 +157,13 @@ namespace InventoryInventor.Version
                     EditorUtility.DisplayDialog("Inventory Inventor", "Project has been put on hold indefinitely.", "Close");
                 }
                 // An update is available.
-                else if (installedVersion != latestVersion)
+                else if (buildVersion != "" && buildVersion != latestBuild)
                 {
-                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestVersion + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)": ""), "Yes", "No"))
+                    if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Only do this before migrating!)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")) 
+                    || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
                     {
                         // Download the update.
-                        DownloadUpdate(latestVersion);
+                        DownloadUpdate(latestBuild);
                         updated = true;
                     }
                 }
@@ -233,21 +248,28 @@ namespace InventoryInventor.Version
         // Deletes the current version
         private static void DeleteCurrentVersion(string mainPath)
         {
-            // Delete Primary Directory
-            string[] folders = Directory.GetDirectories(mainPath);
-            foreach (string folder in folders)
-                foreach (string entry in deletableFolders)
-                    if (folder.EndsWith(entry))
-                        Directory.Delete(folder, true);
+            try
+            {
+                // Delete Primary Directory
+                string[] folders = Directory.GetDirectories(mainPath);
+                foreach (string folder in folders)
+                    foreach (string entry in deletableFolders)
+                        if (folder.EndsWith(entry))
+                            Directory.Delete(folder, true);
 
-            // Delete Gizmos
-            folders = Directory.GetDirectories("Assets" + Path.DirectorySeparatorChar + "Gizmos");
-            foreach (string folder in folders)
-                if (folder.EndsWith("InventoryInventor"))
-                {
-                    Directory.Delete(folder, true);
-                    break;
-                }
+                // Delete Gizmos
+                folders = Directory.GetDirectories("Assets" + Path.DirectorySeparatorChar + "Gizmos");
+                foreach (string folder in folders)
+                    if (folder.EndsWith("InventoryInventor"))
+                    {
+                        Directory.Delete(folder, true);
+                        break;
+                    }
+            }
+            catch (Exception err)
+            {
+                Debug.LogWarning(err);
+            }
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]
