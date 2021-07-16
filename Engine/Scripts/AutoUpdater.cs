@@ -248,21 +248,28 @@ namespace InventoryInventor.Version
         // Deletes the current version
         private static void DeleteCurrentVersion(string mainPath)
         {
-            // Delete Primary Directory
-            string[] folders = Directory.GetDirectories(mainPath);
-            foreach (string folder in folders)
-                foreach (string entry in deletableFolders)
-                    if (folder.EndsWith(entry))
-                        Directory.Delete(folder, true);
+            try
+            {
+                // Delete Primary Directory
+                string[] folders = Directory.GetDirectories(mainPath);
+                foreach (string folder in folders)
+                    foreach (string entry in deletableFolders)
+                        if (folder.EndsWith(entry))
+                            Directory.Delete(folder, true);
 
-            // Delete Gizmos
-            folders = Directory.GetDirectories("Assets" + Path.DirectorySeparatorChar + "Gizmos");
-            foreach (string folder in folders)
-                if (folder.EndsWith("InventoryInventor"))
-                {
-                    Directory.Delete(folder, true);
-                    break;
-                }
+                // Delete Gizmos
+                folders = Directory.GetDirectories("Assets" + Path.DirectorySeparatorChar + "Gizmos");
+                foreach (string folder in folders)
+                    if (folder.EndsWith("InventoryInventor"))
+                    {
+                        Directory.Delete(folder, true);
+                        break;
+                    }
+            }
+            catch (Exception err)
+            {
+                Debug.LogWarning(err);
+            }
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]
