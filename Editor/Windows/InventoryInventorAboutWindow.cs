@@ -1,4 +1,5 @@
 ﻿using InventoryInventor.Version;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -44,6 +45,8 @@ namespace InventoryInventor
         {
             // Load version number.
             string version = Updater.GetVersion();
+            if (version != "")
+                version = version.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)[0];
 
             // Display top header.
             EditorGUILayout.BeginHorizontal();
@@ -53,7 +56,7 @@ namespace InventoryInventor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<size=13>Author: Joshuarox100</size>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } });
+            GUILayout.Box("<size=13>Author: Joshuarox100</size>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } });
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -67,7 +70,7 @@ namespace InventoryInventor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can quickly create inventories with plenty of toggles, all managed by a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can quickly create inventories with plenty of toggles, all managed by a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -81,12 +84,12 @@ namespace InventoryInventor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<i><size=12>Ambiguous, Dannie Wolf, & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("<i><size=12>Ambiguous, Dannie Wolf, & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -100,7 +103,7 @@ namespace InventoryInventor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("If you're having issues or want to contact me, you can find more information at the GitHub page linked below!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("If you're having issues or want to contact me, you can find more information at the GitHub page linked below!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
