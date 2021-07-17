@@ -1706,9 +1706,9 @@ namespace InventoryInventor
                     // Catch faulty data
                     if (buttons[i].ButtonGroup[j] != null && items.IndexOf(buttons[i].ButtonGroup[j].Item) == -1)
                     {
-                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
+                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + buttons[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
                         Selection.activeObject = preset;
-                        throw new Exception("Inventory Inventor: Corrupt member data found in " + items[i].name + "/Slot " + (j + 1) + ".");
+                        throw new Exception("Inventory Inventor: Corrupt member data found in " + buttons[i].name + "/Slot " + (j + 1) + ".");
                     }
                     // If the group item refers to an actual toggle.
                     if (buttons[i].ButtonGroup[j] != null && buttons[i].ButtonGroup[j].Item != null)
