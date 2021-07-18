@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 653c66429c2466845920f9399b645f78, type: 3}
   m_Name: Tutorial
   m_EditorClassIdentifier: 
-  m_Version: 2
+  m_Version: 3
+  m_LastPath: 
   m_Pages:
   - {fileID: 114052494721656458}
   - {fileID: 114651942175153490}
@@ -66,6 +67,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -102,6 +106,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114911827664630154}
@@ -183,6 +190,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -219,6 +229,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 114911827664630154}
@@ -269,6 +282,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -333,6 +349,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
@@ -463,6 +482,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_ObjectReference: 
   m_UseAnimations: 0
+  m_TransitionType: 1
+  m_TransitionDuration: 0
+  m_TransitionOffset: 0
   m_EnableClip: {fileID: 0}
   m_DisableClip: {fileID: 0}
   m_PageReference: {fileID: 0}
