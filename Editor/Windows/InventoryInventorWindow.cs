@@ -150,18 +150,20 @@ namespace InventoryInventor
             // List Output Settings.
             EditorGUILayout.LabelField("Output Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(50f));
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { textColor = GUI.skin.label.normal.textColor, background = null } });
             GUILayout.FlexibleSpace();
+
+            // The File Destination
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Destination", "The folder where generated files will be saved to."));
             // Format file path to fit in a button.
             string displayPath = (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : "";
-            displayPath = (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
-            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = GUI.skin.GetStyle("Button").normal, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
-            {
+            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > windowSize.width - EditorGUIUtility.labelWidth - 48f)
                 displayPath = "..." + displayPath.Substring(4);
-            }
+            if (displayPath.IndexOf("...") == 0 && displayPath.IndexOf('/') != -1)
+                displayPath = "..." + displayPath.Substring(displayPath.IndexOf('/'));
             // Destination.
-            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, active = GUI.skin.GetStyle("Button").active }, new GUILayoutOption[] { GUILayout.ExpandWidth(true) }))
             {
                 string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
                 if (absPath.StartsWith(Application.dataPath))
@@ -173,6 +175,8 @@ namespace InventoryInventor
                 }
             }
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
             EditorGUILayout.BeginHorizontal();
             // Overwrite All.
             EditorGUILayout.PrefixLabel(new GUIContent("Overwrite All", "Automatically overwrite existing files if needed."));
