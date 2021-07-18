@@ -242,6 +242,9 @@ namespace InventoryInventor.Preset
             newItem.Sync = item.Sync;
             newItem.Type = item.Type;
             newItem.UseAnimations = item.UseAnimations;
+            newItem.TransitionType = item.TransitionType;
+            newItem.TransitionDuration = item.TransitionDuration;
+            newItem.TransitionOffset = item.TransitionOffset;
             newItem.Control = item.Control;
             newItem.EnableClip = item.EnableClip;
             newItem.DisableClip = item.DisableClip;
