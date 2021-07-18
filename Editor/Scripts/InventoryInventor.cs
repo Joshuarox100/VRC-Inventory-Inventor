@@ -911,6 +911,7 @@ namespace InventoryInventor
             foreach (VRCExpressionsMenu page in pages)
             {
                 VRCExpressionsMenu current = page;
+                EditorUtility.SetDirty(current);
                 if (AssetDatabase.GetAssetPath(current).Length == 0)
                 {
                     if (AssetDatabase.FindAssets(current.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length != 0)
@@ -932,7 +933,6 @@ namespace InventoryInventor
                         }
                     }
                 }
-                EditorUtility.SetDirty(current);
             }
 
             // Out the top level menu.
@@ -1768,9 +1768,9 @@ namespace InventoryInventor
                     // Catch faulty data
                     if (buttons[i].ButtonGroup[j] != null && items.IndexOf(buttons[i].ButtonGroup[j].Item) == -1)
                     {
-                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + items[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
+                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + buttons[i].name + " has a corrupt member in Slot " + (j + 1) + ". Please reassign the member to the desired Item to fix it. The program will now abort forcefully.", "Close");
                         Selection.activeObject = preset;
-                        throw new Exception("Inventory Inventor: Corrupt member data found in " + items[i].name + "/Slot " + (j + 1) + ".");
+                        throw new Exception("Inventory Inventor: Corrupt member data found in " + buttons[i].name + "/Slot " + (j + 1) + ".");
                     }
                     // If the group item refers to an actual toggle.
                     if (buttons[i].ButtonGroup[j] != null && buttons[i].ButtonGroup[j].Item != null)
