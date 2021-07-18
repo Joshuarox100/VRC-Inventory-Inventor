@@ -4,10 +4,9 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
-using VRC.SDK3.Avatars.Components; 
+using VRC.SDK3.Avatars.Components;
 using InventoryInventor.Preset;
 using InventoryInventor;
-using UnityEngine.UIElements;
 
 [CustomEditor(typeof(InventoryPreset))]
 public class InventoryPresetEditor : Editor

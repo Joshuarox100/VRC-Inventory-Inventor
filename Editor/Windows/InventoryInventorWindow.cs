@@ -345,7 +345,7 @@ namespace InventoryInventor
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                EditorGUILayout.LabelField("<i>No Inventory Detected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+                EditorGUILayout.LabelField("<i>No Inventory Detected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { textColor = GUI.skin.textField.normal.textColor, background = null } });
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
             }

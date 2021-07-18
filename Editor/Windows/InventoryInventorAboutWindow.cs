@@ -51,26 +51,26 @@ namespace InventoryInventor
             // Display top header.
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<b><size=18>Inventory Inventor" + (version != "" ? " " : "") + version + "</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(300f));
+            GUILayout.Box("<b><size=18>Inventory Inventor" + (version != "" ? " " : "") + version + "</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(300f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<size=13>Author: Joshuarox100</size>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } });
+            GUILayout.Box("<size=13>Author: Joshuarox100</size>", new GUIStyle(GUI.skin.GetStyle("Label")) { richText = true });
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+            EditorGUILayout.Space(); 
             DrawLine();
 
             // Display summary.
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<b><size=15>Summary</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
+            GUILayout.Box("<b><size=15>Summary</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(200f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can quickly create inventories with plenty of toggles, all managed by a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("Make inventories fast with Inventory Inventor! With it, you can quickly create inventories with plenty of toggles, all managed by a single Expression Parameter!", new GUIStyle(GUI.skin.GetStyle("Label")) { richText = true, alignment = TextAnchor.UpperCenter, wordWrap = true }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -79,17 +79,17 @@ namespace InventoryInventor
             // Display special thanks.
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<b><size=15>Special Thanks</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
+            GUILayout.Box("<b><size=15>Special Thanks</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(200f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("<i><size=12>zachgregoire & ValliereMagic</size></i>\nFor helping with development, giving advice, and improving my coding knowledge overall.", new GUIStyle(GUI.skin.GetStyle("Label")) { richText = true, alignment = TextAnchor.UpperCenter, wordWrap = true }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<i><size=12>Ambiguous, Dannie Wolf, & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("<i><size=12>Ambiguous, Dannie Wolf, & FlowerBunny</size></i>\nFor being my guinea pigs to test things on.", new GUIStyle(GUI.skin.GetStyle("Label")) { richText = true, alignment = TextAnchor.UpperCenter, wordWrap = true }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -98,12 +98,12 @@ namespace InventoryInventor
             // Display troubleshooting.
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<b><size=15>Troubleshooting</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }, GUILayout.Width(200f));
+            GUILayout.Box("<b><size=15>Troubleshooting</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(200f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("If you're having issues or want to contact me, you can find more information at the GitHub page linked below!", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, normal = new GUIStyleState() { textColor = GUI.skin.box.normal.textColor, background = null } }, GUILayout.Width(350f));
+            GUILayout.Box("If you're having issues or want to contact me, you can find more information at the GitHub page linked below!", new GUIStyle(GUI.skin.GetStyle("Label")) { richText = true, alignment = TextAnchor.UpperCenter, wordWrap = true }, GUILayout.Width(350f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
