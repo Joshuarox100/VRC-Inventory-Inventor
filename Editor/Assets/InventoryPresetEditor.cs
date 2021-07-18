@@ -1955,7 +1955,7 @@ public class InventoryPresetEditor : Editor
         menu.AddSeparator("");
 
         // Clear the group settings
-        menu.AddItem(new GUIContent("Clear Settings"), false, InventoryPresetUtility.ClearGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
+        menu.AddItem(new GUIContent("Clear Group"), false, InventoryPresetUtility.ClearGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
 
         // Display the menu
         menu.ShowAsContext();
