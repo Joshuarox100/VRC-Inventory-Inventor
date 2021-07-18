@@ -17,6 +17,10 @@ MonoBehaviour:
     valueType: 0
     saved: 0
     defaultValue: 0
+  - name: Inventory Loaded
+    valueType: 2
+    saved: 1
+    defaultValue: 1
   - name: Inventory 1
     valueType: 2
     saved: 1
