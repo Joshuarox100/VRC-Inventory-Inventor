@@ -165,7 +165,7 @@ Groups are used for toggling multiple objects at once. Each Group can have as ma
 
 Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled [Item](#items) will be triggered, any other Groups within its members will be ignored.
 
-Right-clicking a Group will allow you to copy and paste settings to or from other Groups or clear it of any current members. All options (aside from copying), have undo support. Copying writes settings directly to the system buffer (clipboard), so it will overwrite whatever you last had copied either with right-click or CTRL-C.
+Right-clicking a Group will allow you to copy and paste settings to or from other Groups, set all of its members at once, or clear it of any current members. All options (aside from copying), have undo support. Copying writes settings directly to the system buffer (clipboard), so it will overwrite whatever you last had copied either with right-click or CTRL-C.
 
 ### Tips
 Here are some things you should keep in mind as you create your Preset.
@@ -257,6 +257,9 @@ Inventory Inventor has a few persistent settings and options you can access with
 
 **VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
 >This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
+
+**The Auto Updater is failing to download an update and it also looks weird in the notification.**
+>You probably don't have the newest version of Inventory Inventor, which may have changed how the updater functions (I'm looking at you v1.2.4 users). The only way to fix this is to download the latest version manually and import it into your project yourself.
 
 **"An exception occured!"**
 >If this happens, ensure you have a clean install of Inventory Inventor, and if the problem persists, [let me know](#contacting-me)!
