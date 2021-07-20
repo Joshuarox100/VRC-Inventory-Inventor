@@ -3,7 +3,7 @@ WOOT UNITY 2019 IS HERE BABY! DARK MODE FOR ALL! *cough*- sorry about that. *Any
 
 Unfortunately, due to a change in location for some class references needed for Inventory Inventor, from here on out, it will only be compatible with Unity 2019. If you plan on staying with Unity 2018, I recommend you use v1.2.5 instead (or just migrate, silly). 
 
-Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version hasn't been able to be vigorously tested in the updated engine. **Visual bugs may be present, if you find one, please report it to the Issue's page on Github, not to me on Discord.**
+Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version hasn't been able to be vigorously tested in the updated engine. **Visual bugs may be present, if you find one, please report it to the Issue's page on GitHub, not to me on Discord.**
 
 Additionally, ***if you are currently on v1.2.4, the Auto Updater will not work. You will need to import this update manually.*** If you are on v1.2.5, you should be able to update **before migrating**. There will be compiler errors after the import, but they should go away once you load the project again in Unity 2019.
 
@@ -11,16 +11,16 @@ Additionally, ***if you are currently on v1.2.4, the Auto Updater will not work.
 - Added support for Unity 2019:
 	- All UI elements should now be compatible with both light and dark theme.
 	- The icon for Presets has been updated to match the new design language of the Editor.
-- Copying & pasting is now supported for Pages, Items, & Groups.
+- Copying & pasting is now supported for Pages, Items, & Groups. (Support for Groups suggested by @noideaman)
 - You can now duplicate or delete Pages & Items after right-clicking them in the Directory.
 - You can now set all members of a Group at once or clear a Group entirely after right-clicking the Group header.
 - When using Animation Clips in Toggles, you can now set a duration for the transition in either fixed or normalized time.
 - When using Animation Clips in Toggles, you can now offset the animation's starting point while your avatar is loading, this is useful for progressive animations such as dissolves.
 - Toggles with syncing disabled (local-only) are now able to be saved locally.
 - The location of relevant windows such as the Manager have been relocated to "Tools/Joshuarox100" instead of "Tools/Avatars 3.0"
-- The last used destination is now saved within each Preset and is automatically used if possible when selecting the Preset in the Manager.
+- The last used destination is now saved within each Preset and is automatically used if possible when selecting the Preset in the Manager. (Suggested by @sinni800)
 - The README has been updated with new documentation for introduced features and includes some modifications to the Troubleshooting section.
-- A new social preview for the Github has been applied and is also included in the "Images" folder.
+- A new social preview for the GitHub has been applied and is also included in the "Images" folder.
 
 ## Fixes
 ### v1.3.0
@@ -39,3 +39,4 @@ Additionally, ***if you are currently on v1.2.4, the Auto Updater will not work.
 	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
 	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
 	- Moved a SetDirty flag about 8 lines higher to stop a weird bug where menus set as submenus would be removed from the exported assets occasionally.
+	- Fixed a bug with the "Corrupt Member" error message that didn't specify the correct item when triggered by buttons. (Found by @MikeMatrix)
