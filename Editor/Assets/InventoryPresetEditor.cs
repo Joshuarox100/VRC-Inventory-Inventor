@@ -1954,6 +1954,12 @@ public class InventoryPresetEditor : Editor
 
         menu.AddSeparator("");
 
+        // Set all members to enable
+        menu.AddItem(new GUIContent("Set All To/Enable"), false, InventoryPresetUtility.SetAllGroupMembers, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset, true });
+
+        // Set all members to disable
+        menu.AddItem(new GUIContent("Set All To/Disable"), false, InventoryPresetUtility.SetAllGroupMembers, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset, false });
+
         // Clear the group settings
         menu.AddItem(new GUIContent("Clear Group"), false, InventoryPresetUtility.ClearGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
 

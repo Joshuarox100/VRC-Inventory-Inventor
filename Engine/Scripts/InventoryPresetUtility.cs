@@ -1118,6 +1118,51 @@ namespace InventoryInventor.Preset
             Undo.CollapseUndoOperations(group);
         }
 
+        // Sets the settings of all group members
+        public static void SetAllGroupMembers(object args)
+        {
+            PageItem item = ((object[])args)[0] as PageItem;
+            int groupType = (int)((object[])args)[1];
+
+            // Mark Preset as dirty
+            InventoryPreset preset = (InventoryPreset)((object[])args)[2];
+            EditorUtility.SetDirty(preset);
+
+            // Record the change
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+
+            // Set all group members
+            Undo.RecordObject(item, "Set All Members");
+            switch (groupType)
+            {
+                case 0:
+                    foreach (GroupItem member in item.EnableGroup)
+                        if ((bool)((object[])args)[3])
+                            member.Reaction = GroupItem.GroupType.Enable;
+                        else
+                            member.Reaction = GroupItem.GroupType.Disable;
+                    break;
+                case 1:
+                    foreach (GroupItem member in item.DisableGroup)
+                        if ((bool)((object[])args)[3])
+                            member.Reaction = GroupItem.GroupType.Enable;
+                        else
+                            member.Reaction = GroupItem.GroupType.Disable;
+                    break;
+                case 2:
+                    foreach (GroupItem member in item.ButtonGroup)
+                        if ((bool)((object[])args)[3])
+                            member.Reaction = GroupItem.GroupType.Enable;
+                        else
+                            member.Reaction = GroupItem.GroupType.Disable;
+                    break;
+            }
+
+            // Save Undo operation
+            Undo.CollapseUndoOperations(group);
+        }
+
         // Clears all the items within a group
         public static void ClearGroupSettings(object args)
         {
