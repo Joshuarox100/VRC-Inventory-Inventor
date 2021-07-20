@@ -38,3 +38,4 @@ Additionally, ***if you are currently on v1.2.4, the Auto Updater will not work.
 	- Adjusted the About window to account for the new VERSION file format.
 	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
 	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
+	- Moved a SetDirty flag about 8 lines higher to stop a weird bug where menus set as submenus would be removed from the exported assets occasionally.
