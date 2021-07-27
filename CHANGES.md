@@ -49,4 +49,4 @@ Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version 
 	- Adjusted the About window to account for the new VERSION file format.
 	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
 	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
-	- Moved a SetDirty flag about 8 lines higher to stop a weird bug where menus set as submenus would be removed from the exported assets occasionally.
+	- Corrected some code involving asset loading that caused submenus to not be preserved during export in 2019 exclusively.
