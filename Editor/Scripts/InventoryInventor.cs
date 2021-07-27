@@ -863,9 +863,9 @@ namespace InventoryInventor
                 AssetDatabase.CreateFolder(outputPath, "Menus");
 
             // Create / overwrite each menu asset to the directory.
-            index = 0;
-            foreach (VRCExpressionsMenu page in pages)
+            for (int i = 0; i < pages.Count; i++)
             {
+                VRCExpressionsMenu page = pages[i];
                 bool exists = true;
                 if (File.Exists(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset"))
                 {
@@ -893,47 +893,42 @@ namespace InventoryInventor
                 AssetDatabase.Refresh();
 
                 // Check that the asset was saved successfully.
-                if (AssetDatabase.FindAssets(page.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
+                if (AssetDatabase.FindAssets(page.name + " t:VRCExpressionsMenu", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
                 {
                     return 3;
                 }
                 else
                 {
                     AssetDatabase.Refresh();
+                    // Update the object in list
+                    pages[i] = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(page.name + " t:VRCExpressionsMenu", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0]), typeof(VRCExpressionsMenu));
+                    if (pages[i] == null)
+                    {
+                        Debug.LogError("Inventory Inventor: Type mismatch when loading menu: " + page.name);
+                        return 3;
+                    }    
                     if (!exists)
                         generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"));
                 }
-                EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.975f + index * 1f / pages.Count * 0.025f);
-                index++;
+                EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.975f + i * 1f / pages.Count * 0.025f);
             }
 
             // Reassign created menus to each other as submenus so the reference persists post restart.
-            foreach (VRCExpressionsMenu page in pages)
+            for (int i = 0; i < pages.Count; i++)
             {
-                VRCExpressionsMenu current = page;
+                VRCExpressionsMenu current = pages[i];
+                Page currentPage = preset.Pages[i];
                 EditorUtility.SetDirty(current);
-                if (AssetDatabase.GetAssetPath(current).Length == 0)
-                {
-                    if (AssetDatabase.FindAssets(current.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length != 0)
-                    {
-                        current = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.FindAssets(current.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0], typeof(VRCExpressionsMenu));
-                    }
-                }
+                index = 0;
                 foreach (VRCExpressionsMenu.Control control in current.controls)
                 {
-                    if (control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && control.subMenu != null && AssetDatabase.GetAssetPath(control.subMenu).Length == 0)
-                    {
-                        if (AssetDatabase.FindAssets(control.subMenu.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length != 0)
-                        {
-                            control.subMenu = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.FindAssets(control.subMenu.name, new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0], typeof(VRCExpressionsMenu));
-                        }
-                        else // Failed to create menu
-                        {
-                            return 3;
-                        }
-                    }
+                    if (control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && currentPage.Items[index].Type == PageItem.ItemType.Subpage && currentPage.Items[index].PageReference != null)
+                        control.subMenu = preset.Pages.Contains(currentPage.Items[index].PageReference) ? pages[preset.Pages.IndexOf(currentPage.Items[index].PageReference)] : null;
+                    index++;
                 }
             }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             // Out the top level menu.
             mainMenu = pages[0];
