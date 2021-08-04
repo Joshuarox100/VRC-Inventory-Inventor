@@ -1,6 +1,8 @@
 # Inventory Inventor
 Author: Joshuarox100
 
+> **This does not properly work in the Editor for the Unity 2019 VRChat Open Beta. Any avatars already uploaded after using the tool will still work fine though.**
+
 Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all managed by a single Expression Parameter! *(Disclamer: You can choose to use more parameters if you want to save the state of items in the Inventory.)*
 
 Dependencies: 
