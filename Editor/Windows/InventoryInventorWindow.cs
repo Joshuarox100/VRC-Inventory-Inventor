@@ -32,7 +32,7 @@ namespace InventoryInventor
         // Colors
         private readonly static Color32 navy = new Color32(143, 0, 254, 255);   
 
-        [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Manage Inventory", priority = 0)]
+        [MenuItem("Tools/Joshuarox100/Inventory Inventor/Manage Inventory", priority = 0)]
         public static void ManageInventory()
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
@@ -42,7 +42,7 @@ namespace InventoryInventor
             window.Show();
         }
 
-        [MenuItem("Tools/Avatars 3.0/Inventory Inventor/Check For Updates", priority = 11)]
+        [MenuItem("Tools/Joshuarox100/Inventory Inventor/Check For Updates", priority = 11)]
         public static void CheckForUpdates()
         {
             Updater.CheckForUpdates();
@@ -130,35 +130,40 @@ namespace InventoryInventor
                 manager.PreviewRemoval(out layers, out parameters, out expression);
             }
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
+            GUILayout.Space(3);
             DrawLine();
 
             // List Inventory Settings.
             EditorGUILayout.LabelField("Inventory Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
             // Preset
+            EditorGUI.BeginChangeCheck();
             manager.preset = (InventoryPreset)EditorGUILayout.ObjectField(new GUIContent("Preset", "The preset to apply to the Animator."), manager.preset, typeof(InventoryPreset), false);
+            if (EditorGUI.EndChangeCheck() && manager.preset != null && manager.preset.LastPath != null && manager.preset.LastPath != "")
+                manager.outputPath = manager.preset.LastPath;
             // Refresh Rate
             manager.refreshRate = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Refresh Rate", "How long each synced (or unsaved) toggle is given to synchronize with late joiners (seconds per item)."), manager.refreshRate), 0f, float.MaxValue);
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
+            GUILayout.Space(3);
             DrawLine();
 
             // List Output Settings.
             EditorGUILayout.LabelField("Output Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")), GUILayout.Height(50f));
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(new GUIContent("Destination", "The folder where generated files will be saved to."), new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
             GUILayout.FlexibleSpace();
+
+            // The File Destination
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Destination", "The folder where generated files will be saved to."));
             // Format file path to fit in a button.
             string displayPath = (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : "";
-            displayPath = (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210) ? "..." + displayPath.Substring((displayPath.IndexOf('/', displayPath.Length - 29) != -1) ? displayPath.IndexOf('/', displayPath.Length - 29) : displayPath.Length - 29) : displayPath;
-            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > 210)
-            {
+            while (new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true }.CalcSize(new GUIContent("<i>" + displayPath + "</i>")).x > windowSize.width - EditorGUIUtility.labelWidth - 48f)
                 displayPath = "..." + displayPath.Substring(4);
-            }
+            if (displayPath.IndexOf("...") == 0 && displayPath.IndexOf('/') != -1)
+                displayPath = "..." + displayPath.Substring(displayPath.IndexOf('/'));
             // Destination.
-            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, hover = GUI.skin.GetStyle("Button").active }, GUILayout.MinWidth(210)))
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, active = GUI.skin.GetStyle("Button").active }, new GUILayoutOption[] { GUILayout.ExpandWidth(true) }))
             {
                 string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
                 if (absPath.StartsWith(Application.dataPath))
@@ -170,6 +175,8 @@ namespace InventoryInventor
                 }
             }
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
             EditorGUILayout.BeginHorizontal();
             // Overwrite All.
             EditorGUILayout.PrefixLabel(new GUIContent("Overwrite All", "Automatically overwrite existing files if needed."));
@@ -342,7 +349,7 @@ namespace InventoryInventor
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                EditorGUILayout.LabelField("<i>No Inventory Detected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+                EditorGUILayout.LabelField("<i>No Inventory Detected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { textColor = GUI.skin.textField.normal.textColor, background = null } });
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
             }

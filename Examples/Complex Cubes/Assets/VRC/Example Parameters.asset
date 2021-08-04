@@ -17,6 +17,10 @@ MonoBehaviour:
     valueType: 0
     saved: 0
     defaultValue: 0
+  - name: Inventory Loaded
+    valueType: 2
+    saved: 1
+    defaultValue: 1
   - name: Inventory 1
     valueType: 2
     saved: 1
@@ -78,6 +82,42 @@ MonoBehaviour:
     saved: 1
     defaultValue: 0
   - name: Inventory 16
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 17
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 18
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 19
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 20
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 21
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 22
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 23
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 24
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+  - name: Inventory 25
     valueType: 2
     saved: 1
     defaultValue: 0

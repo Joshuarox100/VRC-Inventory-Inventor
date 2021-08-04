@@ -1,21 +1,52 @@
-# v1.2.5
-This is a quick patch to the updater so that updates between Unity 2018.4 and Unity 2019.4 for Inventory Inventor are distinguishable. Unfortunately, I'm both not knowledgeable or determined enough to maintain two separate builds of the tool for 2018.4 and 2019.4, so consider this to be the last version supported for Unity 2018.4. 
+# v1.3.0
+WOOT UNITY 2019 IS HERE BABY! DARK MODE FOR ALL! *cough*- sorry about that. *Anyways*, this is a **feature update**! Several new features have been added, as well as support and compatibility for Unity 2019.
 
->**VERY IMPORTANT NOTE: Before upgrading your project to Unity 2019, install Inventory Inventor v1.3.0, which should release at the same time the update for VRChat goes live. Otherwise, *things will break* and you will likely be unable to upload avatars due to compiler issues until you manually update it, since the included updater likely won't work either.**
+Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version hasn't been able to be vigorously tested in the updated engine. **Visual bugs in the Editor may be present, if you find one, please report it to the Issue's page on GitHub, not to me on Discord.**
+
+## New Features
+- **Unity 2019 Support!**
+	Following VRChat in its footsteps, Inventory Inventor is now being built upon Unity 2019. All UI elements have been adjusted to work with the new theming and design language better.
+- **Dark Mode Compatibility**
+	With the upgrade to Unity 2019, everyone now has free access to Dark mode. Because of this, support for it has now been implemented into Inventory Inventor.
+- **Copying & Pasting**
+	Copying and pasting is now possible with Pages, Items, & Groups. Both options can be found when right-clicking them in the Directory (or the header for Groups). 
+	- Settings are copied to the system buffer, so any changes made after copying settings won't be pasted. It will also overwrite whatever you currently have saved to the clipboard.
+	- All members copied from one type of Group can be pasted as any other type, meaning you can copy a Button's Group and paste it into a Toggle's Enable or Disable Group for example and vice-versa. (Suggested by @noideaman)
+- **More Context Menu Options**
+	Right-clicking Pages, Items, & Groups now provides several more options than before:
+	- In addition to copying & pasting, you can now duplicate or delete Pages & Items after right-clicking them in the Directory.
+	- You can now set all members of a Group at once or clear a Group entirely after right-clicking the Group header.
+- **Additional Toggle Settings**
+	When using Animation Clips for Toggles, new options have been added for better control and adaptability:
+	- You can now set a duration for the transition in either fixed or normalized time, this is useful for blending animations such as those that affect opacity or blend shapes.
+	- You can now offset the animation's starting point while your avatar is loading, this is useful for progressive animations such as dissolves.
+
+## Changes
+- **General**
+	- The location of relevant windows such as the Manager have been relocated to "Tools/Joshuarox100" instead of "Tools/Avatars 3.0"
+	- The README has been updated with new documentation for introduced features and includes some modifications to the Troubleshooting section.
+	- A new social preview for the GitHub has been applied and is also included in the "Images" folder.
+- **Inventory Manager**
+	- The last used destination is now saved within each Preset and is automatically used if possible when selecting the Preset in the Manager. (Suggested by @sinni800)
+- **Presets**
+	- Toggles with syncing disabled (local-only) are now able to be saved locally.
+	- The icon for Presets has been updated to match the new design language of the Editor.
 
 ## Fixes
-### v1.2.5
-- Modified the VERSION file syntax to include the supported Unity version and modified the Updater to account for the information.
-- Fixed an issue with the AutoUpdater that could result in it failing midway through the installation.
-### v1.2.4
-- Modified the solution introduced by the previous patch to not require the usage of extra unsynced parameters within the animator.
-### v1.2.3
-- Worked around the saved parameter issue to display the default state of the inventory to remote clients until the local client has loaded their avatar themselves.
-### v1.2.2
-- Added several null checks to fix problems when viewing presets for an avatar without Expression Parameters assigned.
-- Fixed an oversight that caused the script to use the wrong animation file generated for objects.
-### v1.2.1
-- Added a null check for Subpage Items when they can't find the page they link to during appending.
-### v1.2.0
-- Added a null check for using Controls on an avatar without assigned parameters.
-- Fixed an ingame syncing issue that was caused by some VRChat update regarding buttons.
+### v1.3.0
+- **All** instances of the chosen Animator are now replaced in the Avatar Descriptor.
+- Fixed a long-standing bug with new Page creation that occurred when names were already in use (The correct item should now be renamed).
+- Fixed a bug with the "Corrupt Member" error message that didn't specify the correct item when triggered by buttons. (Found by @MikeMatrix)
+- Aaaaaand here's all the Unity 2019 related ones:
+	- Changed references for "UnityEngine.Experimental.UIElements" to "UnityEngine.UIElements" so it would compile.
+	- Removed the IsDirtyUtility Subclass since the "EditorUtility.IsDirty" function is Public in Unity 2019.
+	- Added a bar to the tops of Reorderable list footers since they no longer have one by default.
+	- Fixed Data & Memory usage bar colors so that they work in both light & dark mode.
+	- Fixed the styling of ToolbarTextFields to not blend in with the color of Box sections.
+	- Changed the style of overlapping Boxes to Helpboxes since the border of Boxes was removed.
+	- Adjusted some spacing between elements in the Manager window to prevent the Create button from going off the screen.
+	- Subtly changed the way the destination option was displayed in the manager to better align with other settings.
+	- Adjusted the About window to account for the new VERSION file format.
+	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
+	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
+	- Corrected some code involving asset loading that caused submenus to not be preserved during export in 2019 exclusively.

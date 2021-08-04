@@ -4,8 +4,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
-using VRC.SDK3.Avatars.Components; 
-using System.Reflection;
+using VRC.SDK3.Avatars.Components;
 using InventoryInventor.Preset;
 using InventoryInventor;
 
@@ -103,10 +102,10 @@ public class InventoryPresetEditor : Editor
 
             // Deal with pages that share the same name.
             List<string> names = new List<string>();
-            foreach (Page page in preset.Pages)
+            for (int i = 0; i <= index && i < preset.Pages.Count; i++)
             {
-                if (page != item)
-                    names.Add(page.name);
+                if (preset.Pages[i] != item)
+                    names.Add(preset.Pages[i].name);
             }
             if (names.Contains(item.name) && names.IndexOf(item.name) != index)
             {
@@ -130,6 +129,12 @@ public class InventoryPresetEditor : Editor
             }
             Rect foldoutRect = new Rect(rect.x + 8, rect.y + EditorGUIUtility.singleLineHeight / 4, 0f, 18f);
             pagesFoldout[index] = EditorGUI.Foldout(foldoutRect, pagesFoldout[index], displayedName + ((index == 0) ? " (Default)" : ""));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                ShowPageContextMenu(index);
+            }
 
             if (pagesFoldout[index] && !draggingPage)
             {
@@ -364,6 +369,13 @@ public class InventoryPresetEditor : Editor
         enableGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Enabled...", "Modifies listed toggles when this toggle is enabled."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 0);
+            }
         };
         enableGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -546,6 +558,13 @@ public class InventoryPresetEditor : Editor
         disableGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Disabled...", "Modifies listed toggles when this toggle is disabled."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 1);
+            }
         };
         disableGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -727,6 +746,13 @@ public class InventoryPresetEditor : Editor
         buttonGroupContents.drawHeaderCallback += (Rect rect) =>
         {
             GUI.Label(rect, new GUIContent("When Activated...", "Modifies listed toggles when this button is used."));
+
+            // Show Context Menu
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            {
+                string listKey = preset.Pages[focusedItemPage].GetInstanceID().ToString();
+                ShowGroupContextMenu(focusedItemPage, pageContentsDict[listKey].index, 2);
+            }
         };
         buttonGroupContents.drawElementCallback += (Rect rect, int index, bool active, bool focused) =>
         {
@@ -951,7 +977,7 @@ public class InventoryPresetEditor : Editor
             buttonGroupContents.onRemoveCallback -= buttonGroupContents.onRemoveCallback;
         }
 
-        if (IsDirtyUtility.IsDirty(preset.GetInstanceID()))
+        if (EditorUtility.IsDirty(preset.GetInstanceID()))
             InventoryPresetUtility.SaveChanges(preset);
         EditorApplication.wantsToQuit -= WantsToQuit;
     }
@@ -1020,6 +1046,16 @@ public class InventoryPresetEditor : Editor
                                 totalUsage++;
                             if (pageItem.DisableGroup.Length > 0)
                                 totalUsage++;
+                            if (pageItem.Saved)
+                            {
+                                savedUsage++;
+                                if (avatar != null)
+                                {
+                                    if (avatar.expressionParameters != null && avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
+                                        totalMemory--;
+                                    totalMemory++;
+                                }
+                            }
                             break;
                         // If the toggle is manual, add three: one for the menu, being enabled, and being disabled.
                         case PageItem.SyncMode.Manual:
@@ -1077,7 +1113,7 @@ public class InventoryPresetEditor : Editor
             Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 15, rect.y + 1));
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+            EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")));
             EditorGUI.indentLevel++;
             if (missingFoldout = EditorGUILayout.Foldout(missingFoldout, "Missing Objects", true))
             {
@@ -1115,11 +1151,20 @@ public class InventoryPresetEditor : Editor
         GUIStyle barFrontStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
         GUIStyle barUnderStyle = new GUIStyle(GUI.skin.FindStyle("ProgressBarBar") ?? EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ProgressBarBar"));
         if (savedUsage > 120)
+        {
             barUnderStyle.normal.background = barColors[1];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[1] };
+        }
         else if (avatar != null && avatar.expressionParameters != null &&  avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
+        {
             barUnderStyle.normal.background = barColors[0];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[0] };
+        }
         else
+        {
             barUnderStyle.normal.background = barColors[2];
+            barUnderStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[2] };
+        }
         GUIStyle barTextColor = new GUIStyle(EditorStyles.label)
         {
             alignment = TextAnchor.MiddleCenter,
@@ -1129,12 +1174,14 @@ public class InventoryPresetEditor : Editor
         if (togglePercentage >= 0.85f)
         {
             barFrontStyle.normal.background = barColors[1];
+            barFrontStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[1] };
             barTextColor.normal.textColor = Color.white;
             barText = "<b>Data: " + (totalUsage - 1) + " of 255</b>";
         }
         else if (togglePercentage >= 0.7f)
         {
             barFrontStyle.normal.background = barColors[0];
+            barFrontStyle.normal.scaledBackgrounds = new Texture2D[] { barColors[0] };
         }
         DoCustomProgressBar(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), togglePercentage, savedPercentage, barBackStyle, barFrontStyle, barUnderStyle);
         EditorGUI.LabelField(new Rect(barPos.x + 4, barPos.y + 4, barPos.width - 8, 16), barText, barTextColor);
@@ -1146,7 +1193,7 @@ public class InventoryPresetEditor : Editor
             EditorGUILayout.HelpBox("This preset uses more memory than the amount possible available on an Avatar (" + (savedUsage + 8) + "/" + 128 + " bits).", MessageType.Error);
         else if (avatar != null && avatar.expressionParameters != null && avatar.expressionParameters.CalcTotalCost() + totalMemory > VRCExpressionParameters.MAX_PARAMETER_COST)
             EditorGUILayout.HelpBox("This preset uses more memory than is available on the Active Avatar (" + totalMemory + "/" + (VRCExpressionParameters.MAX_PARAMETER_COST - avatar.expressionParameters.CalcTotalCost()) + " bits).", MessageType.Warning);
-        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")));
+        EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")));
         EditorGUI.indentLevel++;
         if (usageFoldout = EditorGUILayout.Foldout(usageFoldout, "What Uses Data and Memory?", true))
         {
@@ -1283,6 +1330,9 @@ public class InventoryPresetEditor : Editor
             bool itemState = currentItem.InitialState;
             Transform itemObject = avatar != null && !currentItem.ObjectReference.Equals("") ? avatar.transform.Find(currentItem.ObjectReference) : null;
             bool itemAnimations = currentItem.UseAnimations;
+            bool itemTransitionType = currentItem.TransitionType;
+            float itemTransitionDuration = currentItem.TransitionDuration;
+            bool itemTransitionOffset = currentItem.TransitionOffset;
             AnimationClip itemEnable = currentItem.EnableClip;
             AnimationClip itemDisable = currentItem.DisableClip;
             PageItem.SyncMode itemSync = currentItem.Sync;
@@ -1291,7 +1341,7 @@ public class InventoryPresetEditor : Editor
             VRCExpressionsMenu.Control itemControl = currentItem.Control;
 
             // Item type.
-            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("Box")) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) }, GUILayout.Height(24f));
+            EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.GetStyle("HelpBox")) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) }, GUILayout.Height(24f));
             itemType = (PageItem.ItemType)EditorGUILayout.IntPopup(new GUIContent("Type", "The type of item."), (int)itemType, typePopupName, typePopupVal);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal(GUILayout.Height(5f));
@@ -1307,7 +1357,7 @@ public class InventoryPresetEditor : Editor
             // Draw item renamer.
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            itemName = EditorGUILayout.TextField(itemName, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
+            itemName = EditorGUILayout.TextField(itemName, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
 
             // Item icon (only if the item is not of type Page).
@@ -1337,7 +1387,7 @@ public class InventoryPresetEditor : Editor
                     itemAnimations = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemAnimations), new string[] { "Game Object", "Animation Clips" }));
                     EditorGUILayout.EndHorizontal();
 
-                    EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
+                    EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("HelpBox")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
                     if (itemAnimations)
                     {
                         // Item enabled clip.
@@ -1345,6 +1395,37 @@ public class InventoryPresetEditor : Editor
 
                         // Item disabled clip.
                         itemDisable = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Disable", "The Animation to play when the toggle is disabled."), itemDisable, typeof(AnimationClip), false);
+
+                        // Custom Spacer
+                        GUILayout.Space(2f);
+                        rect = EditorGUILayout.BeginHorizontal();
+                        Handles.color = Color.gray;
+                        Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 25, rect.y + 1));
+                        EditorGUILayout.EndHorizontal();
+                        GUILayout.Space(2f);
+
+                        // Item transition offset.
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PrefixLabel(new GUIContent("Loading State", "Where in the animation to display while/upon loading."));
+                        itemTransitionOffset = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionOffset), new string[] { "Start", "End" }));
+                        EditorGUILayout.EndHorizontal();
+
+                        // Custom Spacer
+                        GUILayout.Space(2f);
+                        rect = EditorGUILayout.BeginHorizontal();
+                        Handles.color = Color.gray;
+                        Handles.DrawLine(new Vector2(rect.x, rect.y + 1), new Vector2(rect.width + 25, rect.y + 1));
+                        EditorGUILayout.EndHorizontal();
+                        GUILayout.Space(2f);
+
+                        // Item transition timing.
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PrefixLabel(new GUIContent("Blend Timing", "Whether the duration is in fixed (s) or normalized (%) time."));
+                        itemTransitionType = Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(itemTransitionType), new string[] { "Fixed", "Normalized" }));
+                        EditorGUILayout.EndHorizontal();
+
+                        // Item transition duration.
+                        itemTransitionDuration = EditorGUILayout.FloatField(new GUIContent("Blend Duration", "How long the transition between states takes."), itemTransitionDuration);
                     }
                     else
                     {
@@ -1368,7 +1449,7 @@ public class InventoryPresetEditor : Editor
                             EditorGUILayout.HelpBox(new GUIContent("An avatar must be present in order to switch objects."));
                             EditorGUILayout.BeginHorizontal();
                             EditorGUILayout.PrefixLabel(new GUIContent("Object Path", "The stored path to the affected Game Object. (Read-Only)"));
-                            EditorGUILayout.LabelField(currentItem.ObjectReference, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal }, GUILayout.ExpandWidth(true));
+                            EditorGUILayout.LabelField(currentItem.ObjectReference, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
                             EditorGUILayout.EndHorizontal();
                         }
                     }
@@ -1398,13 +1479,12 @@ public class InventoryPresetEditor : Editor
 
                     // Item sync setting.
                     itemSync = (PageItem.SyncMode)EditorGUILayout.EnumPopup(new GUIContent("Sync", "How the toggle should sync with others."), itemSync);
-                    if (itemSync == PageItem.SyncMode.Auto)
-                    {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
-                        itemSaved = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemSaved), new string[] { "Enable", "Disable" }));
-                        EditorGUILayout.EndHorizontal();
-                    }
+                    EditorGUI.BeginDisabledGroup(itemSync == PageItem.SyncMode.Manual);
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PrefixLabel(new GUIContent("Saved", "Whether to save the state of this item when unloading the avatar."));
+                    itemSaved = !Convert.ToBoolean(GUILayout.Toolbar(Convert.ToInt32(!itemSaved), new string[] { "Enable", "Disable" }));
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUI.EndDisabledGroup();
 
                     // Like EditorGUILayout.Space(), but smaller.
                     EditorGUILayout.BeginVertical();
@@ -1465,6 +1545,11 @@ public class InventoryPresetEditor : Editor
                 if (!currentItem.UseAnimations && !itemAnimations)
                     currentItem.ObjectReference = avatar != null && (resetReference || avatar.transform.Find(currentItem.ObjectReference) != null && (Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) != -1) || itemObject == null) ? (resetReference || itemObject == null ? "" : Helper.GetGameObjectPath(itemObject).Substring(Helper.GetGameObjectPath(itemObject).IndexOf(Helper.GetGameObjectPath(avatar.transform)) + Helper.GetGameObjectPath(avatar.transform).Length + 1)) : currentItem.ObjectReference;
                 currentItem.UseAnimations = itemAnimations;
+                currentItem.TransitionType = itemTransitionType;
+                if (itemTransitionDuration < 0)
+                    itemTransitionDuration = 0;
+                currentItem.TransitionDuration = itemTransitionDuration;
+                currentItem.TransitionOffset = itemTransitionOffset;
                 currentItem.EnableClip = itemEnable;
                 currentItem.DisableClip = itemDisable;
                 currentItem.Sync = itemSync;
@@ -1565,7 +1650,7 @@ public class InventoryPresetEditor : Editor
             // End item settings container.
             EditorGUILayout.EndVertical();
         }
-        else if (!focusedOnItem && pageDirectory.index > -1)
+        else if (!focusedOnItem && pageDirectory.index > -1 && pageDirectory.index < preset.Pages.Count)
         {
             // Draw page control container.
             EditorGUILayout.BeginVertical(new GUIStyle(GUI.skin.GetStyle("Box")) { padding = new RectOffset(GUI.skin.box.padding.left, GUI.skin.box.padding.right, 5, 5) });
@@ -1574,7 +1659,7 @@ public class InventoryPresetEditor : Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(new GUIContent("Name", "The name of the item."));
-            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, new GUIStyle(GUI.skin.GetStyle("Box")) { font = EditorStyles.toolbarTextField.font, alignment = TextAnchor.MiddleLeft, normal = EditorStyles.toolbarTextField.normal, wordWrap = false }, GUILayout.ExpandWidth(true));
+            string pageName = EditorGUILayout.TextField(preset.Pages[pageDirectory.index].name, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
             if (EditorGUI.EndChangeCheck())
             {
@@ -1635,7 +1720,7 @@ public class InventoryPresetEditor : Editor
         serializedObject.ApplyModifiedProperties();
 
         // Save Changes before entering Play Mode
-        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying && IsDirtyUtility.IsDirty(preset.GetInstanceID()))
+        if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying && EditorUtility.IsDirty(preset.GetInstanceID()))
         {
             InventoryPresetUtility.SaveChanges(preset);
         }
@@ -1695,7 +1780,7 @@ public class InventoryPresetEditor : Editor
 
         GUIStyle preButton = "RL FooterButton";
         GUIStyle newButton = new GUIStyle(preButton);
-        newButton.normal.textColor = Color.Lerp(Color.black, Color.grey, 0.65f);
+        newButton.normal.textColor = GUI.skin.button.normal.textColor;//Color.Lerp(Color.black, Color.grey, 0.65f);
         GUIStyle footerBackground = "RL Footer";
 
         // Modify the footer rect for the two buttons.
@@ -1708,16 +1793,17 @@ public class InventoryPresetEditor : Editor
         rect = new Rect(leftEdge, rect.y, rightEdge - leftEdge, rect.height);
 
         // Get Rects for each button.
-        Rect addRect = new Rect(leftEdge + 4, rect.y - 3, rect.width / 2, 13);
-        Rect removeRect = new Rect(rightEdge - 4 - (rect.width / 2), rect.y - 3, rect.width / 2, 13);
+        Rect addRect = new Rect(leftEdge + 4, rect.y , rect.width / 2, 13);
+        Rect removeRect = new Rect(rightEdge - 4 - (rect.width / 2), rect.y , rect.width / 2, 13);
 
         // Draw the background for the footer on Repaint Events.
         if (Event.current.type == EventType.Repaint)
         {
             footerBackground.Draw(rect, false, false, false, false);
-            // Separator
+            // Separators
             Handles.color = Color.gray;
             Handles.DrawLine(new Vector2(rect.xMin + rect.width / 2, rect.yMin), new Vector2(rect.xMin + rect.width / 2, rect.yMin + defaultFooterHeight));
+            Handles.DrawLine(new Vector2(rect.x, rect.y), new Vector2(rect.width + 15, rect.y));
         }
 
         // Makes button unable to be used while conditions are met.
@@ -1797,16 +1883,85 @@ public class InventoryPresetEditor : Editor
         AppendPresetWindow.AppendPresetWindowInit(preset);
     }
 
+    // Shows the page context menu
+    private void ShowPageContextMenu(int pageIndex)
+    {
+        // Create the menu
+        GenericMenu menu = new GenericMenu();
+
+        // Copy the page settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyPageSettings, new object[] { preset.Pages[pageIndex] });
+
+        // Paste the page settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PastePageSettings, new object[] { preset.Pages[pageIndex], preset });
+
+        menu.AddSeparator("");
+
+        // Duplicate the page
+        menu.AddItem(new GUIContent("Duplicate Page"), false, InventoryPresetUtility.DuplicatePage, new object[] { preset.Pages[pageIndex], preset });
+
+        // Delete the selected page
+        if (preset.Pages.Count > 1)
+            menu.AddItem(new GUIContent("Remove Page"), false, InventoryPresetUtility.RemovePage, new object[] { preset.Pages[pageIndex], pagesFoldout, preset });
+
+        // Display the menu
+        menu.ShowAsContext();
+    }
+
     // Shows the item context menu
     private void ShowItemContextMenu(int pageIndex, int itemIndex)
     {
         // Create the menu
         GenericMenu menu = new GenericMenu();
 
+        // Copy the item settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        // Paste the item settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteItemSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset });
+
+        menu.AddSeparator("");
+
         // Add pages to menu that have space
         for (int i = 0; i < preset.Pages.Count; i++)
             if (pageIndex != i && preset.Pages[i].Items.Count < 8)
                 menu.AddItem(new GUIContent("Send to Page/" + preset.Pages[i].name), false, InventoryPresetUtility.SendItemToPage, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset.Pages[i], preset });
+
+        menu.AddSeparator("");
+
+        // Duplicate the item within the same page
+        if (preset.Pages[pageIndex].Items.Count < 8)
+        menu.AddItem(new GUIContent("Duplicate Item"), false, InventoryPresetUtility.DuplicateItem, new object[] { preset.Pages[pageIndex], preset.Pages[pageIndex].Items[itemIndex], preset });
+
+        // Delete the selected item
+        menu.AddItem(new GUIContent("Remove Item"), false, InventoryPresetUtility.RemoveItem, new object[] { preset.Pages[pageIndex].Items[itemIndex], preset.Pages[pageIndex], preset });
+
+        // Display the menu
+        menu.ShowAsContext();
+    }
+
+    // Shows the group context menu
+    private void ShowGroupContextMenu(int pageIndex, int itemIndex, int groupType)
+    {
+        // Create the menu
+        GenericMenu menu = new GenericMenu();
+
+        // Copy the group settings to the buffer
+        menu.AddItem(new GUIContent("Copy Settings"), false, InventoryPresetUtility.CopyGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
+
+        // Paste the group settings from the buffer
+        menu.AddItem(new GUIContent("Paste Settings"), false, InventoryPresetUtility.PasteGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
+
+        menu.AddSeparator("");
+
+        // Set all members to enable
+        menu.AddItem(new GUIContent("Set All To/Enable"), false, InventoryPresetUtility.SetAllGroupMembers, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset, true });
+
+        // Set all members to disable
+        menu.AddItem(new GUIContent("Set All To/Disable"), false, InventoryPresetUtility.SetAllGroupMembers, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset, false });
+
+        // Clear the group settings
+        menu.AddItem(new GUIContent("Clear Group"), false, InventoryPresetUtility.ClearGroupSettings, new object[] { preset.Pages[pageIndex].Items[itemIndex], groupType, preset });
 
         // Display the menu
         menu.ShowAsContext();
@@ -1921,11 +2076,6 @@ public class InventoryPresetEditor : Editor
                     var barRect = new Rect(position.x + cursor + scale, position.y, barWidth, position.height);
                     progressBarUnderStyle.Draw(barRect, GUIContent.none, mouseHover, false, false, false);
                 }
-                //for (int i = 1; i < 120; i++)
-                //{
-                //    Handles.color = Color.black;
-                //    Handles.DrawLine(new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y), new Vector3(memBar.x + i * (memBar.width / 120f), memBar.y + memBar.height));
-                //}
                 break;
         }
     }
@@ -2244,36 +2394,6 @@ public class InventoryPresetEditor : Editor
             EditorGUI.indentLevel -= 2;
             subControl.icon = (Texture2D)EditorGUILayout.ObjectField(subControl.icon, typeof(Texture2D), false);
             EditorGUILayout.EndHorizontal();
-        }
-    }
-
-    /*
-    // Check if an item is dirty
-    */
-
-    private class IsDirtyUtility
-    {
-        //Cached Value
-        private static Func<int, bool> _isDirtyCallback;
-
-        private static Func<int, bool> IsDirtyCallback
-        {
-            get
-            {
-                if (_isDirtyCallback == null)
-                {
-                    //Reflection
-                    MethodInfo isDirtyMethod = typeof(EditorUtility).GetMethod("IsDirty", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(int) }, null);
-                    _isDirtyCallback = (Func<int, bool>)Delegate.CreateDelegate(typeof(Func<int, bool>), null, isDirtyMethod);
-                }
-
-                return _isDirtyCallback;
-            }
-        }
-
-        public static bool IsDirty(int instanceID)
-        {
-            return IsDirtyCallback(instanceID);
         }
     }
 }

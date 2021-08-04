@@ -118,7 +118,7 @@ namespace InventoryInventor.Preset
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                EditorGUILayout.LabelField("<i>No Preset Selected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleLeft, normal = new GUIStyleState() { background = null } });
+                EditorGUILayout.LabelField("<i>No Preset Selected</i>", new GUIStyle(GUI.skin.GetStyle("Box")) { richText = true, alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { textColor = GUI.skin.textField.normal.textColor, background = null } }, GUILayout.Height(64f));
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
                 GUILayout.FlexibleSpace();
@@ -242,6 +242,9 @@ namespace InventoryInventor.Preset
             newItem.Sync = item.Sync;
             newItem.Type = item.Type;
             newItem.UseAnimations = item.UseAnimations;
+            newItem.TransitionType = item.TransitionType;
+            newItem.TransitionDuration = item.TransitionDuration;
+            newItem.TransitionOffset = item.TransitionOffset;
             newItem.Control = item.Control;
             newItem.EnableClip = item.EnableClip;
             newItem.DisableClip = item.DisableClip;

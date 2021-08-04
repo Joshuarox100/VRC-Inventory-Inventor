@@ -22,6 +22,7 @@ Before following these steps, set up your Avatar how you normally would and ensu
 If you would like to see an example of how an Inventory looks on an Avatar and within a Preset, there are a few example Scenes and Presets you can reference in the 'Examples' folder. There are also some [additional settings](#additional-settings) you can adjust. Furthermore, if you have any issues or questions, look in the [troubleshooting](#troubleshooting) and [questions](#common-questions) sections below before [contacting me](#contacting-me).
 
 Additionally, I have made a tutorial video covering much of the basics for using Inventory Inventor, which you can watch [here](https://youtu.be/KSkQnb4q1sA)!
+I also am working on a more indepth video series on performing specific actions using Inventory Inventor, which will be avaiable at a later date.
 
 ## Creating a Preset
 To add an Inventory to an Avatar, you first need to create a Preset!
@@ -80,6 +81,8 @@ If two Pages are given the same name, the most recently modified Page will be gi
 
 All Pages can contain up to 8 different [Items](#items) used for toggling objects, accessing other Pages, or for accessing external menus.
 
+Right-clicking a Page will allow you to copy and paste settings to or from other Pages, duplicate the selected page, or remove it entirely. All options (aside from copying), have undo support. Copying writes settings directly to the system buffer (clipboard), so it will overwrite whatever you last had copied either with right-click or CTRL-C.
+
 #### Default
 The first Page in the list will always become the Default. The Default Page functions exactly the same as a regular Page, except that it will always be the menu that the Inventory initially starts in when added to the Avatar. If a menu is provided in the manager when applying the Preset, this is the Page that will be added to it as a Submenu using the Page's name and icon. The Default Page will always be represented with the word 'Default' to the right of its name.
 
@@ -110,7 +113,8 @@ This option allows you to add Pages from another Preset. After selecting a Prese
 </p>
 
 An Item represents a control contained within a [Page](#pages). An Item can be one of four types: a [Toggle](#toggle), a [Button](#button), a [Subpage](#subpage), or a [Control](#control). Each type of Item functions differently.
->Items can also be moved between [Pages](#pages) by right-clicking them and selecting a different [Page](#pages).<br>(**You cannot move an Item into a [Page](#pages) that is already full**).
+
+Right-clicking an Item will allow you to copy and paste settings to or from other Items, move it to another unfilled [Page](#pages), duplicate the selected Item (if room is available), or remove it entirely. All options (aside from copying), have undo support. Copying writes settings directly to the system buffer (clipboard), so it will overwrite whatever you last had copied either with right-click or CTRL-C.
 
 #### Toggle
 <p align="center">
@@ -127,8 +131,11 @@ Toggles can be used to toggle between two Animations and can be configured in se
 | Object | (When using Game Objects,) the Game Object the Toggle will affect. If the object saved cannot be found on the Active Avatar, no Animations will be created for this Toggle. |
 | Enable | (When using Animation Clips,) the Animation to play when the Toggle is activated. |
 | Disable | (When using Animation Clips,) the Animation to play when the Toggle is deactivated. |
+| Loading State | (When using Animation Clips,) Where in the animation to display while/upon loading. Use this for animations that are progressive such as dissolves. |
+| Blend Timing | (When using Animation Clips,) Whether the duration is in fixed (s) or normalized (%) time. |
+| Blend Duration | (When using Animation Clips,) How long the transition between states takes. |
 | Sync | How the Toggle is synced with others.<br>**Off**: Local only; remote clients will only see the default state of the Toggle.<br>**Manual**: Syncs when triggered; late-joiners will see the default state until the Toggle is reused.<br>**Auto**: Always synced; any Toggles marked Auto will be synced while the Inventory is left idle. |
-| Saved | ***Only available with Auto Sync enabled.***<br>Whether or not to retain the item's active state when switching Avatars or worlds.<br>*Each item with this setting enabled will take up one bit of memory in the Avatar's Expression Parameters list.* |
+| Saved | ***Not available for Manual Sync.***<br>Whether or not to retain the item's active state when switching Avatars or worlds.<br>*Each item with this setting enabled will take up one bit of memory in the Avatar's Expression Parameters list.* |
 
 #### Button
 <p align="center">
@@ -160,6 +167,8 @@ Groups are used for toggling multiple objects at once. Each Group can have as ma
 
 Every member contained within a Group can be either enabled or disabled upon the Group being activated. Only the Group on the toggled [Item](#items) will be triggered, any other Groups within its members will be ignored.
 
+Right-clicking a Group will allow you to copy and paste settings to or from other Groups, set all of its members at once, or clear it of any current members. All options (aside from copying), have undo support. Copying writes settings directly to the system buffer (clipboard), so it will overwrite whatever you last had copied either with right-click or CTRL-C.
+
 ### Tips
 Here are some things you should keep in mind as you create your Preset.
 
@@ -172,7 +181,7 @@ Here are some things you should keep in mind as you create your Preset.
 4. Because of how Unity works, only the *relative path* to Game Objects can be stored. Thus, if you were to move an object a [Toggle](#toggle) was using from your right hand to your left, you will need to reassign that object to the [Toggle](#toggle).
 
 ## Using the Manager
-The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Avatars 3.0 -> Inventory Inventor -> Manage Inventory'.
+The manager is used for both applying Presets and removing existing Inventories on an Avatar. It can be accessed under 'Tools -> Joshuarox100 -> Inventory Inventor -> Manage Inventory'.
 
 <p align="center">
   <img width="80%" height="80%" src="Images/Manager/Location.png">
@@ -229,7 +238,7 @@ Inventory Inventor has a few persistent settings and options you can access with
 | Upgrade All Old Presets | Automatically search for and upgrade any and all older Presets found within the Project. |
 
 ## Common Questions
-**Can I have multiple Inventories on a single Avatar?**
+**Can I have multiple Inventories on a single Avatar (Basically multiple ints)?**
 >Not at the moment. I don't really plan or see the need for this feature, but if I see demand for it I will supply.
 
 **Can I use the Inventory with other layers beside FX?**
@@ -242,14 +251,20 @@ Inventory Inventor has a few persistent settings and options you can access with
 **My Inventory isn't syncing correctly to people joining late.**
 >Your Refresh Rate may be too fast for the network to handle. Try reapplying your Preset using a slower time. Also make sure that your [Toggles](#toggle) are set to Auto Sync instead of Manual Sync.
 
+**Can I make items start at the end of an animation when I load? I'd rather have all my clothes start on than off...**
+>You can! Just change the Loading State setting from "Start" to "End".
+
 **Items aren't being saved when I test the Inventory.**
 >Parameters don't save for Avatars created with Build & Test. They must be uploaded in order to use it.
 
 **VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
 >This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
 
+**The Auto Updater is failing to download an update and it also looks weird in the notification.**
+>You probably don't have the newest version of Inventory Inventor, which may have changed how the updater functions (I'm looking at you v1.2.4 users). The only way to fix this is to download the latest version manually and import it into your project yourself.
+
 **"An exception occured!"**
 >If this happens, ensure you have a clean install of Inventory Inventor, and if the problem persists, [let me know](#contacting-me)!
 
 ## Contacting Me
-If you still have some questions or recommendations you'd like to throw my way, you can ask me on Discord (Joshuarox100#5024) or leave a suggestion or issue on the [Issues](https://github.com/Joshuarox100/VRC-Inventory-Inventor/issues) page.
+If you still have some questions or recommendations you'd like to throw my way, you can ask me on Discord (Joshuarox100#5024) or leave a suggestion or issue on the [Issues](https://github.com/Joshuarox100/VRC-Inventory-Inventor/issues) page. (There will be a Discord server in the future, just give me some more time.)
