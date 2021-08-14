@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -7,69 +11,76 @@ namespace InventoryInventor.Preset
     [Serializable]
     public class PageItem : ScriptableObject
     {
-        public ItemType Type { get { return m_Type; } set { m_Type = value; } }
+        /// <summary>
+        /// Unique identifier to be used in names.
+        /// </summary>
+        public string ID => m_ID;
         [SerializeField]
-        private ItemType m_Type;
-
-        public SyncMode Sync { get { return m_Sync; } set { m_Sync = value; } }
+        private string m_ID = IdGenerator.Generate();
+        
+        public ItemType Type { get => m_Type; set => m_Type = value; }
         [SerializeField]
-        private SyncMode m_Sync;
+        private ItemType m_Type = ItemType.Toggle;
 
-        public bool Saved { get { return m_Saved; } set { m_Saved = value; } }
+        public SyncMode Sync { get => m_Sync; set => m_Sync = value; }
         [SerializeField]
-        private bool m_Saved;
+        private SyncMode m_Sync = SyncMode.Auto;
 
-        public bool InitialState { get { return m_InitialState; } set { m_InitialState = value; } }
+        public bool Saved { get => m_Saved; set => m_Saved = value; }
+        [SerializeField]
+        private bool m_Saved = true;
+
+        public bool InitialState { get => m_InitialState; set => m_InitialState = value; }
         [SerializeField]
         private bool m_InitialState;
 
-        public string ObjectReference { get { return m_ObjectReference; } set { m_ObjectReference = value; } }
+        public string ObjectReference { get => m_ObjectReference; set => m_ObjectReference = value; }
         [SerializeField]
-        private string m_ObjectReference;
+        private string m_ObjectReference = "";
 
-        public bool UseAnimations { get { return m_UseAnimations; } set { m_UseAnimations = value; } }
+        public bool UseAnimations { get => m_UseAnimations; set => m_UseAnimations = value; }
         [SerializeField]
         private bool m_UseAnimations;
 
-        public bool TransitionType { get { return m_TransitionType; } set { m_TransitionType = value; } }
+        public bool TransitionType { get => m_TransitionType; set => m_TransitionType = value; }
         [SerializeField]
-        private bool m_TransitionType;
+        private bool m_TransitionType = true;
 
-        public float TransitionDuration { get { return m_TransitionDuration; } set { m_TransitionDuration = value; } }
+        public float TransitionDuration { get => m_TransitionDuration; set => m_TransitionDuration = value; }
         [SerializeField]
         private float m_TransitionDuration;
 
-        public bool TransitionOffset { get { return m_TransitionOffset; } set { m_TransitionOffset = value; } }
+        public bool TransitionOffset { get => m_TransitionOffset; set => m_TransitionOffset = value; }
         [SerializeField]
         private bool m_TransitionOffset;
 
-        public AnimationClip EnableClip { get { return m_EnableClip; } set { m_EnableClip = value; } }
+        public AnimationClip EnableClip { get => m_EnableClip; set => m_EnableClip = value; }
         [SerializeField]
         private AnimationClip m_EnableClip;
 
-        public AnimationClip DisableClip { get { return m_DisableClip; } set { m_DisableClip = value; } }
+        public AnimationClip DisableClip { get => m_DisableClip; set => m_DisableClip = value; }
         [SerializeField]
         private AnimationClip m_DisableClip;
 
-        public Page PageReference { get { return m_PageReference; } set { m_PageReference = value; } }
+        public Page PageReference { get => m_PageReference; set => m_PageReference = value; }
         [SerializeField]
         private Page m_PageReference;
 
-        public GroupItem[] EnableGroup { get { return m_EnableGroup; } set { m_EnableGroup = value; } }
+        public GroupItem[] EnableGroup { get => m_EnableGroup; set => m_EnableGroup = value; }
         [SerializeField]
-        private GroupItem[] m_EnableGroup;
+        private GroupItem[] m_EnableGroup = Array.Empty<GroupItem>();
 
-        public GroupItem[] DisableGroup { get { return m_DisableGroup; } set { m_DisableGroup = value; } }
+        public GroupItem[] DisableGroup { get => m_DisableGroup; set => m_DisableGroup = value; }
         [SerializeField]
-        private GroupItem[] m_DisableGroup;
+        private GroupItem[] m_DisableGroup = Array.Empty<GroupItem>();
 
-        public GroupItem[] ButtonGroup { get { return m_ButtonGroup; } set { m_ButtonGroup = value; } }
+        public GroupItem[] ButtonGroup { get => m_ButtonGroup; set => m_ButtonGroup = value; }
         [SerializeField]
-        private GroupItem[] m_ButtonGroup;
+        private GroupItem[] m_ButtonGroup = Array.Empty<GroupItem>();
 
-        public VRCExpressionsMenu.Control Control { get { return m_Control; } set { m_Control = value; } }
+        public VRCExpressionsMenu.Control Control { get => m_Control; set => m_Control = value; }
         [SerializeField]
-        private VRCExpressionsMenu.Control m_Control;
+        private VRCExpressionsMenu.Control m_Control = new VRCExpressionsMenu.Control();
 
         public Texture2D Icon { get { return m_Icon; } set { m_Icon = value; } }
         [SerializeField]
@@ -81,61 +92,192 @@ namespace InventoryInventor.Preset
             Subpage = 1,
             Control = 2,
             Button = 3,
-        };
+        }
 
         public enum SyncMode
         {
             Off = 0,
             Manual = 1,
-            Auto = 2
+            Auto = 2,
         }
 
-        //Default Constructor
-        public PageItem()
+        private string _generatedForName;
+        private string _normalizedName;
+        public string NormalizedName
         {
-            Type = ItemType.Toggle;
-            InitialState = false;
-            ObjectReference = "";
-            UseAnimations = false;
-            TransitionType = true;
-            TransitionDuration = 0f;
-            TransitionOffset = false;
-            EnableClip = null;
-            DisableClip = null;
-            Sync = SyncMode.Auto;
-            Saved = true;
-            EnableGroup = new GroupItem[0];
-            DisableGroup = new GroupItem[0];
-            ButtonGroup = new GroupItem[0];
-            Control = new VRCExpressionsMenu.Control();
+            get
+            {
+                if (_normalizedName == null || _generatedForName != name)
+                {
+                    var invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+                    var invalidReStr = $@"[\s{invalidChars}]+";
+                    var sanitizedName = Regex.Replace(name, invalidReStr, "_");
+                    _normalizedName = $"{sanitizedName}_{ID}";
+                    _generatedForName = name;
+                }
+                
+                return _normalizedName;
+            }
         }
 
-        public PageItem[] GetEnableGroupItems()
+        public PageItem[] GetEnableGroupItems() => EnableGroup.Select((item => item.Item)).ToArray();
+
+        public PageItem[] GetDisableGroupItems() => DisableGroup.Select((item => item.Item)).ToArray();
+        
+        public PageItem[] GetButtonGroupItems() => ButtonGroup.Select((item => item.Item)).ToArray();
+
+        public VRCExpressionParameters.Parameter[] ExpressionParameters
         {
-            PageItem[] items = new PageItem[EnableGroup.Length];
-            for (int i = 0; i < items.Length; i++)
+            get
             {
-                items[i] = EnableGroup[i].Item;
+                if (Type == ItemType.Toggle && Sync != SyncMode.Manual)
+                {
+                    return new[]
+                    {
+                        new VRCExpressionParameters.Parameter
+                        {
+                            name = $@"Inventory {NormalizedName}",
+                            valueType = VRCExpressionParameters.ValueType.Bool,
+                            defaultValue = InitialState ? 1 : 0,
+                            saved = true,
+                        },
+                    };
+                }
+                
+                return Array.Empty<VRCExpressionParameters.Parameter>();
             }
-            return items;
         }
-        public PageItem[] GetDisableGroupItems()
+
+        public AnimatorControllerParameter[] AnimatorParameters
         {
-            PageItem[] items = new PageItem[DisableGroup.Length];
-            for (int i = 0; i < items.Length; i++)
+            get
             {
-                items[i] = DisableGroup[i].Item;
+                return new[]
+                {
+                    new AnimatorControllerParameter
+                    {
+                        name = $@"Inventory {NormalizedName}",
+                        type = AnimatorControllerParameterType.Bool,
+                        defaultBool = InitialState,
+                    }
+                };
             }
-            return items;
         }
-        public PageItem[] GetButtonGroupItems()
+        
+        public int RequiredStates
         {
-            PageItem[] items = new PageItem[ButtonGroup.Length];
-            for (int i = 0; i < items.Length; i++)
+            get
             {
-                items[i] = ButtonGroup[i].Item;
+                switch (Type)
+                {
+                    case ItemType.Button:
+                        return 1;
+                    case ItemType.Toggle:
+                        var totalUsage = 0;
+
+                        if (Sync != SyncMode.Manual)
+                        {
+                            if (EnableGroup.Length > 0)
+                                totalUsage++;
+                            
+                            if (DisableGroup.Length > 0) 
+                                totalUsage++;
+                        }
+                        
+                        switch (Sync)
+                        {
+                            case SyncMode.Off:
+                                totalUsage += 1;
+                                break;
+                            case SyncMode.Manual:
+                                totalUsage += 3;
+                                break;
+                            case SyncMode.Auto:
+                                totalUsage += Saved ? 1 : 3;
+                                break;
+                        }
+
+                        return totalUsage;
+                    default:
+                        return 0;
+                }
             }
-            return items;
+        }
+        
+        protected bool CheckAnimationClipCompatibility(AnimationClip clip)
+        {
+            if (clip == null)
+            {
+                return true;
+            }
+
+            foreach (var binding in AnimationUtility.GetCurveBindings(clip))
+            {
+                if (binding.type == typeof(Transform) || binding.type == typeof(Animator))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool IsEnableClipCompatible
+        {
+            get => CheckAnimationClipCompatibility(EnableClip);
+        }
+
+        public bool IsDisableClipCompatible
+        {
+            get => CheckAnimationClipCompatibility(DisableClip);
+        }
+
+        public VRCExpressionsMenu.Control MakeControl(StateSequence stateSequence)
+        {
+            switch (Type)
+            {
+                case ItemType.Toggle:
+                    return new VRCExpressionsMenu.Control
+                    {
+                        name = name,
+                        icon = Icon,
+                        type = VRCExpressionsMenu.Control.ControlType.Toggle,
+                        parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" },
+                        value = stateSequence.Next(),
+                    };
+                case ItemType.Subpage:
+                    return new VRCExpressionsMenu.Control
+                    {
+                        name = name,
+                        icon = PageReference != null ? PageReference.Icon : null,
+                        type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                        subMenu = null, // ToDo: somehow contextually be able to retrieve the right instance of a control
+                    };
+                case ItemType.Control:
+                    return new VRCExpressionsMenu.Control
+                    {
+                        name = Control.name,
+                        icon = Control.icon,
+                        type = Control.type,
+                        parameter = Control.parameter,
+                        value = Control.value,
+                        style = Control.style,
+                        labels = Control.labels,
+                        subMenu = Control.subMenu,
+                        subParameters = Control.subParameters,
+                    };
+                case ItemType.Button:
+                    return new VRCExpressionsMenu.Control
+                    {
+                        name = name, 
+                        icon = Icon,
+                        type = VRCExpressionsMenu.Control.ControlType.Button,
+                        parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" },
+                        value = stateSequence.Next(),
+                    };
+                default:
+                    return null;
+            }
         }
     }
 }

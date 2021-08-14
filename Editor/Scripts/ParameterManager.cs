@@ -10,16 +10,7 @@ namespace InventoryInventor
 {
     public class ParameterManager
     {
-        private static Dictionary<VRCExpressionParameters.ValueType, AnimatorControllerParameterType>
-            valueTypesToParameterTypes =
-                new Dictionary<VRCExpressionParameters.ValueType, AnimatorControllerParameterType>
-                {
-                    [VRCExpressionParameters.ValueType.Bool] = AnimatorControllerParameterType.Bool,
-                    [VRCExpressionParameters.ValueType.Int] = AnimatorControllerParameterType.Int,
-                    [VRCExpressionParameters.ValueType.Float] = AnimatorControllerParameterType.Float,
-                };
-
-        private static int CalculateCosts(List<VRCExpressionParameters.Parameter> parameters)
+        private static int CalculateCosts(IEnumerable<VRCExpressionParameters.Parameter> parameters)
         {
             return parameters.Aggregate(
                 0,
@@ -27,23 +18,41 @@ namespace InventoryInventor
             );
         }
 
-        private List<VRCExpressionParameters.Parameter> _requiredParameters =
+        private readonly List<VRCExpressionParameters.Parameter> _requiredExpressionParameters =
             new List<VRCExpressionParameters.Parameter>();
 
-        public void AddParameter(VRCExpressionParameters.Parameter parameter)
+        private readonly List<AnimatorControllerParameter> _requiredAnimatorParameters =
+            new List<AnimatorControllerParameter>();
+
+        public void AddExpressionParameter(VRCExpressionParameters.Parameter parameter)
         {
-            _requiredParameters.Add(parameter);
+            _requiredExpressionParameters.Add(parameter);
+        }
+        
+        public void AddExpressionParameters(IEnumerable<VRCExpressionParameters.Parameter> parameters)
+        {
+            _requiredExpressionParameters.AddRange(parameters);
+        }
+
+        public void AddAnimatorParameter(AnimatorControllerParameter parameter)
+        {
+            _requiredAnimatorParameters.Add(parameter);
+        }
+        
+        public void AddAnimatorParameters(IEnumerable<AnimatorControllerParameter> parameters)
+        {
+            _requiredAnimatorParameters.AddRange(parameters);
         }
 
         public int CalculateTotalCost()
         {
-            return CalculateCosts(_requiredParameters);
+            return CalculateCosts(_requiredExpressionParameters);
         }
 
         public bool CanApplyToExpressions(VRCExpressionParameters expressionParameters)
         {
             var baseParameters = expressionParameters.parameters
-                .Where((parameter) => _requiredParameters.FindIndex((e) => e.name == parameter.name) < 0)
+                .Where((parameter) => _requiredExpressionParameters.FindIndex((e) => e.name == parameter.name) < 0)
                 .ToList();
 
             // Cost requirements
@@ -60,7 +69,7 @@ namespace InventoryInventor
             var typeMismatchParameters = expressionParameters.parameters
                 .Where((parameter) =>
                 {
-                    var reqParameter = _requiredParameters.Find((e) => e.name == parameter.name);
+                    var reqParameter = _requiredExpressionParameters.Find((e) => e.name == parameter.name);
                     return reqParameter.valueType != parameter.valueType;
                 })
                 .ToList();
@@ -77,10 +86,10 @@ namespace InventoryInventor
         public bool ApplyToExpressions(VRCExpressionParameters expressionParameters)
         {
             var baseParameters = expressionParameters.parameters
-                .Where((parameter) => _requiredParameters.FindIndex((e) => e.name == parameter.name) < 0)
+                .Where((parameter) => _requiredExpressionParameters.FindIndex((e) => e.name == parameter.name) < 0)
                 .ToList();
 
-            baseParameters.AddRange(_requiredParameters);
+            baseParameters.AddRange(_requiredExpressionParameters);
             expressionParameters.parameters = baseParameters.ToArray();
             EditorUtility.SetDirty(expressionParameters);
 
@@ -96,18 +105,10 @@ namespace InventoryInventor
         public bool ApplyToAnimator(AnimatorController animator)
         {
             var baseParameters = animator.parameters
-                .Where((parameter) => _requiredParameters.FindIndex((e) => e.name == parameter.name) < 0)
+                .Where((parameter) => _requiredAnimatorParameters.FindIndex((e) => e.name == parameter.name) < 0)
                 .ToList();
 
-            var requiredAnimatorParameters = _requiredParameters
-                .Select((parameter) => new AnimatorControllerParameter
-                {
-                    name = animator.MakeUniqueParameterName(parameter.name),
-                    type = valueTypesToParameterTypes[parameter.valueType],
-                })
-                .ToList();
-
-            baseParameters.AddRange(requiredAnimatorParameters);
+            baseParameters.AddRange(_requiredAnimatorParameters);
 
             animator.parameters = baseParameters.ToArray();
             

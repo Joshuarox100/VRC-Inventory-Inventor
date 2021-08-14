@@ -12,19 +12,12 @@ namespace InventoryInventor.Preset
 
         public GroupType Reaction { get { return m_Reaction; } set { m_Reaction = value; } }
         [SerializeField]
-        private GroupType m_Reaction;
+        private GroupType m_Reaction = GroupType.Enable;
 
         public enum GroupType
         {
             Disable = 0,
-            Enable = 1
-        };
-
-        //Constructors
-        public GroupItem()
-        {
-            Item = null;
-            Reaction = GroupType.Enable;
+            Enable = 1,
         }
     }
 }

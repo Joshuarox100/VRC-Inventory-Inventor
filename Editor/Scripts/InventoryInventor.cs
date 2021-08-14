@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -42,10 +43,9 @@ namespace InventoryInventor
         // Other data.
         private int totalToggles;
 
-        // Default constructor.
-        public Manager() { }
-
-        // Called by the Editor window to create an inventory from the stored preset onto the selected Avatar.
+        /// <summary>
+        /// Called by the Editor window to create an inventory from the stored preset onto the selected Avatar.
+        /// </summary>
         public void CreateInventory()
         {
             // Try catch block because there's surely some Exception I can't account for.
@@ -61,7 +61,8 @@ namespace InventoryInventor
                     EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: No Avatar selected.", "Close");
                     return;
                 }
-                else if (avatar.expressionParameters == null)
+
+                if (avatar.expressionParameters == null)
                 {
                     EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Avatar does not have an Expression Parameters object assigned in the descriptor.", "Close");
                     Selection.activeObject = avatar;
@@ -75,179 +76,89 @@ namespace InventoryInventor
                     return;
                 }
 
-                // Upgrade the Preset if neccessary.
+                // Upgrade the Preset if necessary.
                 if (preset.Version < InventoryPresetUtility.currentVersion)
+                {
                     InventoryPresetUtility.UpgradePreset(preset);
-
-                /*
-                    Check for space in parameters list & check for incompatible Animations.
-                */
-
-                int neededMem = 0;
-                List<string> expParamNames = new List<string>();
-                List<string> delParamNames = new List<string>();
-
-                // Check for Inventory parameter
-
-                if (avatar.expressionParameters.FindParameter("Inventory") == null)
-                {
-                    expParamNames.Add("Inventory");
-                    neededMem += 8;
                 }
-                else if (avatar.expressionParameters.FindParameter("Inventory").valueType != VRCExpressionParameters.ValueType.Int)
+                
+                // Check Compatability of Clips
+                if (!InventorSettings.GetSerializedSettings().FindProperty("m_AllowInvalid").boolValue)
                 {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Expression Parameter \"Inventory\" is present with the wrong type.", "Close");
-                    Selection.activeObject = avatar.expressionParameters;
-                    return;
-                }
-                else
-                {
-                    if (!autoOverwrite)
+                    foreach (var item in preset.Pages.SelectMany(page => page.Items))
                     {
-                        if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
+                        if (!item.UseAnimations)
                         {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
-                            Selection.activeObject = avatar.expressionParameters;
+                            continue;
+                        }
+                        
+                        if (!item.IsEnableClipCompatible)
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor",
+                                $"ERROR: {item.EnableClip.name} cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.", "Close");
+                            Selection.activeObject = item.EnableClip;
+                            return;
+                        }
+
+                        if (!item.IsDisableClipCompatible)
+                        {
+                            EditorUtility.DisplayDialog("Inventory Inventor",
+                                $"ERROR: {item.DisableClip.name} cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.", "Close");
+                            Selection.activeObject = item.DisableClip;
                             return;
                         }
                     }
-                    delParamNames.Add("Inventory");
-                    expParamNames.Add("Inventory");
                 }
 
-                // Check for loaded parameter
+                var parameterManager = new ParameterManager();
+                
+                parameterManager.AddExpressionParameter(new VRCExpressionParameters.Parameter
+                {
+                    name = "Inventory",
+                    valueType = VRCExpressionParameters.ValueType.Int,
+                    defaultValue = 0,
+                    saved = false,
+                });
+                
+                parameterManager.AddExpressionParameter(new VRCExpressionParameters.Parameter
+                {
+                    name = "Inventory Loaded",
+                    valueType = VRCExpressionParameters.ValueType.Bool,
+                    defaultValue = 1,
+                    saved = true,
+                });
+                
+                parameterManager.AddAnimatorParameter(new AnimatorControllerParameter
+                {
+                    name = "IsLocal",
+                    type = AnimatorControllerParameterType.Bool,
+                    defaultBool = false,
+                });
 
-                if (avatar.expressionParameters.FindParameter("Inventory Loaded") == null)
+                // Add all item Parameters
+                preset.Pages.ForEach(page => page.Items.ForEach(item =>
                 {
-                    expParamNames.Add("Inventory Loaded");
-                    neededMem += 1;
-                }
-                else if (avatar.expressionParameters.FindParameter("Inventory Loaded").valueType != VRCExpressionParameters.ValueType.Bool)
+                    parameterManager.AddExpressionParameters(item.ExpressionParameters);
+                    parameterManager.AddAnimatorParameters(item.AnimatorParameters);
+                }));
+
+                if (!parameterManager.CanApplyToExpressions(avatar.expressionParameters))
                 {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Expression Parameter \"Inventory Loaded\" is present with the wrong type.", "Close");
+                    // ToDo: make the error more detailed
+                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Not enough memory available for Expression Parameters.", "Close");
                     Selection.activeObject = avatar.expressionParameters;
                     return;
                 }
-                else
-                {
-                    if (!autoOverwrite)
-                    {
-                        if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"Inventory Loaded\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
-                            Selection.activeObject = avatar.expressionParameters;
-                            return;
-                        }
-                    }
-                    delParamNames.Add("Inventory Loaded");
-                    expParamNames.Add("Inventory Loaded");
-                }
-
-                // Check that no Animations modify a humanoid rig or Transform.
-                totalToggles = 0;
-                int totalUsage = 1;
-
-                foreach (Page page in preset.Pages)
-                {
-                    foreach (PageItem item in page.Items)
-                    {
-                        switch (item.Type)
-                        {
-                            case PageItem.ItemType.Toggle:
-                                if (item.UseAnimations && InventorSettings.GetSerializedSettings().FindProperty("m_AllowInvalid").boolValue)
-                                {
-                                    if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
-                                    {
-                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.EnableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                                        Selection.activeObject = item.EnableClip;
-                                        return;
-                                    }
-                                    if (!CheckCompatibility(item.DisableClip, false, out problem, out propertyName))
-                                    {
-                                        EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: " + item.DisableClip.name + " cannot be used because it modifies an invalid property type!\nUse \"Allow Invalid Animations\" to ignore this and continue.\nInvalid Property Type: " + problem.Name + "\nName: " + propertyName, "Close");
-                                        Selection.activeObject = item.DisableClip;
-                                        return;
-                                    }
-                                }
-                                // Simulatenously, increment the known number of toggles and parameter usage.
-                                switch (item.Sync)
-                                {
-                                    case PageItem.SyncMode.Off:
-                                        totalUsage += 1;
-                                        if (item.EnableGroup.Length > 0)
-                                            totalUsage++;
-                                        if (item.DisableGroup.Length > 0)
-                                            totalUsage++;
-                                        break;
-                                    case PageItem.SyncMode.Manual:
-                                        totalUsage += 3;
-                                        break;
-                                    case PageItem.SyncMode.Auto:
-                                        totalUsage += item.Saved ? 1 : 3;
-                                        if (item.EnableGroup.Length > 0)
-                                            totalUsage++;
-                                        if (item.DisableGroup.Length > 0)
-                                            totalUsage++;
-                                        break;
-                                }
-                                totalToggles++;
-                                if (item.Sync != PageItem.SyncMode.Manual && item.Saved)
-                                {
-                                    if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
-                                    {
-                                        if (!autoOverwrite)
-                                        {
-                                            if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Expression Parameter \"" + "Inventory " + totalToggles + "\" already exists!\nOverwrite?", "Overwrite", "Cancel"))
-                                            {
-                                                Selection.activeObject = avatar.expressionParameters;
-                                                return;
-                                            }
-                                        }
-                                        delParamNames.Add("Inventory " + totalToggles);
-                                        neededMem--;
-                                    }
-                                    expParamNames.Add("Inventory " + totalToggles);
-                                    neededMem++;
-                                }
-                                else if (avatar.expressionParameters.FindParameter("Inventory " + totalToggles) != null)
-                                {
-                                    if (!autoOverwrite)
-                                    {
-                                        if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: a conflicting Expression Parameter \"" + "Inventory " + totalToggles + "\" exists!\nDelete?", "Delete", "Cancel"))
-                                        {
-                                            Selection.activeObject = avatar.expressionParameters;
-                                            return;
-                                        }
-                                    }
-                                    delParamNames.Add("Inventory " + totalToggles);
-                                    neededMem--;
-                                }
-
-                                break;
-                            case PageItem.ItemType.Button:
-                                totalUsage++;
-                                break;
-                            case PageItem.ItemType.Subpage:
-                                if (item.PageReference == null || Array.IndexOf(preset.Pages.ToArray(), item.PageReference) == -1)
-                                    if (!EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: The Subpage '" + item.name + "' refers to is missing.\nContinue? (The menu will not lead anywhere.)", "Continue", "Cancel"))
-                                    {
-                                        EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
-                                        Selection.activeObject = preset;
-                                        return;
-                                    }
-                                break;
-                        }
-                    }
-                }
-
-                // If more memory is needed.
-                if (avatar.expressionParameters.CalcTotalCost() + neededMem > VRCExpressionParameters.MAX_PARAMETER_COST)
-                {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Not enough memory available for Expression Parameters (Needed: " + neededMem + ").", "Close");
-                    Selection.activeObject = avatar.expressionParameters;
-                    return;
-                }
-
+                
+                var totalUsage = preset.Pages.Aggregate(
+                    1,
+                    (pageSum, page) =>
+                        pageSum + page.Items.Aggregate(
+                            0,
+                            (pageItemSum, item) => pageItemSum + item.RequiredStates
+                        )
+                );
+                
                 // Larger than int to manage (Failsafe).
                 if (totalUsage > 256)
                 {
@@ -255,6 +166,15 @@ namespace InventoryInventor
                     Selection.activeObject = preset;
                     return;
                 }
+
+                totalToggles = preset.Pages.Aggregate(
+                    1,
+                    (pageSum, page) =>
+                        pageSum + page.Items.Aggregate(
+                            0,
+                            (pageItemSum, item) => pageItemSum + (item.Type == PageItem.ItemType.Toggle ? 1 : 0)
+                        )
+                );
 
                 // Check that the file destination exists.
                 if (!VerifyDestination())
@@ -270,21 +190,19 @@ namespace InventoryInventor
                 backupManager = new Backup();
                 generated = new AssetList();
 
-                /*
-                    Get FX Animator.
-                    */
-                AnimatorController animator = controller != null ? controller : null;
+                // Get FX Animator.
+                var animator = controller != null ? controller : null;
 
                 // Replace the Animator Controller in the descriptor if this Controller was there to begin with.
-                List<bool> replaceAnimator = new List<bool>();
-                foreach (VRCAvatarDescriptor.CustomAnimLayer c in avatar.baseAnimationLayers)
+                var replaceAnimator = new List<bool>();
+                foreach (var c in avatar.baseAnimationLayers)
                 {
                     if (c.animatorController != null && animator == (AnimatorController)c.animatorController)
                         replaceAnimator.Add(true);
                     else
                         replaceAnimator.Add(false);
                 }
-                foreach (VRCAvatarDescriptor.CustomAnimLayer c in avatar.specialAnimationLayers)
+                foreach (var c in avatar.specialAnimationLayers)
                 {
                     if (c.animatorController != null && animator == (AnimatorController)c.animatorController)
                         replaceAnimator.Add(true);
@@ -307,7 +225,7 @@ namespace InventoryInventor
                             return;
                     }
 
-                    animator = (AssetDatabase.FindAssets(avatar.name + "_FX", new string[] { outputPath + Path.DirectorySeparatorChar + "Animators" }).Length != 0) ? (AnimatorController)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.name + "_FX", new string[] { outputPath + Path.DirectorySeparatorChar + "Animators" })[0]), typeof(AnimatorController)) : null;
+                    animator = (AssetDatabase.FindAssets(avatar.name + "_FX", new[] { outputPath + Path.DirectorySeparatorChar + "Animators" }).Length != 0) ? (AnimatorController)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(avatar.name + "_FX", new string[] { outputPath + Path.DirectorySeparatorChar + "Animators" })[0]), typeof(AnimatorController)) : null;
 
                     if (animator == null)
                     {
@@ -322,40 +240,56 @@ namespace InventoryInventor
                 }
 
                 // Duplicate the source controller.
-                AssetDatabase.CopyAsset(new Asset(AssetDatabase.GetAssetPath(animator)).path, relativePath + Path.DirectorySeparatorChar + "temp.controller");
+                var controllerPath = Path.Combine(relativePath, "temp.controller");
+                AssetDatabase.CopyAsset(new Asset(AssetDatabase.GetAssetPath(animator)).path, controllerPath);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                AnimatorController newAnimator = (AnimatorController)AssetDatabase.LoadAssetAtPath(relativePath + Path.DirectorySeparatorChar + "temp.controller", typeof(AnimatorController));
+                var newAnimator = (AnimatorController)AssetDatabase.LoadAssetAtPath(controllerPath, typeof(AnimatorController));
                 generated.Add(new Asset(AssetDatabase.GetAssetPath(newAnimator)));
 
                 // Remove Inventory layers.
-                for (int i = animator.layers.Length - 1; i >= 0; i--)
+                for (var i = animator.layers.Length - 1; i >= 0; i--)
                 {
                     // A layer is an Inventory layer if the State Machine has a InventoryMachine behaviour attached.
                     // Or it has a "special transition"
-                    bool hasSpecialTransition = false;
-                    foreach (AnimatorStateTransition transition in animator.layers[i].stateMachine.anyStateTransitions)
+                    var hasSpecialTransition = false;
+                    foreach (var transition in animator.layers[i].stateMachine.anyStateTransitions)
                     {
-                        if (transition.name == "InventoryMachineIdentifier" && transition.isExit == false && transition.mute == true && transition.destinationState == null && transition.destinationStateMachine == null)
+                        if (transition.name == "InventoryMachineIdentifier" &&
+                            transition.isExit == false &&
+                            transition.mute &&
+                            transition.destinationState == null &&
+                            transition.destinationStateMachine == null
+                        )
                         {
                             hasSpecialTransition = true;
                             break;
                         }
                     }
 
-                    if (hasSpecialTransition || (animator.layers[i].stateMachine.behaviours.Length >= 1 && animator.layers[i].stateMachine.behaviours[0].GetType() == typeof(InventoryMachine)))
+                    // If it's not a layer we care about, skip
+                    if (!hasSpecialTransition)
                     {
-                        EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Removing Layers: {0}", animator.layers[i].name), 0.05f * (float.Parse((animator.layers.Length - i).ToString()) / animator.layers.Length));
+                        continue;
+                    }
+
+                    if (animator.layers[i].stateMachine.behaviours.Length >= 1 &&
+                        animator.layers[i].stateMachine.behaviours[0].GetType() == typeof(InventoryMachine)
+                    )
+                    {
+                        EditorUtility.DisplayProgressBar("Inventory Inventor",
+                            $"Removing Layers: {animator.layers[i].name}", 0.05f * (float.Parse((animator.layers.Length - i).ToString()) / animator.layers.Length));
 
                         newAnimator.RemoveLayer(i);
 
-                        EditorUtility.DisplayProgressBar("Inventory Inventor", string.Format("Removing Layers: {0}", animator.layers[i].name), 0.05f * (((animator.layers.Length - i) + 1f) / animator.layers.Length));
+                        EditorUtility.DisplayProgressBar("Inventory Inventor",
+                            $"Removing Layers: {animator.layers[i].name}", 0.05f * (((animator.layers.Length - i) + 1f) / animator.layers.Length));
                     }
                 }
                 newAnimator.SaveController();
 
                 // Replace the old Animator Controller.
-                string path = AssetDatabase.GetAssetPath(animator);
+                var path = AssetDatabase.GetAssetPath(animator);
                 AssetDatabase.DeleteAsset(path);
                 AssetDatabase.MoveAsset(AssetDatabase.GetAssetPath(newAnimator), path);
                 AssetDatabase.RenameAsset(AssetDatabase.GetAssetPath(newAnimator), path.Substring(path.LastIndexOf(Path.DirectorySeparatorChar) + 1));
@@ -365,10 +299,10 @@ namespace InventoryInventor
                 // Replace the Animator Controller in the descriptor if it was there.
                 if (replaceAnimator.Contains(true))
                 {
-                    for (int i = 0; i < avatar.baseAnimationLayers.Length; i++)
+                    for (var i = 0; i < avatar.baseAnimationLayers.Length; i++)
                         if (replaceAnimator[i])
                             avatar.baseAnimationLayers[i].animatorController = newAnimator;
-                    for (int i = 0; i < avatar.specialAnimationLayers.Length; i++)
+                    for (var i = 0; i < avatar.specialAnimationLayers.Length; i++)
                         if (replaceAnimator[i + avatar.baseAnimationLayers.Length])
                             avatar.specialAnimationLayers[i].animatorController = newAnimator;
                 }
@@ -378,7 +312,7 @@ namespace InventoryInventor
                     Generate Clips for Game Objects.
                  */
 
-                bool missingItems = false;
+                var missingItems = false;
                 foreach (Page page in preset.Pages)
                 {
                     foreach (PageItem item in page.Items)
@@ -427,150 +361,20 @@ namespace InventoryInventor
                 /*
                     Create parameters.
                 */
-
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f);
-
-                AnimatorControllerParameter[] srcParam = newAnimator.parameters;
-
-                // Check if the parameters already exist. If one does as the correct type, use it. If one already exists as the wrong type, abort.
-                bool[] existing = new bool[totalToggles + 3];
-
-                for (int i = 0; i < srcParam.Length; i++)
-                {
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.05f + (0.025f * (float.Parse(i.ToString()) / srcParam.Length)));
-                    bool flag = true;
-                    foreach (bool exists in existing)
-                        if (!exists)
-                            flag = false;
-                    if (flag)
-                        break;
-                    if (srcParam[i].name == "Inventory")
-                    {
-                        if (srcParam[i].type == AnimatorControllerParameterType.Int)
-                        {
-                            existing[existing.Length - 2] = true;
-                            continue;
-                        }
-                        else
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
-                            RevertChanges();
-                            Selection.activeObject = animator;
-                            return;
-                        }
-                    }
-                    else if (srcParam[i].name == "IsLocal")
-                    {
-                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
-                        {
-                            existing[existing.Length - 1] = true;
-                            continue;
-                        }
-                        else
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
-                            RevertChanges();
-                            Selection.activeObject = animator;
-                            return;
-                        }
-                    }
-                    else if (srcParam[i].name == "Inventory Loaded")
-                    {
-                        if (srcParam[i].type == AnimatorControllerParameterType.Bool)
-                        {
-                            existing[existing.Length - 3] = true;
-                            continue;
-                        }
-                        else
-                        {
-                            EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
-                            RevertChanges();
-                            Selection.activeObject = animator;
-                            return;
-                        }
-                    }
-                    for (int j = 0; j < totalToggles; j++)
-                    {
-                        if (srcParam[i].name == "Inventory " + (j + 1))
-                        {
-                            if (srcParam[i].type == AnimatorControllerParameterType.Bool)
-                            {
-                                existing[j] = true;
-                                break;
-                            }
-                            else
-                            {
-                                EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Animator Parameter \"" + srcParam[i].name + "\" already exists as the incorrect type.", "Close");
-                                RevertChanges();
-                                Selection.activeObject = animator;
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                // Add the needed parameters to the Animator Controller.
-                for (int i = 0; i < existing.Length; i++)
-                {
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.075f + (0.025f * (float.Parse(i.ToString()) / existing.Length)));
-                    if (i < totalToggles)
-                    {
-                        if (!existing[i])
-                        {
-                            newAnimator.AddParameter("Inventory " + (i + 1), AnimatorControllerParameterType.Bool);
-                        }
-                    }
-                    else if (i == existing.Length - 2)
-                    {
-                        if (!existing[i])
-                        {
-                            newAnimator.AddParameter("Inventory", AnimatorControllerParameterType.Int);
-                        }
-                    }
-                    else if (i == existing.Length - 1)
-                    {
-                        if (!existing[i])
-                        {
-                            newAnimator.AddParameter("IsLocal", AnimatorControllerParameterType.Bool);
-                        }
-                    }
-                    else if (i == existing.Length - 3)
-                    {
-                        if (!existing[i])
-                        {
-                            newAnimator.AddParameter("Inventory Loaded", AnimatorControllerParameterType.Bool);
-                        }
-                    }
-                }
-
+                parameterManager.ApplyToAnimator(newAnimator);
                 AssetDatabase.SaveAssets();
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Parameters", 0.1f);
 
                 /*
                     Create layers.
                 */
-
                 CreateMasterLayer(newAnimator, totalToggles, out List<PageItem> items, out List<KeyValuePair<List<int>, List<int>>> activeStates);
                 CreateItemLayers(newAnimator, ref items, ref activeStates);
 
                 /*
                     Set default bool states.
                 */
-
-                srcParam = newAnimator.parameters;
-                for (int i = 0; i < items.Count; i++)
-                {
-                    for (int j = 0; j < srcParam.Length; j++)
-                    {
-                        if (srcParam[j].name == "Inventory " + (i + 1))
-                        {
-                            srcParam[j].defaultBool = items[i].InitialState;
-                            break;
-                        }
-                    }
-                }
-                newAnimator.parameters = srcParam;
-
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Saving Controller", 0.9f);
                 newAnimator.SaveController();
                 AssetDatabase.SaveAssets();
@@ -579,74 +383,22 @@ namespace InventoryInventor
                     Add expression parameters to the list.
                 */
 
+                parameterManager.ApplyToExpressions(avatar.expressionParameters);
+                
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.9f);
-                List<VRCExpressionParameters.Parameter> parameters = new List<VRCExpressionParameters.Parameter>();
-                parameters.AddRange(avatar.expressionParameters.parameters);
-                for (int i = parameters.Count - 1; i >= 0; i--)
-                {
-                    if (delParamNames.Contains(parameters[i].name))
-                    {
-                        delParamNames.Remove(parameters[i].name);
-                        parameters.RemoveAt(i);
-                    }
-                }
-                int index = 0;
-                foreach (string expName in expParamNames)
-                {
-                    if (expName.Equals("Inventory"))
-                    {
-                        VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter
-                        {
-                            name = "Inventory",
-                            valueType = VRCExpressionParameters.ValueType.Int,
-                            defaultValue = 0,
-                            saved = false
-                        };
-                        parameters.Add(param);
-                    }
-                    else if (expName.Equals("Inventory Loaded"))
-                    {
-                        VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter
-                        {
-                            name = "Inventory Loaded",
-                            valueType = VRCExpressionParameters.ValueType.Bool,
-                            defaultValue = 1,
-                            saved = true
-                        };
-                        parameters.Add(param);
-                    }
-                    else
-                    {
-                        VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter
-                        {
-                            name = expName,
-                            valueType = VRCExpressionParameters.ValueType.Bool,
-                            defaultValue = items[int.Parse(expName.Substring(expName.IndexOf(" ") + 1)) - 1].InitialState ? 1 : 0,
-                        };
-                        parameters.Add(param);
-                    }
-                    index++;
-                    EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.9f + index * 1f / expParamNames.Count * 0.05f);
-                }
-                avatar.expressionParameters.parameters = parameters.ToArray();
-                EditorUtility.SetDirty(avatar.expressionParameters);
 
                 /*
                     Create Expressions menu for toggles.
                 */
-                bool menuExists = false;
-                if (menu != null)
-                {
-                    menuExists = true;
-                }
+                var menuExists = menu != null;
 
                 switch (CreateMenus(out VRCExpressionsMenu inventory, items.Count))
                 {
-                    case 1:
+                    case CreateMenuResult.Cancel:
                         EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
                         RevertChanges();
                         return;
-                    case 3:
+                    case CreateMenuResult.FailedAsset:
                         EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: Failed to create one or more files!", "Close");
                         RevertChanges();
                         return;
@@ -709,34 +461,14 @@ namespace InventoryInventor
             }
         }
 
-        // Checks if an AnimationClip contains invalid bindings.
-        private bool CheckCompatibility(AnimationClip clip, bool transformsOnly, out Type problem, out string name)
-        {
-            if (clip != null)
-            {
-                // Loop through each modified property in the AnimationClip.
-                foreach (var binding in AnimationUtility.GetCurveBindings(clip))
-                {
-                    // If the binding is a Transform or Animator when transformsOnly is false or vice versa, return false with the binding's type and name.
-                    if ((transformsOnly && binding.type != typeof(Transform) && binding.type != typeof(Animator)) || (!transformsOnly && (binding.type == typeof(Transform) || binding.type == typeof(Animator))))
-                    {
-                        problem = binding.type;
-                        name = binding.propertyName;
-                        return false;
-                    }
-                }
-            }
-
-            problem = null;
-            name = "";
-            return true;
-        }
-
-        // Checks if the destination is valid.
+        /// <summary>
+        /// Checks if the destination is valid.
+        /// </summary>
+        /// <returns>True if destination is valid.</returns>
         private bool VerifyDestination()
         {
             // Load the settings object.
-            SerializedObject settings = InventorSettings.GetSerializedSettings();
+            var settings = InventorSettings.GetSerializedSettings();
 
             // If the destination is not valid, create it if possible or use the default.
             if (!AssetDatabase.IsValidFolder(outputPath))
@@ -747,7 +479,10 @@ namespace InventoryInventor
                 }
                 catch (Exception err)
                 {
-                    if (outputPath == settings.FindProperty("m_DefaultPath").stringValue || !EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Could not create the chosen destination.\nTry again with the default location?", "Yes", "No"))
+                    if (outputPath == settings.FindProperty("m_DefaultPath").stringValue ||
+                        !EditorUtility.DisplayDialog("Inventory Inventor",
+                            "WARNING: Could not create the chosen destination.\nTry again with the default location?",
+                            "Yes", "No"))
                     {
                         outputPath = settings.FindProperty("m_LastPath").stringValue;
                         Debug.LogError(err);
@@ -803,8 +538,20 @@ namespace InventoryInventor
             return 0;
         }
 
-        // Creates all the menus needed for the generated Inventory.
-        private int CreateMenus(out VRCExpressionsMenu mainMenu, int totalItems)
+        enum CreateMenuResult
+        {
+            Success = 0,
+            Cancel = 1,
+            Skip = 2,
+            FailedAsset = 3,
+        }
+        /// <summary>
+        /// Creates all the menus needed for the generated Inventory.
+        /// </summary>
+        /// <param name="mainMenu"></param>
+        /// <param name="totalItems"></param>
+        /// <returns></returns>
+        private CreateMenuResult CreateMenus(out VRCExpressionsMenu mainMenu, int totalItems)
         {
             mainMenu = null;
 
@@ -821,40 +568,70 @@ namespace InventoryInventor
             // Loop through each page, adding controls as the preset specifies.
             int index = 0;
             int index2 = 0;
-            for (int i = 0; i < preset.Pages.Count; i++)
+
+            var stateSequence = new StateSequence();
+            
+            for (var i = 0; i < preset.Pages.Count; i++)
             {
-                for (int j = 0; j < preset.Pages[i].Items.Count; j++)
+                foreach (var item in preset.Pages[i].Items)
                 {
-                    switch (preset.Pages[i].Items[j].Type)
+                    item.MakeControl(stateSequence);
+                    switch (item.Type)
                     {
                         case PageItem.ItemType.Toggle:
-                            pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Toggle, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = index + 1 });
+                            pages[i].controls.Add(new VRCExpressionsMenu.Control
+                            {
+                                name = item.name,
+                                icon = item.Icon,
+                                type = VRCExpressionsMenu.Control.ControlType.Toggle,
+                                parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" },
+                                value = index + 1,
+                            });
                             index++;
                             break;
                         case PageItem.ItemType.Subpage:
-                            int val = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages.IndexOf(preset.Pages[i].Items[j].PageReference) : 0;
-                            pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? preset.Pages[val].Icon : null, type = VRCExpressionsMenu.Control.ControlType.SubMenu, subMenu = preset.Pages[i].Items[j].PageReference != null && preset.Pages.Contains(preset.Pages[i].Items[j].PageReference) ? pages[val] : null });
+                            int val = item.PageReference != null && preset.Pages.Contains(item.PageReference)
+                                ? preset.Pages.IndexOf(item.PageReference)
+                                : 0;
+                            pages[i].controls.Add(new VRCExpressionsMenu.Control
+                            {
+                                name = item.name,
+                                icon = item.PageReference != null && preset.Pages.Contains(item.PageReference)
+                                    ? preset.Pages[val].Icon
+                                    : null,
+                                type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                                subMenu = item.PageReference != null && preset.Pages.Contains(item.PageReference)
+                                    ? pages[val]
+                                    : null
+                            });
                             break;
                         case PageItem.ItemType.Control:
-                            pages[i].controls.Add(new VRCExpressionsMenu.Control()
+                            pages[i].controls.Add(new VRCExpressionsMenu.Control
                             {
-                                name = preset.Pages[i].Items[j].Control.name,
-                                icon = preset.Pages[i].Items[j].Control.icon,
-                                type = preset.Pages[i].Items[j].Control.type,
-                                parameter = preset.Pages[i].Items[j].Control.parameter,
-                                value = preset.Pages[i].Items[j].Control.value,
-                                style = preset.Pages[i].Items[j].Control.style,
-                                labels = preset.Pages[i].Items[j].Control.labels,
-                                subMenu = preset.Pages[i].Items[j].Control.subMenu,
-                                subParameters = preset.Pages[i].Items[j].Control.subParameters
+                                name = item.Control.name,
+                                icon = item.Control.icon,
+                                type = item.Control.type,
+                                parameter = item.Control.parameter,
+                                value = item.Control.value,
+                                style = item.Control.style,
+                                labels = item.Control.labels,
+                                subMenu = item.Control.subMenu,
+                                subParameters = item.Control.subParameters
                             });
                             break;
                         case PageItem.ItemType.Button:
-                            pages[i].controls.Add(new VRCExpressionsMenu.Control() { name = preset.Pages[i].Items[j].name, icon = preset.Pages[i].Items[j].Icon, type = VRCExpressionsMenu.Control.ControlType.Button, parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" }, value = totalItems + index2 + 1 });
+                            pages[i].controls.Add(new VRCExpressionsMenu.Control()
+                            {
+                                name = item.name, icon = item.Icon,
+                                type = VRCExpressionsMenu.Control.ControlType.Button,
+                                parameter = new VRCExpressionsMenu.Control.Parameter() { name = "Inventory" },
+                                value = totalItems + index2 + 1
+                            });
                             index2++;
                             break;
                     }
                 }
+
                 EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f + i * 1f / preset.Pages.Count * 0.025f);
             }
 
@@ -874,9 +651,9 @@ namespace InventoryInventor
                         switch (EditorUtility.DisplayDialogComplex("Inventory Inventor", avatar.name + "_" + page.name + ".asset" + " already exists!\nOverwrite the file?", "Overwrite", "Cancel", "Skip"))
                         {
                             case 1:
-                                return 1;
+                                return CreateMenuResult.Cancel;
                             case 2:
-                                return 2;
+                                return CreateMenuResult.Skip;
                         }
                     }
                     backupManager.AddToBackup(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset"));
@@ -895,7 +672,7 @@ namespace InventoryInventor
                 // Check that the asset was saved successfully.
                 if (AssetDatabase.FindAssets(page.name + " t:VRCExpressionsMenu", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
                 {
-                    return 3;
+                    return CreateMenuResult.FailedAsset;
                 }
                 else
                 {
@@ -905,7 +682,7 @@ namespace InventoryInventor
                     if (pages[i] == null)
                     {
                         Debug.LogError("Inventory Inventor: Type mismatch when loading menu: " + page.name);
-                        return 3;
+                        return CreateMenuResult.FailedAsset;
                     }    
                     if (!exists)
                         generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"));
@@ -933,7 +710,7 @@ namespace InventoryInventor
             // Out the top level menu.
             mainMenu = pages[0];
 
-            return 0;
+            return CreateMenuResult.Success;
         }
 
         // Creates layers for each item in the inventory (ordered by page).
@@ -2035,14 +1812,12 @@ namespace InventoryInventor
                 AssetDatabase.Refresh();
 
                 EditorUtility.DisplayDialog("Inventory Inventor", "Success!", "Close");
-                return;
             }
             catch (Exception err)
             {
                 EditorUtility.DisplayDialog("Inventory Inventor", "ERROR: An exception has occured!\nCheck the console for more details.", "Close");
                 Debug.LogError(err);
                 RevertChanges();
-                return;
             }
         }
 
