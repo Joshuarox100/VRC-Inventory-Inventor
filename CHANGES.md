@@ -1,4 +1,31 @@
-# v1.3.0
+# v1.3.1
+This is just a quick patch for a significant issue with Menu creation when applying Presets. 
+
+## Fixes
+### v1.3.1
+- Bandaged an issue with Menu creation that caused incorrect Menus to be found or used if their names were similar and contained whitespace. (Found by @MikeMatrix)
+### v1.3.0
+- **All** instances of the chosen Animator are now replaced in the Avatar Descriptor.
+- Fixed a long-standing bug with new Page creation that occurred when names were already in use (The correct item should now be renamed).
+- Fixed a bug with the "Corrupt Member" error message that didn't specify the correct item when triggered by buttons. (Found by @MikeMatrix)
+- Aaaaaand here's all the Unity 2019 related ones:
+	- Changed references for "UnityEngine.Experimental.UIElements" to "UnityEngine.UIElements" so it would compile.
+	- Removed the IsDirtyUtility Subclass since the "EditorUtility.IsDirty" function is Public in Unity 2019.
+	- Added a bar to the tops of Reorderable list footers since they no longer have one by default.
+	- Fixed Data & Memory usage bar colors so that they work in both light & dark mode.
+	- Fixed the styling of ToolbarTextFields to not blend in with the color of Box sections.
+	- Changed the style of overlapping Boxes to Helpboxes since the border of Boxes was removed.
+	- Adjusted some spacing between elements in the Manager window to prevent the Create button from going off the screen.
+	- Subtly changed the way the destination option was displayed in the manager to better align with other settings.
+	- Adjusted the About window to account for the new VERSION file format.
+	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
+	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
+	- Corrected some code involving asset loading that caused submenus to not be preserved during export in 2019 exclusively.
+----------------
+
+*(The major version's release notes will now follow.)*
+
+----------------
 WOOT UNITY 2019 IS HERE BABY! DARK MODE FOR ALL! *cough*- sorry about that. *Anyways*, this is a **feature update**! Several new features have been added, as well as support and compatibility for Unity 2019.
 
 Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version hasn't been able to be vigorously tested in the updated engine. **Visual bugs in the Editor may be present, if you find one, please report it to the Issue's page on GitHub, not to me on Discord.**
@@ -31,22 +58,3 @@ Due to the somewhat sudden release of VRChat's Unity 2019 upgrade, this version 
 - **Presets**
 	- Toggles with syncing disabled (local-only) are now able to be saved locally.
 	- The icon for Presets has been updated to match the new design language of the Editor.
-
-## Fixes
-### v1.3.0
-- **All** instances of the chosen Animator are now replaced in the Avatar Descriptor.
-- Fixed a long-standing bug with new Page creation that occurred when names were already in use (The correct item should now be renamed).
-- Fixed a bug with the "Corrupt Member" error message that didn't specify the correct item when triggered by buttons. (Found by @MikeMatrix)
-- Aaaaaand here's all the Unity 2019 related ones:
-	- Changed references for "UnityEngine.Experimental.UIElements" to "UnityEngine.UIElements" so it would compile.
-	- Removed the IsDirtyUtility Subclass since the "EditorUtility.IsDirty" function is Public in Unity 2019.
-	- Added a bar to the tops of Reorderable list footers since they no longer have one by default.
-	- Fixed Data & Memory usage bar colors so that they work in both light & dark mode.
-	- Fixed the styling of ToolbarTextFields to not blend in with the color of Box sections.
-	- Changed the style of overlapping Boxes to Helpboxes since the border of Boxes was removed.
-	- Adjusted some spacing between elements in the Manager window to prevent the Create button from going off the screen.
-	- Subtly changed the way the destination option was displayed in the manager to better align with other settings.
-	- Adjusted the About window to account for the new VERSION file format.
-	- Edited the text in the About window as well as several Textfields & Labels scattered in other areas to support dark theme.
-	- Edited the "Append Preset" window to both support dark theme and to not crunch the "No Preset Selected" text.
-	- Corrected some code involving asset loading that caused submenus to not be preserved during export in 2019 exclusively.

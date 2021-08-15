@@ -855,7 +855,7 @@ namespace InventoryInventor
                             break;
                     }
                 }
-                EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.95f + i * 1f / preset.Pages.Count * 0.025f);
+                EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Menus", 0.95f + i * 1f / preset.Pages.Count * 0.025f);
             }
 
             // Create output directory if not present.
@@ -891,17 +891,16 @@ namespace InventoryInventor
                 AssetDatabase.CreateAsset(page, outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + avatar.name + "_" + page.name + ".asset");
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-
+                
                 // Check that the asset was saved successfully.
-                if (AssetDatabase.FindAssets(page.name + " t:VRCExpressionsMenu", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" }).Length == 0)
+                if (!File.Exists(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"))
                 {
                     return 3;
                 }
                 else
                 {
-                    AssetDatabase.Refresh();
                     // Update the object in list
-                    pages[i] = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(page.name + " t:VRCExpressionsMenu", new string[] { outputPath + Path.DirectorySeparatorChar + "Menus" })[0]), typeof(VRCExpressionsMenu));
+                    pages[i] = (VRCExpressionsMenu)AssetDatabase.LoadAssetAtPath(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset", typeof(VRCExpressionsMenu));
                     if (pages[i] == null)
                     {
                         Debug.LogError("Inventory Inventor: Type mismatch when loading menu: " + page.name);
@@ -910,17 +909,17 @@ namespace InventoryInventor
                     if (!exists)
                         generated.Add(new Asset(outputPath + Path.DirectorySeparatorChar + "Menus" + Path.DirectorySeparatorChar + page.name + ".asset"));
                 }
-                EditorUtility.DisplayProgressBar("Inventory Inventor", "Finalizing", 0.975f + i * 1f / pages.Count * 0.025f);
+                EditorUtility.DisplayProgressBar("Inventory Inventor", "Creating Menus", 0.975f + i * 1f / pages.Count * 0.025f);
             }
 
             // Reassign created menus to each other as submenus so the reference persists post restart.
             for (int i = 0; i < pages.Count; i++)
             {
-                VRCExpressionsMenu current = pages[i];
+                VRCExpressionsMenu currentMenu = pages[i];
                 Page currentPage = preset.Pages[i];
-                EditorUtility.SetDirty(current);
+                EditorUtility.SetDirty(currentMenu);
                 index = 0;
-                foreach (VRCExpressionsMenu.Control control in current.controls)
+                foreach (VRCExpressionsMenu.Control control in currentMenu.controls)
                 {
                     if (control.type == VRCExpressionsMenu.Control.ControlType.SubMenu && currentPage.Items[index].Type == PageItem.ItemType.Subpage && currentPage.Items[index].PageReference != null)
                         control.subMenu = preset.Pages.Contains(currentPage.Items[index].PageReference) ? pages[preset.Pages.IndexOf(currentPage.Items[index].PageReference)] : null;
@@ -931,7 +930,8 @@ namespace InventoryInventor
             AssetDatabase.Refresh();
 
             // Out the top level menu.
-            mainMenu = pages[0];
+            if (pages.Count > 0)
+                mainMenu = pages[0];
 
             return 0;
         }
