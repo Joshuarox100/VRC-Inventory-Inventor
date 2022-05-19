@@ -2,10 +2,12 @@
     "name": "com.joshuarox100.inventoryinventor.Editor",
     "references": [
         "com.joshuarox100.inventoryinventor",
-		"com.joshuarox100.bmblibraries"
+        "com.joshuarox100.bmblibraries"
     ],
     "includePlatforms": [],
-    "excludePlatforms": [],
+    "excludePlatforms": [
+        "Editor"
+    ],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
