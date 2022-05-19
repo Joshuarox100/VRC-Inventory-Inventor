@@ -154,7 +154,7 @@ namespace InventoryInventor
                         switch (item.Type)
                         {
                             case PageItem.ItemType.Toggle:
-                                if (item.UseAnimations && InventorSettings.GetSerializedSettings().FindProperty("m_AllowInvalid").boolValue)
+                                if (item.UseAnimations && InventorSettings.Create().allowInvalid)
                                 {
                                     if (!CheckCompatibility(item.EnableClip, false, out Type problem, out string propertyName))
                                     {
@@ -736,7 +736,7 @@ namespace InventoryInventor
         private bool VerifyDestination()
         {
             // Load the settings object.
-            SerializedObject settings = InventorSettings.GetSerializedSettings();
+            InventorSettings settings = InventorSettings.Create();
 
             // If the destination is not valid, create it if possible or use the default.
             if (!AssetDatabase.IsValidFolder(outputPath))
@@ -747,20 +747,20 @@ namespace InventoryInventor
                 }
                 catch (Exception err)
                 {
-                    if (outputPath == settings.FindProperty("m_DefaultPath").stringValue || !EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Could not create the chosen destination.\nTry again with the default location?", "Yes", "No"))
+                    if (outputPath == settings.defaultPath || !EditorUtility.DisplayDialog("Inventory Inventor", "WARNING: Could not create the chosen destination.\nTry again with the default location?", "Yes", "No"))
                     {
-                        outputPath = settings.FindProperty("m_LastPath").stringValue;
+                        outputPath = settings.lastPath;
                         Debug.LogError(err);
                         return false;
                     }
-                    outputPath = settings.FindProperty("m_DefaultPath").stringValue;
+                    outputPath = settings.defaultPath;
                     VerifyDestination();
                 }
             }
 
             // Update the last path used.
-            settings.FindProperty("m_LastPath").stringValue = outputPath;
-            settings.ApplyModifiedProperties();
+            settings.lastPath = outputPath;
+            settings.Save();
             preset.LastPath = outputPath;
             InventoryPresetUtility.SaveChanges(preset);
             return true;

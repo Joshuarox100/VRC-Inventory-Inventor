@@ -35,7 +35,7 @@ namespace InventoryInventor
         public static void ManageInventory()
         {
             InventoryInventorWindow window = (InventoryInventorWindow)GetWindow(typeof(InventoryInventorWindow), false, "Inventory Inventor");
-            window.manager.outputPath = InventorSettings.GetSerializedSettings().FindProperty("m_LastPath").stringValue;
+            window.manager.outputPath = InventorSettings.Create().lastPath;
             window.minSize = new Vector2(375f, 355f);
             window.wantsMouseMove = true;
             window.Show();
@@ -162,9 +162,9 @@ namespace InventoryInventor
                 if (absPath.StartsWith(Application.dataPath))
                 {
                     manager.outputPath = "Assets" + absPath.Substring(Application.dataPath.Length);
-                    SerializedObject settings = InventorSettings.GetSerializedSettings();
-                    settings.FindProperty("m_LastPath").stringValue = manager.outputPath;
-                    settings.ApplyModifiedProperties();
+                    InventorSettings settings = InventorSettings.Create();
+                    settings.lastPath = manager.outputPath;
+                    settings.Save();
                 }
             }
             EditorGUILayout.EndHorizontal();
