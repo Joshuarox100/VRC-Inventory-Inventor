@@ -42,7 +42,7 @@ namespace InventoryInventor.Version
     public class Updater : UnityEngine.Object
     {
         // MonoBehaviour for running network coroutines.
-        private class NetworkManager : MonoBehaviour 
+        private class NetworkManager : MonoBehaviour
         {
             // Gets a desired request from the internet
             public static IEnumerator GetFileRequest(string url, string filePath, Action<UnityWebRequest> callback)
@@ -61,8 +61,7 @@ namespace InventoryInventor.Version
 
                 if (www.isNetworkError || www.isHttpError)
                 {
-                    if (!www.error.Contains("404"))
-                        Debug.LogError(www.error);
+                    Debug.LogError(www.error);
                     result?.Invoke("");
                 }
                 else
@@ -133,26 +132,62 @@ namespace InventoryInventor.Version
 
             // Run a coroutine to retrieve the GitHub data.
             NetworkManager manager = temp.AddComponent<NetworkManager>();
-            manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VPM", latestVersion =>
-            {
+            manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
                 string[] decodedVersion = latestVersion.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                string latestBuild = "";
+                string latestUnity = "";
+                if (decodedVersion.Length > 0)
+                    latestBuild = decodedVersion[0];
+                if (decodedVersion.Length > 1)
+                    latestUnity = decodedVersion[1];
+
+                string vpmBuild = "";
+                string vpmUnity = "";
+                if (decodedVersion.Length > 4)
+                    vpmBuild = decodedVersion[4];
+                if (decodedVersion.Length > 5)
+                    vpmUnity = decodedVersion[5];
 
                 // Network Error.
                 if (latestVersion == "" && !auto)
                 {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
+                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to fetch the latest version.\n(Check console for details.)", "Close");
+                }
+                // VPM is now required.
+                else if (vpmBuild != "")
+                {
+                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A newer version (" + vpmBuild + ") is available, but it is only usable if you migrate your project to use the VRChat Creator Companion.\nOpen GitHub to Download the Package?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No"))
+                        Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
+                }
+                // VERSION file missing.
+                else if (buildVersion == "" && !auto)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to identify installed version.\n(VERSION file was not found.)", "Close");
+                }
+                // Project has been archived.
+                else if (latestVersion == "RIP" && !auto)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "Project has been put on hold indefinitely.", "Close");
                 }
                 // An update is available.
-                else if (latestVersion != "")
+                else if (buildVersion != "" && buildVersion != latestBuild)
                 {
-                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A newer version is available, but it is only usable if you migrate your project to use the VRChat Creator Companion.\nOpen GitHub to Download the Package?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No"))
+                    if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Only do this before migrating!)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No"))
+                    || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
                     {
-                        Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
+                        // Download the update.
+                        DownloadUpdate(latestBuild);
+                        updated = true;
                     }
+                }
+                // Using latest version.
+                else if (!auto)
+                {
+                    EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
                 }
                 DestroyImmediate(temp);
             }));
-            return false;
+            return updated;
         }
 
         // Downloads and installs a given version of the package.
