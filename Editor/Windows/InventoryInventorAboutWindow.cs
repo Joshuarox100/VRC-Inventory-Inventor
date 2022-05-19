@@ -1,5 +1,4 @@
-﻿using InventoryInventor.Version;
-using System;
+﻿using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -43,15 +42,10 @@ namespace InventoryInventor
         // Draw about window GUI.
         private void DrawAboutWindow()
         {
-            // Load version number.
-            string version = Updater.GetVersion();
-            if (version != "")
-                version = version.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)[0];
-
             // Display top header.
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Box("<b><size=18>Inventory Inventor" + (version != "" ? " " : "") + version + "</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(300f));
+            GUILayout.Box("<b><size=18>Inventory Inventor</size></b>", new GUIStyle(GUI.skin.GetStyle("Box")) { normal = GUI.skin.box.hover, richText = true }, GUILayout.Width(300f));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();

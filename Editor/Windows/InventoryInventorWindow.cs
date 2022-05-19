@@ -6,7 +6,6 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using InventoryInventor.Preset;
-using InventoryInventor.Version;
 using InventoryInventor.Settings;
 
 namespace InventoryInventor
@@ -40,12 +39,6 @@ namespace InventoryInventor
             window.minSize = new Vector2(375f, 355f);
             window.wantsMouseMove = true;
             window.Show();
-        }
-
-        [MenuItem("Tools/Joshuarox100/Inventory Inventor/Check For Updates", priority = 11)]
-        public static void CheckForUpdates()
-        {
-            Updater.CheckForUpdates();
         }
 
         // Relocate file directory path.
