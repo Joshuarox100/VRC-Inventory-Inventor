@@ -272,7 +272,7 @@ namespace InventoryInventor
 
                 /*
                     Get FX Animator.
-                    */
+                */
                 AnimatorController animator = controller != null ? controller : null;
 
                 // Replace the Animator Controller in the descriptor if this Controller was there to begin with.
@@ -295,7 +295,7 @@ namespace InventoryInventor
                 // Create new Animator Controller from SDK template if none was provided.
                 if (animator == null)
                 {
-                    switch (CopySDKTemplate(avatar.name + "_FX.controller", "vrc_AvatarV3FaceLayer"))
+                    switch (CopySDKTemplate(avatar.name + "_FX.controller", "AV3 Demo FX"))
                     {
                         case 1:
                             EditorUtility.DisplayDialog("Inventory Inventor", "Cancelled.", "Close");
@@ -790,7 +790,7 @@ namespace InventoryInventor
             {
                 existed = false;
             }
-            if (!AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(SDKfile, new string[] { "Assets" + Path.DirectorySeparatorChar + "VRCSDK" + Path.DirectorySeparatorChar + "Examples3" + Path.DirectorySeparatorChar + "Animation" + Path.DirectorySeparatorChar + "Controllers" })[0]), outputPath + Path.DirectorySeparatorChar + "Animators" + Path.DirectorySeparatorChar + outFile))
+            if (!AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(SDKfile, new string[] { relativePath + Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar + "Templates" })[0]), outputPath + Path.DirectorySeparatorChar + "Animators" + Path.DirectorySeparatorChar + outFile))
             {
                 return 3;
             }

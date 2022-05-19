@@ -1,7 +1,12 @@
-# v1.3.1
-This is just a quick patch for a significant issue with Menu creation when applying Presets. 
+# v1.3.2
+Minor update for the code to use the value given by the VRCSDK for max parameter space. Also ceased reliance on the SDK's controller templates and instead refer to included ones for the future.
 
 ## Fixes
+### v1.3.2
+- Added preliminary support for arbitrary parameter space in the UI.
+- Default controller templates and animations are now included in II.
+- Fixed a UI issue with dark mode that caused text to appear black.
+- Revised the auto-updater to support future versions.
 ### v1.3.1
 - Bandaged an issue with Menu creation that caused incorrect Menus to be found or used if their names were similar and contained whitespace. (Found by @MikeMatrix)
 ### v1.3.0
