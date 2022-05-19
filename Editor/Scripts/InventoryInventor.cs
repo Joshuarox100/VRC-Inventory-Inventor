@@ -1,5 +1,5 @@
-﻿using InventoryInventor.Libraries.BMBLibraries.Classes;
-using InventoryInventor.Libraries.BMBLibraries.Extensions;
+﻿using BMBLibraries.Classes;
+using BMBLibraries.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -790,7 +790,7 @@ namespace InventoryInventor
             {
                 existed = false;
             }
-            if (!AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(SDKfile, new string[] { relativePath + Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar + "Templates" })[0]), outputPath + Path.DirectorySeparatorChar + "Animators" + Path.DirectorySeparatorChar + outFile))
+            if (!AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(SDKfile, new string[] { "Packages" + Path.DirectorySeparatorChar + "com.joshuarox100.inventoryinventor" + Path.DirectorySeparatorChar + "Editor" + Path.DirectorySeparatorChar + "Templates" })[0]), outputPath + Path.DirectorySeparatorChar + "Animators" + Path.DirectorySeparatorChar + outFile))
             {
                 return 3;
             }

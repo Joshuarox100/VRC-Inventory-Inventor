@@ -3,12 +3,11 @@ Author: Joshuarox100
 
 Description: Make inventories fast with Inventory Inventor! With it, you can create inventories with plenty of toggles, all managed by a single Expression Parameter! *(Disclamer: You can choose to use more parameters if you want to save the state of items in the Inventory.)*
 
-Dependencies: 
-- [VRCSDK3-AVATAR](https://vrchat.com/home/download) (Not Included)
-
 ## Installation Guide
-Simply download and import the latest **Unity Package** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub **(You will have issues if you don't)**.
+Simply download and add the latest **ZIP file** from [**Releases**](https://github.com/Joshuarox100/VRC-Inventory-Inventor/releases) on GitHub.
 > **Do NOT download and try to use the source code on its own from the main page. You will encounter unintended behavior.**
+
+> **This and future versions are designed to work with VRChat's new VPM system. If you wish to use it without VPM, download the Unity Package for version 1.3.2.**
 
 ## How to Use
 Before following these steps, set up your Avatar how you normally would and ensure that you have a basic understanding of how Avatars 3.0 works.
@@ -258,11 +257,8 @@ Inventory Inventor has a few persistent settings and options you can access with
 **VRChat has started crashing when switching away from an Avatar that has an Inventory on it!**
 >This was due to an odd bug with v1.0.0 that I hadn't noticed during development. To fix it, make sure you are using version v1.0.1 or higher and reapply your preset.
 
-**The Auto Updater is failing to download an update and it also looks weird in the notification.**
->You probably don't have the newest version of Inventory Inventor, which may have changed how the updater functions (I'm looking at you v1.2.4 users). The only way to fix this is to download the latest version manually and import it into your project yourself.
-
 **"An exception occured!"**
 >If this happens, ensure you have a clean install of Inventory Inventor, and if the problem persists, [let me know](#contacting-me)!
 
 ## Contacting Me
-If you still have some questions or recommendations you'd like to throw my way, you can ask me on Discord (Joshuarox100#5024) or leave a suggestion or issue on the [Issues](https://github.com/Joshuarox100/VRC-Inventory-Inventor/issues) page. (There will be a Discord server in the future, just give me some more time.)
+If you still have some questions or recommendations you'd like to throw my way, you can ask me on Discord (Joshuarox100#5024) or leave a suggestion or issue on the [Issues](https://github.com/Joshuarox100/VRC-Inventory-Inventor/issues) page. (There will be a Discord server in the future, just give me some more time. It'll be soon™.)
