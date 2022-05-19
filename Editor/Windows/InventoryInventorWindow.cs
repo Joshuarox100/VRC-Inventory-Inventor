@@ -163,7 +163,7 @@ namespace InventoryInventor
                 displayPath = "..." + displayPath.Substring(displayPath.IndexOf('/'));
             // Destination.
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, active = GUI.skin.GetStyle("Button").active }, new GUILayoutOption[] { GUILayout.ExpandWidth(true) }))
+            if (GUILayout.Button(new GUIContent("<i>" + displayPath + "</i>", (manager.outputPath != null) ? manager.outputPath.Replace('\\', '/') : ""), new GUIStyle(GUI.skin.GetStyle("Button")) { richText = true, active = GUI.skin.GetStyle("Button").active, font = GUI.skin.label.font }, new GUILayoutOption[] { GUILayout.ExpandWidth(true) }))
             {
                 string absPath = EditorUtility.OpenFolderPanel("Destination Folder", "", "");
                 if (absPath.StartsWith(Application.dataPath))

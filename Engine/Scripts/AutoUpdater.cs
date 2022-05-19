@@ -61,7 +61,8 @@ namespace InventoryInventor.Version
 
                 if (www.isNetworkError || www.isHttpError)
                 {
-                    Debug.LogError(www.error);
+                    if (!www.error.Contains("404"))
+                        Debug.LogError(www.error);
                     result?.Invoke("");
                 }
                 else
@@ -132,49 +133,26 @@ namespace InventoryInventor.Version
 
             // Run a coroutine to retrieve the GitHub data.
             NetworkManager manager = temp.AddComponent<NetworkManager>();
-            manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VERSION", latestVersion => {
+            manager.StartCoroutine(NetworkManager.GetText("https://raw.githubusercontent.com/Joshuarox100/VRC-Inventory-Inventor/master/Editor/VPM", latestVersion =>
+            {
                 string[] decodedVersion = latestVersion.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                string latestBuild = "";
-                string latestUnity = "";
-                if (decodedVersion.Length > 0)
-                    latestBuild = decodedVersion[0];
-                if (decodedVersion.Length > 1)
-                    latestUnity = decodedVersion[1];
 
                 // Network Error.
                 if (latestVersion == "" && !auto)
                 {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to fetch the latest version.\n(Check console for details.)", "Close");
-                }
-                // VERSION file missing.
-                else if (buildVersion == "" && !auto)
-                {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "Failed to identify installed version.\n(VERSION file was not found.)", "Close");
-                }
-                // Project has been archived.
-                else if (latestVersion == "RIP" && !auto)
-                {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "Project has been put on hold indefinitely.", "Close");
+                    EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
                 }
                 // An update is available.
-                else if (buildVersion != "" && buildVersion != latestBuild)
+                else if (latestVersion != "")
                 {
-                    if ((unityVersion != latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available, but for a newer version of Unity (" + latestUnity + ").\nInstall anyway? (Only do this before migrating!)" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")) 
-                    || (unityVersion == latestUnity && EditorUtility.DisplayDialog("Inventory Inventor", "A new update is available! (" + latestBuild + ")\nDownload and install from GitHub?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No")))
+                    if (EditorUtility.DisplayDialog("Inventory Inventor", "A newer version is available, but it is only usable if you migrate your project to use the VRChat Creator Companion.\nOpen GitHub to Download the Package?" + (auto ? "\n(You can disable update checks within Project Settings)" : ""), "Yes", "No"))
                     {
-                        // Download the update.
-                        DownloadUpdate(latestBuild);
-                        updated = true;
+                        Application.OpenURL("https://github.com/Joshuarox100/VRC-Inventory-Inventor");
                     }
-                }
-                // Using latest version.
-                else if (!auto)
-                {
-                    EditorUtility.DisplayDialog("Inventory Inventor", "You are using the latest version.", "Close");
                 }
                 DestroyImmediate(temp);
             }));
-            return updated;
+            return false;
         }
 
         // Downloads and installs a given version of the package.
