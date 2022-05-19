@@ -1,7 +1,9 @@
-# v1.3.2
-Minor update for the code to use the value given by the VRCSDK for max parameter space. Also ceased reliance on the SDK's controller templates and instead refer to included ones for the future.
+# v1.3.3
+Important bug-fix for the auto-updater so it receives new versions correctly. If you are currently on v1.3.2, you will not receive automatic updates because of it. Sincerest apologies for the inconvenience.
 
 ## Fixes
+### v1.3.3
+- Fixed a *bit* of an oversight with the updater changes.
 ### v1.3.2
 - Added preliminary support for arbitrary parameter space in the UI.
 - Default controller templates and animations are now included in II.
